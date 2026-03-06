@@ -1,5 +1,4 @@
-from matrix import ConceptMatrix
-from utils.hashing import coordinates_from_index, posiciones_en_abecedario
+from src.matrix import ConceptMatrix
 
 MATRIX_SHAPE= 1_000_000_000
 
@@ -50,23 +49,9 @@ ecosistema_lexico = [
 
 
 for item in ecosistema_lexico:
-    concepto_raw_index = posiciones_en_abecedario(item["concept"])
-    print(f"concepto_raw_index: {concepto_raw_index}")
+    result = cm.add_concept(item["concept"], item["definition"])
+    print(result)
 
 
-    concept_index = coordinates_from_index(concepto_raw_index)
-    print(f"concept_index: {concept_index}")
-
-    concept_definition = []
-
-    for c in item["definition"]:
-        cri = posiciones_en_abecedario(c)
-        coo = coordinates_from_index(cri)
-        concept_definition.append(coo)
-    
-
-    cm.set(concept_index, concept_definition)
-
-print(cm.get((8510649, 8428853, 1706681)))
 
 cm.plot(title="ConceptMatrix", save_html="concept_matrix_3d.html")
