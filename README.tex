@@ -270,7 +270,18 @@ El proceso de comunicación inter-nodal sigue una jerarquía de tres pasos que g
 
 
 
+\section{Dinámica de Propagación y Entropía de Señal}
 
+La inferencia en \textbf{SPEKTRA} no es una búsqueda lineal, sino un proceso de difusión estocástica controlada por la \textit{Energía de Activación} ($E$).
+
+\subsection{Ecuación de Atenuación Progresiva}
+En cada salto inter-nodal $n \to n+1$, la intensidad de la señal se ve afectada por tres factores críticos: la fuerza de la conexión ($\omega$), la fricción del medio ($\delta$) y el decaimiento intrínseco ($\gamma$):
+
+\begin{equation}
+	E_{n+1} = E_n \cdot \omega_{n,n+1} \cdot (1 - \delta) \cdot \gamma
+\end{equation}
+
+Donde $\gamma = 0.9$ actúa como una constante de entropía que evita la saturación de la Matrix. Este mecanismo asegura que el pensamiento sea \textbf{finito} y \textbf{localizado}, permitiendo que el sistema se enfoque en las asociaciones más relevantes sin entrar en bucles de resonancia infinita.
 
 
 

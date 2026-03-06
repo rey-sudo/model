@@ -111,6 +111,11 @@ class ConceptMatrix:
         data = np.array(list(scalar_items.values()), dtype=float)
         return sparse.COO(coords=coords, data=data, shape=self.shape)
 
+    def get_coo_from_symbol(self, concept: str) -> tuple[int, int, int]:
+        concepto_raw_index = posiciones_en_abecedario(concept)
+        concept_index = coordinates_from_index(concepto_raw_index)
+        
+        return concept_index
 
     def add_concept(self, concept: str, definition: list[str]) -> tuple[int, int, int]:
         concepto_raw_index = posiciones_en_abecedario(concept)
@@ -187,6 +192,60 @@ class ConceptMatrix:
         # 4. Atenuación y Activación
         attenuated_signal = signal_vector * (1.0 - effective_friction)
         return target_node.activate(attenuated_signal)
+
+
+
+    def propagate(self, start_coords: Tuple[int, ...], initial_signal: np.ndarray, max_hops: int = 5):
+        """
+        Propaga una señal a través de los punteros de los nodos, 
+        aplicando decaimiento de energía y fricción en cada salto.
+        """
+        queue = [(start_coords, initial_signal, 1.0)]  # (coords, vector, energía_actual)
+        results = []
+        visited = set()
+
+        print(f"--- Iniciando Propagación desde {start_coords} ---")
+
+        while queue:
+            current_coords, current_signal, energy = queue.pop(0)
+            
+            if energy < 0.1 or max_hops <= 0:  # Umbral de extinción
+                continue
+                
+            node = self._node_storage.get(current_coords)
+            if not node or current_coords in visited:
+                continue
+            
+            visited.add(current_coords)
+            
+            # 1. El nodo procesa la señal
+            output_signal = node.activate(current_signal)
+            results.append((node.name, energy))
+            
+            # 2. Explorar punteros (relaciones)
+            # Ordenamos por fuerza de conexión
+            top_ptrs = node.get_top_pointers(limit=3)
+            
+            for target_coords, strength in top_ptrs:
+                # La energía del siguiente salto depende de:
+                # - La energía actual
+                # - La fuerza del puntero (relación)
+                # - Un factor de decaimiento constante (0.9)
+                next_energy = energy * strength * 0.9
+                
+                # Intentamos enviar la señal a través de la Matrix (aplica fricción)
+                next_signal = self.send_signal(current_coords, target_coords, output_signal)
+                
+                if next_signal is not None:
+                    queue.append((target_coords, next_signal, next_energy))
+            
+            max_hops -= 1
+            
+        return results
+
+
+
+
 
 
     # ------------------------------------------------------------------
