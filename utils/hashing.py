@@ -1,6 +1,22 @@
 from blake3 import blake3
 import struct
 
+def posiciones_en_abecedario(palabra):
+    abecedario = ['a','b','c','d','e','f','g','h','i','j','k','l','m',
+              'n','o','p','q','r','s','t','u','v','w','x','y','z']
+    
+    palabra = palabra.lower()
+    posiciones = []
+    
+    for letra in palabra:
+        if letra in abecedario:
+            posicion = abecedario.index(letra)
+            posiciones.append(posicion)
+        else:
+            posiciones.append(None)
+    
+    return posiciones
+
 def int_to_3d(number: int) -> tuple[int, int, int]:
     digits = str(abs(number))
     n = len(digits)

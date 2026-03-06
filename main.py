@@ -1,25 +1,7 @@
 from matrix import ConceptMatrix
-from utils.hashing import coordinates_from_index
+from utils.hashing import coordinates_from_index, posiciones_en_abecedario
 
 MATRIX_SHAPE= 1_000_000_000
-
-def posiciones_en_abecedario(palabra):
-    abecedario = ['a','b','c','d','e','f','g','h','i','j','k','l','m',
-              'n','o','p','q','r','s','t','u','v','w','x','y','z']
-    
-    palabra = palabra.lower()
-    posiciones = []
-    
-    for letra in palabra:
-        if letra in abecedario:
-            posicion = abecedario.index(letra)
-            posiciones.append(posicion)
-        else:
-            posiciones.append(None)
-    
-    return posiciones
-
-
 
 cm = ConceptMatrix(shape=(MATRIX_SHAPE, MATRIX_SHAPE, MATRIX_SHAPE))
 

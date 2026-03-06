@@ -49,4 +49,43 @@ Donde $\hat{P}_t$ es la coordenada predicha por la red del concepto actual y $P_
 \section{Conclusión}
 Este modelo permite una navegación semántica basada en lógica estructural. La densidad de neuronas por cada punto de la matriz garantiza que el sistema no solo almacene posiciones, sino comportamientos dinámicos ante diferentes contextos lingüísticos.
 
+\section{Arquitectura Interna del Nodo: Micro-Capas de Procesamiento}
+Cada punto activo en la matriz $CM$ no es una unidad atómica, sino un contenedor de una arquitectura neuronal densa. Si definimos $N$ como el número de neuronas por concepto (donde $N \approx 1000$), el estado interno de un concepto se describe como un tensor de parámetros locales.
+
+\subsection{Procesamiento de Contexto Local}
+Cuando un concepto $C_k$ es activado, sus $N$ neuronas realizan una operación de filtrado selectivo sobre las señales de entrada $\mathbf{v}_{in}$. Esto permite que el concepto responda de manera distinta según el contexto:
+$$ \mathbf{h}_k = \phi( \mathbf{W}_{local}^{(k)} \cdot \mathbf{v}_{in} + \mathbf{b}_{local}^{(k)} ) $$
+Donde $\mathbf{h}_k \in \mathbb{R}^N$ representa el vector de estado oculto del concepto.
+
+\subsection{Selección de Definición (Attention Mechanism)}
+Dado que la definición de un concepto "Carro" contiene múltiples sub-conceptos $\{\text{motor, rueda, ...}\}$, las mil neuronas internas actúan como un mecanismo de atención que asigna pesos de relevancia $\alpha$ a cada hijo de la definición:
+$$ \alpha_i = \text{softmax}( \text{score}(\mathbf{h}_k, C_i) ) $$
+Esto permite que el modelo, ante la entrada "ruido en el motor", active con mayor intensidad la red neuronal del sub-concepto $C_{motor}$ que la del sub-concepto $C_{chasis}$.
+
+\subsection{Aprendizaje de Micro-Pesos}
+Durante la etapa de entrenamiento, el gradiente del error $\nabla \mathcal{L}$ se distribuye no solo para mover la posición $(x, y, z)$ del concepto en la matriz dispersa, sino para ajustar los miles de pesos internos $\mathbf{W}_{local}^{(k)}$. Esto permite que el concepto "aprenda" su propia semántica interna independientemente del resto de la matriz.
+
+\section{Resolución de Limitaciones Intrínsecas de los LLMs Tradicionales}
+
+La arquitectura de Matriz de Conceptos Recursiva (RCM) ofrece soluciones estructurales a los problemas de los modelos transformadores convencionales:
+
+\subsection{Mitigación de Alucinaciones mediante Anclaje Semántico}
+En los LLMs actuales, el conocimiento está distribuido de forma difusa. En este modelo, el conocimiento está \textit{localizado} en coordenadas $(x, y, z)$ y validado por su lista de sub-conceptos.
+\begin{itemize}
+    \item \textbf{LLM Tradicional:} Genera texto basado en la secuencia más probable, aunque sea falsa.
+    \item \textbf{RCM:} Si la red neuronal del concepto "Carro" no tiene una conexión activa hacia el concepto "Volar", el modelo tiene una restricción física/lógica que le impide generar esa afirmación, eliminando la alucinación por diseño estructural.
+\end{itemize}
+
+\subsection{Razonamiento Simbólico-Neuronal (Neuro-Symbolic)}
+Los LLMs tienen dificultades con la lógica multietapa. Al utilizar una estructura recursiva, este modelo realiza un "recorrido de grafo":
+$$ \text{Pensamiento} = \text{Trayectoria}(C_{inicio} \to C_{def1} \to C_{sub-def} \dots) $$
+Cada "salto" entre coordenadas requiere una activación de las mil neuronas locales, lo que obliga al modelo a mantener una coherencia lógica paso a paso, similar al razonamiento humano sistemático.
+
+\subsection{Eficiencia Computacional y Actualización de Conocimiento}
+Para enseñar un nuevo dato a un LLM actual, se debe re-entrenar todo el modelo (o gran parte de él). En la arquitectura RCM:
+\begin{itemize}
+    \item \textbf{Aprendizaje Localizado:} Si se descubre una nueva característica del "Motor", solo se actualizan los pesos $W_{local}^{(motor)}$ y su vector de coordenadas. El resto de la matriz permanece intacto.
+    \item \textbf{Consumo de Recursos:} Solo se activan los conceptos relevantes para la consulta, en lugar de procesar billones de parámetros para cada palabra.
+\end{itemize}
+
 \end{document}
