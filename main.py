@@ -56,4 +56,6 @@ for item in ecosistema_lexico:
 
 
 
-cm.plot(title="ConceptMatrix", save_html="concept_matrix_3d.html")
+#cm.plot(title="ConceptMatrix", save_html="concept_matrix_3d.html")
+
+

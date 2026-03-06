@@ -70,5 +70,17 @@ resultado = cm.propagate(sol_coords, señal, max_hops=10)
 print("Cadena:", " -> ".join([f"{n} ({e:.2f})" for n, e in resultado]))
 
 
-visualize_concept_flow(cm, title="Ecosistema Semántico: Sol y Bosque")
+#visualize_concept_flow(cm, title="Ecosistema Semántico: Sol y Bosque")
 
+
+coords_sobre = cm.get_coo_from_symbol("sobre")
+coords_bosque = cm.get_coo_from_symbol("bosque")
+
+def_sobre = cm.get_definitions_by_index(coords_sobre)
+def_bosque = cm.get_definitions_by_index(coords_bosque)
+
+common = set(def_sobre).intersection(set(def_bosque))
+
+print(f"\n--- Auditoría de Resonancia ---")
+print(f"Coincidencias entre 'sobre' y 'bosque': {common}")
+print(f"Factor de Resonancia aplicado: {cm.calculate_resonance(cm._node_storage[coords_sobre], cm._node_storage[coords_bosque]):.2f}")
