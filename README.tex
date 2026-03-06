@@ -5,6 +5,7 @@
 \usepackage{geometry}
 \usepackage{titlesec}
 \usepackage{tikz}
+\usepackage{bm}
 \geometry{a4paper, margin=1in}
 \usetikzlibrary{positioning, calc, arrows.meta, shapes.geometric}
 
@@ -18,31 +19,63 @@
 \maketitle
 
 \section{Introduction}
-The proposed model is defined as a sparse three-dimensional data structure denoted as $CM$. Where each active coordinate $C(x, y, z)$ represents a concept; 
+The proposed model is defined as a sparse three-dimensional data structure denoted as \textit{ConceptMatrix}($CM$). Where each active coordinate $C(x, y, z)$ represents a concept; 
 Each concept has a definition which is a list of other concepts, that is, a list of other coordinates.
 The coordinates act as a unique, deterministic, immutable identifier index ($O(1)$) of a concept.
-Each concept has its own local neural network $NN_c$.
+Each concept has its own local neural network \textit{ConceptNode}($CN$). 
 
+\section{Anatomy of the ConceptNode($CN$)}
 
-\section{Estructura Espacial}
-La matriz se define en un espacio euclidiano de tres dimensiones con una resolución $S$:
-$$CM \in \mathbb{R}^{S \times S \times S}$$
-Dada la naturaleza dispersa de la matriz, el conjunto de conceptos definidos $K$ es un subconjunto tal que $|K| \ll S^3$.
+The ($CN$) is the fundamental processing unit in the architecture. Unlike neurons in a traditional dense network,
+each node is an autonomous and persistent object that encapsulates its own transformation logic and relationship map.
 
-\section{El Nodo Conceptual como Red Neuronal}
-Cada concepto $k \in K$ posee una función de transformación interna:
-$$f_k(\mathbf{v}_{in}) = \sigma(W_k \cdot \mathbf{v}_{in} + b_k)$$
-Donde:
+\subsection{Identity and Immutability}
+
+Each instance of the node is anchored to a fixed position in the \textit{ConceptMatrix} by:
 \begin{itemize}
-    \item $\mathbf{v}_{in}$ es el vector de contexto proveniente de conceptos adyacentes o de la entrada del sistema.
-    \item $W_k$ es la matriz de pesos específica del concepto $k$, que representa miles de neuronas locales.
-    \item $\sigma$ es la función de activación (ej. ReLU) que determina la relevancia del concepto en el flujo actual.
+    \item \textbf{Index or coordinate ($P_i$):} An immutable \texttt{Tuple(int,Int,Int)} that defines its absolute direction in $n$-dimensional space (x,y,z).
+    \item \textbf{Semilla Determinista ($s$):} Generada mediante el hash SHA-256 del nombre del concepto (\texttt{self.seed}). Esta asegura que la inicialización de la micro-red sea reproducible y coherente en cualquier despliegue del sistema.
 \end{itemize}
 
-\section{Recursividad y Definición de Conceptos}
-A diferencia de los modelos tradicionales, la salida de un nodo $C_i$ es una lista de punteros a otras coordenadas dentro de la misma matriz $CM$. La definición de un concepto "Carro" se expresa como:
-$$\text{Def}(C_{carro}) = \{C_{motor}, C_{rueda}, C_{chasis}, \dots, C_n\}$$
-Donde cada $C_i$ es, a su vez, una instancia de una red neuronal independiente.
+\subsection{2. Micro-red Neuronal Local ($\Theta, \bm{b}$)}
+El núcleo de procesamiento del nodo consiste en una red \textit{feed-forward} de 1,000 unidades:
+\begin{itemize}
+    \item \textbf{Pesos Sinápticos (\texttt{self.weights}):} Una matriz $\Theta \in \mathbb{R}^{1000 \times 1000}$. Representa el ``conocimiento acumulado'' sobre cómo el concepto debe reaccionar ante estímulos.
+    \item \textbf{Sesgo (\texttt{self.bias}):} Un vector $\bm{b} \in \mathbb{R}^{1000}$ que modula el umbral de activación intrínseco del concepto.
+\end{itemize}
+
+
+
+\subsection{3. Mapa de Adyacencia y Punteros (\texttt{self.pointers})}
+La conectividad del sistema no es global, sino local y dirigida. El mapa de adyacencia se define como:
+\begin{equation}
+    \mathcal{A}_i = \{ (P_j, w_{ij}) \mid P_j \in \mathbb{Z}^n, w_{ij} \in [0, 1] \}
+\end{equation}
+Donde $w_{ij}$ es la fuerza del enlace hacia la coordenada $P_j$. Estos punteros permiten saltos de memoria de complejidad $O(1)$, eliminando la necesidad de búsquedas vectoriales costosas durante la inferencia.
+
+
+
+\subsection{4. Estado de Evolución y Madurez ($\mu$)}
+El atributo \texttt{self.maturity} ($\mu$) gobierna la plasticidad del nodo. La dinámica de aprendizaje está sujeta a la siguiente restricción:
+\begin{equation}
+    \Delta \Theta = \eta \cdot (1 - \mu) \cdot \nabla \mathcal{L}
+\end{equation}
+A medida que el nodo procesa información coherente (\texttt{self.activation\_count}), $\mu \to 1$, lo que resulta en una \textbf{Cristalización Semántica}. Un nodo maduro actúa como un ancla de verdad, resistiendo alteraciones en su matriz de pesos y estabilizando la memoria a largo plazo del ecosistema.
+
+\subsection{5. Función de Activación}
+El nodo procesa señales entrantes $\vec{x}$ mediante una transformación no lineal:
+\begin{equation}
+    \text{activate}(\vec{x}) = \tanh(\Theta \vec{x} + \bm{b})
+\end{equation}
+La elección de \textit{tanh} permite la existencia de estados de inhibición (valores negativos) y excitación (valores positivos), fundamentales para el razonamiento dialéctico entre conceptos.
+
+
+
+
+
+
+
+
 
 
 \begin{table}[h!]
@@ -63,6 +96,23 @@ Donde cada $C_i$ es, a su vez, una instancia de una red neuronal independiente.
 \textbf{Transferencia de Conocimiento} & \textbf{Imposible:} No puedes "copiar" solo el concepto de "Química" de un modelo a otro. & \textbf{Federada:} Puedes exportar los pesos de un nodo específico a otra Matrix en $O(1)$. \\ \hline
 \end{tabular}
 \end{table}
+
+
+\section{Estructura Espacial}
+La matriz se define en un espacio euclidiano de tres dimensiones con una resolución $S$:
+$$CM \in \mathbb{R}^{S \times S \times S}$$
+Dada la naturaleza dispersa de la matriz, el conjunto de conceptos definidos $K$ es un subconjunto tal que $|K| \ll S^3$.
+
+\section{El Nodo Conceptual como Red Neuronal}
+Cada concepto $k \in K$ posee una función de transformación interna:
+$$f_k(\mathbf{v}_{in}) = \sigma(W_k \cdot \mathbf{v}_{in} + b_k)$$
+Donde:
+\begin{itemize}
+    \item $\mathbf{v}_{in}$ es el vector de contexto proveniente de conceptos adyacentes o de la entrada del sistema.
+    \item $W_k$ es la matriz de pesos específica del concepto $k$, que representa miles de neuronas locales.
+    \item $\sigma$ es la función de activación (ej. ReLU) que determina la relevancia del concepto en el flujo actual.
+\end{itemize}
+
 
 
 
