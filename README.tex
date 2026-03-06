@@ -412,4 +412,69 @@ Representa una memoria volátil de muy corto plazo que gestiona la relevancia te
 
 
 
+
+\section{Persistencia y Gestión de la Plasticidad Sináptica}
+
+La plasticidad en la \textit{ConceptMatrix} no es un estado global, sino una propiedad regulada a nivel de nodo. Para que las micro-redes de 1,000 neuronas mantengan su capacidad de aprendizaje continuo sin degradarse, se implementan los siguientes mecanismos:
+
+\subsection{Normalización de Pesos Local (Homeostasis Neuronal)}
+Para evitar la saturación de las unidades de procesamiento (evitando que los pesos alcancen valores asintóticos que impidan nuevo aprendizaje), cada nodo ejecuta un algoritmo de homeostasis.
+\begin{itemize}
+    \item \textbf{Mecanismo de Persistencia:} Tras cada ciclo de aprendizaje \textit{on-the-fly}, la red local re-escala sus pesos internos $W_{local}$. 
+    \item \textbf{Objetivo:} Mantener a las neuronas en un rango de sensibilidad óptimo, garantizando que siempre exista ``espacio'' sináptico para nuevos ajustes sin desplazar o borrar la memoria adquirida previamente.
+\end{itemize}
+
+\subsection{Tasa de Aprendizaje Dinámica por Nodo}
+Cada concepto gestiona su propio ritmo de absorción de información, adaptándose a su nivel de consolidación en la matriz.
+\begin{itemize}
+    \item \textbf{Gradiente de Plasticidad:} 
+    \begin{itemize}
+        \item \textbf{Nodos Fluidos:} Conceptos nuevos o con definiciones incompletas poseen una plasticidad alta, permitiendo cambios rápidos en sus 1,000 neuronas para absorber información nueva.
+        \item \textbf{Nodos Consolidados:} Conceptos fundamentales (ej. ``Rueda'') operan con baja plasticidad, actuando como anclas rígidas para evitar que datos erróneos corrompan el conocimiento base.
+    \end{itemize}
+    \item \textbf{Persistencia:} El sistema almacena un parámetro de ``madurez'' ($\eta$) vinculado al nodo, el cual dicta el coeficiente de plasticidad permitido en cada interacción.
+\end{itemize}
+
+
+
+\subsection{Re-consolidación Hebbiana de Largo Plazo}
+La plasticidad persiste mediante un ciclo dual de codificación y consolidación, inspirado en los ritmos biológicos:
+\begin{enumerate}
+    \item \textbf{Fase Operativa:} Durante el uso en tiempo real, los cambios neuronales se registran como sinapsis débiles o temporales.
+    \item \textbf{Fase de Consolidación:} En periodos de baja actividad computacional, el sistema audita las conexiones más frecuentes y las convierte en cambios estructurales (sinapsis fuertes).
+    \item \textbf{Resultado:} Este ciclo asegura que la plasticidad no sea un cambio volátil, sino una evolución permanente y coherente del concepto dentro de la matriz.
+\end{enumerate}
+
+
+
+\section{Infraestructura Operativa: Navegación, Poda y Sensores}
+
+Para que la \textit{ConceptMatrix} trascienda de ser una base de datos estática a un sistema cognitivo dinámico, se implementan tres subsistemas críticos de control y enlace.
+
+\subsection{Mecanismo de Olvido Selectivo (Poda Sináptica)}
+Un sistema de aprendizaje continuo corre el riesgo de saturación por ruido informacional. Para mantener la plasticidad, el modelo implementa una función de entropía negativa:
+\begin{itemize}
+    \item \textbf{Poda por Inactividad:} Se asigna un contador de ciclos de vida a cada enlace inter-conceptual. Si una conexión (ej. entre ``Carro'' y ``Velas de barco'') no es reforzada tras un umbral crítico (ej. $10^6$ ciclos), el peso del puntero se debilita hasta su eliminación definitiva.
+    \item \textbf{Eficiencia Estructural:} Este proceso garantiza que la matriz dispersa conserve únicamente las rutas de pensamiento con mayor relevancia estadística y semántica, optimizando el ancho de banda del Kernel.
+\end{itemize}
+
+
+
+\subsection{El Kernel de Navegación (Motor de Inferencia)}
+El Kernel actúa como el supervisor de bajo nivel encargado de la logística de datos entre coordenadas:
+\begin{itemize}
+    \item \textbf{Supervisor de Saltos:} Es un motor de software ligero que intercepta los vectores de salida de un nodo emisor, resuelve la dirección $(x,y,z)$ de destino y despierta instantáneamente el concepto receptor en la memoria RAM.
+    \item \textbf{Pensamiento Multidimensional (Paralelismo):} A diferencia de la ejecución secuencial de un LLM, el Kernel puede gestionar múltiples activaciones simultáneas. Si la definición de ``Carro'' requiere datos de ``Motor'', ``Combustible'' y ``Física'', el Kernel activa los tres nodos en paralelo, permitiendo una inferencia distribuida.
+\end{itemize}
+
+
+
+\subsection{Interfaz de Entrada/Salida: Sensores Semánticos}
+El puente entre el lenguaje natural humano y el espacio de coordenadas 3D se gestiona mediante dos procesos de traducción:
+\begin{enumerate}
+    \item \textbf{Tokenizador de Coordenadas:} Transforma los \textit{tokens} de entrada en vectores de activación que apuntan a direcciones específicas en la matriz. Funciona como un sensor que sitúa la intención del usuario en un punto exacto del mapa conceptual.
+    \item \textbf{Decodificador de Respuesta:} Realiza el proceso inverso. Tras la interacción entre micro-redes, el estado final del nodo de salida es decodificado a lenguaje natural, traduciendo los pesos neuronales activos en una respuesta gramaticalmente coherente.
+\end{enumerate}
+
+
 \end{document}
