@@ -1,28 +1,20 @@
 from blake3 import blake3
+import struct
 
-
-def int_to_3d(number: int) -> list[int]:
-    """
-    Convierte un número entero en coordenadas 3D [X, Y, Z].
-
-    - Divide los dígitos en 3 partes conservando el orden original.
-    - Si no es divisible entre 3, el último elemento (Z) absorbe los dígitos extra.
-
-    Args:
-        number: Número entero de cualquier longitud.
-
-    Returns:
-        Lista de 3 enteros [X, Y, Z].
-    """
-    digits = str(abs(number))  # Trabajar con valor absoluto
+def int_to_3d(number: int) -> tuple[int, int, int]:
+    digits = str(abs(number))
     n = len(digits)
-    chunk_size = n // 3
 
+    if n < 3:
+        digits = digits.zfill(3)  # padding: 1 → "001", 99 → "099"
+        n = 3
+
+    chunk_size = n // 3
+    
     x = int(digits[0 : chunk_size])
     y = int(digits[chunk_size : chunk_size * 2])
-    z = int(digits[chunk_size * 2 :])  # Absorbe el resto si n % 3 != 0
-
-    return [x, y, z]
+    z = int(digits[chunk_size * 2 :])
+    return (x, y, z)
 
 def coordinates_from_index(arr: list[int]) -> tuple[int, int, int]:
     # 1. Convertimos el array a string para el hash
