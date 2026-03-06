@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2026.3.5)  6 MAR 2026 07:48
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2026.3.5)  6 MAR 2026 08:25
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -565,109 +565,254 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
+Underfull \hbox (badness 10000) in paragraph at lines 52--52
+[]\OT1/cmr/bx/n/12 LLM (GPT, Claude,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 52--52
+[]\OT1/cmr/bx/n/12 ConceptMatrix
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 53--53
+[]\OT1/cmr/bx/n/12 Identidad del
+ []
+
+
+Underfull \hbox (badness 1975) in paragraph at lines 53--53
+\OT1/cmr/m/n/12 una ac-ti-vaci^^Son es-tad^^S^^Pstica
+ []
+
+
+Underfull \hbox (badness 1067) in paragraph at lines 53--53
+[]\OT1/cmr/bx/n/12 Inmutable: \OT1/cmr/m/n/12 El con-cepto
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 54--54
+[]\OT1/cmr/bx/n/12 Naturaleza de
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 54--54
+[]\OT1/cmr/bx/n/12 Densa: \OT1/cmr/m/n/12 Todo el
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 54--54
+\OT1/cmr/m/n/12 conocimiento est^^Sa mez-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 54--54
+[]\OT1/cmr/bx/n/12 Dispersa (Sparse):
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 54--54
+\OT1/cmr/m/n/12 en no-dos in-de-pen-di-entes
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 55--55
+[]\OT1/cmr/bx/n/12 Evoluci^^Son del
+ []
+
+
+Underfull \hbox (badness 6173) in paragraph at lines 55--55
+[]\OT1/cmr/bx/n/12 Est^^Satica: \OT1/cmr/m/n/12 Re-quiere re-
+ []
+
+
+Underfull \hbox (badness 1412) in paragraph at lines 55--55
+[]\OT1/cmr/bx/n/12 Pl^^Sastica: \OT1/cmr/m/n/12 Los pe-sos del
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 56--56
+[]\OT1/cmr/bx/n/12 Acceso y
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 56--56
+[]\OT1/cmr/bx/n/12 B^^Susqueda Vec-to-rial:
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 56--56
+\OT1/cmr/m/n/12 Basada en simil-i-tud
+ []
+
+
+Underfull \hbox (badness 7238) in paragraph at lines 56--56
+\OT1/cmr/m/n/12 de cosenos (Cos-tosa en
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 56--56
+[]\OT1/cmr/bx/n/12 Direccionamiento Di-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 56--56
+\OT1/cmr/bx/n/12 recto: \OT1/cmr/m/n/12 Ac-ceso $\OML/cmm/m/it/12 O\OT1/cmr/m/n
+/12 (1)$
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 56--56
+\OT1/cmr/m/n/12 in-stant^^Saneo me-di-ante la
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 57--57
+[]\OT1/cmr/bx/n/12 Estructural: \OT1/cmr/m/n/12 Salta
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 57--57
+\OT1/cmr/m/n/12 f^^S^^Psicamente en-tre defini-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 57--57
+\OT1/cmr/m/n/12 ciones y aso-cia-ciones
+ []
+
+
+Underfull \hbox (badness 4217) in paragraph at lines 58--58
+[]\OT1/cmr/bx/n/12 Integridad Log-
+ []
+
+
+Underfull \hbox (badness 6016) in paragraph at lines 59--59
+[]\OT1/cmr/bx/n/12 Casi In-finita: \OT1/cmr/m/n/12 Puedes
+ []
+
+
+Underfull \hbox (badness 1502) in paragraph at lines 59--59
+\OT1/cmr/m/n/12 a~nadir bil-lones de no-dos;
+ []
+
+
+Underfull \hbox (badness 5711) in paragraph at lines 60--60
+[]\OT1/cmr/bx/n/12 Imposible: \OT1/cmr/m/n/12 No puedes
+ []
+
+
 
 [2]
-Overfull \hbox (49.29372pt too wide) in paragraph at lines 80--81
-\OT1/cmr/m/n/12 Dado que la definici^^Son de un con-cepto "Carro" con-tiene m^^
-Sultiples sub-conceptos $\OMS/cmsy/m/n/12 f[]g$\OT1/cmr/m/n/12 ,
- []
-
-
-Overfull \hbox (3.51pt too wide) in paragraph at lines 87--87
-|[]\OT1/cmr/bx/n/17.28 Resoluci^^Son de Lim-ita-ciones Intr^^S^^Pnsecas de los 
-LLMs
- []
-
-
 
 [3]
-Overfull \hbox (49.29372pt too wide) in paragraph at lines 120--121
-\OT1/cmr/m/n/12 Dado que la definici^^Son de un con-cepto "Carro" con-tiene m^^
-Sultiples sub-conceptos $\OMS/cmsy/m/n/12 f[]g$\OT1/cmr/m/n/12 ,
+Overfull \hbox (2.78789pt too wide) in paragraph at lines 116--116
+|[]\OT1/cmr/bx/n/17.28 Protocolos de Co-mu-ni-caci^^Son y Din^^Samica de Se~nal
+es| 
  []
 
 
 
 [4]
-Overfull \hbox (13.22998pt too wide) in paragraph at lines 128--128
+Overfull \hbox (49.29372pt too wide) in paragraph at lines 157--158
+\OT1/cmr/m/n/12 Dado que la definici^^Son de un con-cepto "Carro" con-tiene m^^
+Sultiples sub-conceptos $\OMS/cmsy/m/n/12 f[]g$\OT1/cmr/m/n/12 ,
+ []
+
+
+
+[5]
+Overfull \hbox (13.22998pt too wide) in paragraph at lines 164--164
 |[]\OT1/cmr/bx/n/17.28 Resoluci^^Son de Lim-ita-ciones Intr^^S^^Pnsecas de los 
 LLMs
  []
 
 
-Overfull \hbox (1.79816pt too wide) in paragraph at lines 144--144
+Overfull \hbox (1.79816pt too wide) in paragraph at lines 180--180
 |[]\OT1/cmr/bx/n/14.4 Eficiencia Com-puta-cional y Ac-tu-al-izaci^^Son de Conoc
 imiento| 
  []
 
 
 
-[5]
-
 [6]
-Overfull \hbox (24.0299pt too wide) in paragraph at lines 262--264
+Overfull \hbox (49.29372pt too wide) in paragraph at lines 197--198
+\OT1/cmr/m/n/12 Dado que la definici^^Son de un con-cepto "Carro" con-tiene m^^
+Sultiples sub-conceptos $\OMS/cmsy/m/n/12 f[]g$\OT1/cmr/m/n/12 ,
+ []
+
+
+Overfull \hbox (13.22998pt too wide) in paragraph at lines 205--205
+|[]\OT1/cmr/bx/n/17.28 Resoluci^^Son de Lim-ita-ciones Intr^^S^^Pnsecas de los 
+LLMs
+ []
+
+
+
+[7]
+Overfull \hbox (1.79816pt too wide) in paragraph at lines 221--221
+|[]\OT1/cmr/bx/n/14.4 Eficiencia Com-puta-cional y Ac-tu-al-izaci^^Son de Conoc
+imiento| 
+ []
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+
+[8]
+Overfull \hbox (24.0299pt too wide) in paragraph at lines 339--341
 \OT1/cmr/m/n/12 "Carro" emite el valor ex-acto de la co-or-de-nada de des-tino 
 $(60225559\OML/cmm/m/it/12 ; \OT1/cmr/m/n/12 42519605\OML/cmm/m/it/12 ; \OT1/cm
 r/m/n/12 2672673)$.
  []
 
 
-Overfull \hbox (14.60365pt too wide) in paragraph at lines 276--277
+Overfull \hbox (14.60365pt too wide) in paragraph at lines 353--354
 \OT1/cmr/m/n/12 La ar-qui-tec-tura de Ma-triz de Con-cep-tos Re-cur-sivos per-m
 ite la ac-tu-al-izaci^^Son del conocimiento
  []
 
 
-Overfull \hbox (9.06342pt too wide) in paragraph at lines 276--277
+Overfull \hbox (9.06342pt too wide) in paragraph at lines 353--354
 \OT1/cmr/m/n/12 sin necesi-dad de re-entrenamiento global, re-solviendo el prob
 -lema del "Olvido Catastr^^Sofico". 
  []
 
 
 
-[7]
-Overfull \hbox (54.76585pt too wide) in paragraph at lines 295--295
+[9]
+Overfull \hbox (54.76585pt too wide) in paragraph at lines 372--372
 |[]\OT1/cmr/bx/n/17.28 Estabilidad y Plas-ti-ci-dad: El Fin del Olvido Catastr^
 ^Sofico| 
  []
 
 
-Overfull \hbox (4.08586pt too wide) in paragraph at lines 297--298
+Overfull \hbox (4.08586pt too wide) in paragraph at lines 374--375
 \OT1/cmr/m/n/12 La nat-u-raleza com-par-ti-men-tada de la \OT1/cmr/m/it/12 Con-
 cept-Ma-trix \OT1/cmr/m/n/12 per-mite una gesti^^Son del conocimiento
  []
 
 
 
-[8]
-Overfull \hbox (1.21489pt too wide) in paragraph at lines 322--323
+[10]
+Overfull \hbox (1.21489pt too wide) in paragraph at lines 399--400
 \OT1/cmr/m/n/12 quieren una b^^Susqueda de ``Ve-ci-nos m^^Sas Cer-canos'' (K-NN
 ) con com-ple-ji-dad $\OML/cmm/m/it/12 O\OT1/cmr/m/n/12 ([] \OML/cmm/m/it/12 N\
 OT1/cmr/m/n/12 )$
  []
 
 
-Overfull \hbox (16.22179pt too wide) in paragraph at lines 357--357
+
+[11]
+Overfull \hbox (16.22179pt too wide) in paragraph at lines 434--434
 |[]\OT1/cmr/bx/n/17.28 Metodolog^^S^^Pa de En-tre-namiento: Op-ti-mizaci^^Son M
 ul-
  []
 
 
-
-[9]
-Overfull \hbox (12.10164pt too wide) in paragraph at lines 363--363
+Overfull \hbox (12.10164pt too wide) in paragraph at lines 440--440
 |[]\OT1/cmr/bx/n/14.4 Fase 2: Apren-dizaje de Micro-Pesos (Back-prop-a-ga-tion 
 Com-
- []
-
-
-
-[10]
-
-[11]
-Overfull \hbox (2.27487pt too wide) in paragraph at lines 426--427
-[]\OT1/cmr/bx/n/12 Gating Mem-ory: \OT1/cmr/m/n/12 Las puer-tas de en-trada y s
-al-ida (\OT1/cmr/m/it/12 In-put/Output Gates\OT1/cmr/m/n/12 ) mantienen
  []
 
 
@@ -675,35 +820,57 @@ al-ida (\OT1/cmr/m/it/12 In-put/Output Gates\OT1/cmr/m/n/12 ) mantienen
 [12]
 
 [13]
-Overfull \hbox (30.15584pt too wide) in paragraph at lines 498--498
-|[]\OT1/cmr/bx/n/17.28 Conclusi^^Son: Ha-cia una In-teligen-cia Post-Transforme
-r| 
- []
-
-
-Overfull \hbox (9.05475pt too wide) in paragraph at lines 506--507
-[]\OT1/cmr/bx/n/12 Plasticidad Real: \OT1/cmr/m/n/12 La ca-paci-dad de apren-de
-r ``on-the-fly'' sin sufrir olvido catatr^^Sofico
+Overfull \hbox (2.27487pt too wide) in paragraph at lines 503--504
+[]\OT1/cmr/bx/n/12 Gating Mem-ory: \OT1/cmr/m/n/12 Las puer-tas de en-trada y s
+al-ida (\OT1/cmr/m/it/12 In-put/Output Gates\OT1/cmr/m/n/12 ) mantienen
  []
 
 
 
 [14]
 
-[15] (./README.aux)
+[15]
+
+[16]
+Overfull \hbox (30.15584pt too wide) in paragraph at lines 575--575
+|[]\OT1/cmr/bx/n/17.28 Conclusi^^Son: Ha-cia una In-teligen-cia Post-Transforme
+r| 
+ []
+
+
+Overfull \hbox (9.05475pt too wide) in paragraph at lines 583--584
+[]\OT1/cmr/bx/n/12 Plasticidad Real: \OT1/cmr/m/n/12 La ca-paci-dad de apren-de
+r ``on-the-fly'' sin sufrir olvido catatr^^Sofico
+ []
+
+
+
+[17]
+Overfull \hbox (4.59853pt too wide) in paragraph at lines 604--605
+[]\OT1/cmr/bx/n/12 Punteros On-tol^^Sogicos (In-muta-bles): \OT1/cmr/m/n/12 Der
+iva-dos de la definici^^Son base (ej. ``Perro''
+ []
+
+
+
+[18]
+
+[19]
+
+[20] (./README.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 14549 strings out of 475178
- 296916 string characters out of 5766540
- 682870 words of memory out of 5000000
- 37293 multiletter control sequences out of 15000+600000
+ 14555 strings out of 475178
+ 297066 string characters out of 5766540
+ 684900 words of memory out of 5000000
+ 37299 multiletter control sequences out of 15000+600000
  572363 words of font info for 87 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 102i,8n,107p,417b,837s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 102i,11n,107p,417b,837s stack positions out of 10000i,1000n,20000p,200000b,200000s
  </home/debian/.texlive2025/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1200.60
 0pk></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></
 usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb></usr/sha
@@ -722,10 +889,10 @@ re/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/tex
 live/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></usr/share/texlive/t
 exmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb></usr/share/texlive/texmf-di
 st/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on README.pdf (15 pages, 247023 bytes).
+Output written on README.pdf (20 pages, 264045 bytes).
 PDF statistics:
- 152 PDF objects out of 1000 (max. 8388607)
- 96 compressed objects within 1 object stream
+ 169 PDF objects out of 1000 (max. 8388607)
+ 107 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
  13 words of extra memory for PDF output out of 10000 (max. 10000000)
 
