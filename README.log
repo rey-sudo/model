@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2026.3.5)  5 MAR 2026 23:15
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2026.3.5)  5 MAR 2026 23:29
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -647,18 +647,42 @@ OT1/cmr/m/n/12 )$
 
 
 [8]
+Overfull \hbox (16.22179pt too wide) in paragraph at lines 340--340
+|[]\OT1/cmr/bx/n/17.28 Metodolog^^S^^Pa de En-tre-namiento: Op-ti-mizaci^^Son M
+ul-
+ []
 
-[9] (./README.aux)
+
+Overfull \hbox (12.10164pt too wide) in paragraph at lines 346--346
+|[]\OT1/cmr/bx/n/14.4 Fase 2: Apren-dizaje de Micro-Pesos (Back-prop-a-ga-tion 
+Com-
+ []
+
+
+
+[9]
+
+[10]
+
+[11]
+Overfull \hbox (2.27487pt too wide) in paragraph at lines 409--410
+[]\OT1/cmr/bx/n/12 Gating Mem-ory: \OT1/cmr/m/n/12 Las puer-tas de en-trada y s
+al-ida (\OT1/cmr/m/it/12 In-put/Output Gates\OT1/cmr/m/n/12 ) mantienen
+ []
+
+
+
+[12] (./README.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 14548 strings out of 475178
- 296902 string characters out of 5766540
- 682869 words of memory out of 5000000
- 37292 multiletter control sequences out of 15000+600000
+ 14549 strings out of 475178
+ 296916 string characters out of 5766540
+ 682871 words of memory out of 5000000
+ 37293 multiletter control sequences out of 15000+600000
  572363 words of font info for 87 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  102i,8n,107p,417b,837s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -680,10 +704,10 @@ re/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/tex
 live/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></usr/share/texlive/t
 exmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb></usr/share/texlive/texmf-di
 st/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on README.pdf (9 pages, 226675 bytes).
+Output written on README.pdf (12 pages, 235146 bytes).
 PDF statistics:
- 132 PDF objects out of 1000 (max. 8388607)
- 83 compressed objects within 1 object stream
+ 142 PDF objects out of 1000 (max. 8388607)
+ 89 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  13 words of extra memory for PDF output out of 10000 (max. 10000000)
 

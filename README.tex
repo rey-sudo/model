@@ -335,4 +335,81 @@ Escalabilidad & Exponencialmente costosa & Linealmente eficiente \\ \hline
 \end{tabular}
 \end{center}
 
+
+
+\section{Metodología de Entrenamiento: Optimización Multinivel}
+El entrenamiento no es un proceso monolítico, sino una orquestación de tres fases:
+
+\subsection{Fase 1: Estructuración Topológica}
+Se aplica una función de pérdida de proximidad para asegurar que los conceptos relacionados por definición mantengan una distancia euclidiana óptima en la matriz dispersa, facilitando el direccionamiento de punteros.
+
+\subsection{Fase 2: Aprendizaje de Micro-Pesos (Backpropagation Compartimentado)}
+Para cada par de conceptos activos $(C_i, C_j)$, el error de predicción $\nabla \mathcal{L}$ se propaga únicamente dentro de sus 1000 neuronas locales. Esto garantiza que el aprendizaje sea \textbf{aditivo} y no destructivo.
+
+\subsection{Fase 3: Refuerzo Hebbiano en Tiempo Real}
+La red implementa una regla de actualización dinámica: si dos coordenadas se activan secuencialmente con alta frecuencia en el corpus de entrada, se fortalece el peso de la "Puerta de Salida" entre ellas, creando una ruta de pensamiento preferencial.
+
+
+
+\section{Metodología de Entrenamiento: Optimización en Tres Niveles}
+
+El proceso de aprendizaje del modelo no es monolítico, sino una orquestación jerárquica que permite la estabilidad del conocimiento y la velocidad de respuesta.
+
+\subsection{Nivel 1: Entrenamiento de la ``Brújula'' (Posicionamiento Espacial)}
+El objetivo es organizar los conceptos en el espacio 3D para que la proximidad y las trayectorias tengan sentido semántico.
+\begin{itemize}
+    \item \textbf{Entrada:} La matriz de coordenadas actual y el corpus de definiciones.
+    \item \textbf{Proceso:} Se emplea un algoritmo de posicionamiento basado en \textit{Force-Directed Graphs} o \textit{Self-Organizing Maps} (SOM). Las fuerzas de atracción actúan entre conceptos que comparten definiciones.
+    \item \textbf{Resultado:} Si ``Carro'' y ``Motor'' están vinculados, el sistema optimiza sus coordenadas relativas para que el salto de dirección sea computacionalmente eficiente y represente una cercanía lógica.
+\end{itemize}
+
+
+
+\subsection{Nivel 2: Entrenamiento del Nodo (Backpropagation Local)}
+Se refiere al ajuste de las 1000 neuronas internas de cada concepto para especializarse en su significado.
+\begin{itemize}
+    \item \textbf{Activación:} Ante una entrada como ``El motor del carro hace ruido'', se activan específicamente los nodos $C_{carro}$ y $C_{motor}$.
+    \item \textbf{Predicción y Corrección:} La red interna de ``Carro'' intenta predecir el vector de mensaje óptimo para enviar a la red de ``Motor''. Si el resultado no mejora la comprensión del contexto global, el error se propaga \textbf{únicamente} dentro de la red del nodo emisor.
+    \item \textbf{Ventaja:} Esto evita el ruido en el resto de la matriz y permite una especialización profunda de cada micro-red.
+\end{itemize}
+
+\subsection{Nivel 3: Bucle de Aprendizaje ``On-the-fly'' (Plisiticidad Hebbiana)}
+Permite la adquisición de conocimiento en tiempo real durante la interacción con el usuario, basándose en el principio de que neuronas que se disparan juntas, se conectan juntas.
+\begin{enumerate}
+    \item \textbf{Identificación de Brecha:} El sistema detecta una relación inexistente o débil (ej: ``Los carros ahora usan hidrógeno'').
+    \item \textbf{Creación de Enlace:} Al notar la ausencia de un puntero fuerte entre $C_{carro}$ y $C_{hidrogeno}$, el sistema inicia una ruta de direccionamiento.
+    \item \textbf{Ajuste de Gating:} Las \textit{Output Gates} (puertas de salida) de ``Carro'' modifican sus pesos para facilitar el flujo de señales hacia la nueva coordenada en el futuro.
+    \item \textbf{Consolidación:} Las neuronas internas de ``Carro'' forman una sub-configuración que representa esta nueva asociación técnica, integrándola permanentemente.
+\end{enumerate}
+
+\section{Arquitectura de la Memoria Conceptual}
+
+Cada concepto dentro de la matriz dispersa funciona como una unidad de almacenamiento y procesamiento independiente, eliminando la dependencia de una memoria centralizada. Su arquitectura de memoria se divide en tres estratos funcionales:
+
+\subsection{Memoria Estructural (Definición Base)}
+Representa la memoria ``rígida'' o la ontología fundamental del concepto.
+\begin{itemize}
+    \item \textbf{Contenido:} Almacena una lista de punteros de direccionamiento hacia otros conceptos que constituyen su definición (ej. el nodo ``Carro'' guarda las coordenadas de ``Motor'', ``Rueda'' y ``Chasis'').
+    \item \textbf{Función:} Actúa como el esqueleto lógico del sistema. Permite que el modelo sepa que, para procesar el concepto actual, debe disparar señales hacia esas coordenadas específicas en el espacio 3D.
+    \item \textbf{Persistencia:} Es altamente estable; solo se modifica mediante procesos de re-entrenamiento profundo o actualizaciones estructurales de la ``Brújula''.
+\end{itemize}
+
+\subsection{Memoria Semántica (Pesos de las 1,000 Neuronas)}
+Es el núcleo de conocimiento experto del nodo. En este estrato, la información no se almacena como texto, sino como configuraciones sinápticas.
+\begin{itemize}
+    \item \textbf{Representación:} Se codifica matemáticamente en la matriz de pesos locales $W_{local}$ y el vector de sesgo $b_{local}$.
+    \item \textbf{Dinámica:} Las mil neuronas aprenden a transformar un mensaje entrante en una respuesta coherente. Por ejemplo, las neuronas de ``Motor'' codifican la relación entre patrones numéricos (ej. ``120°C'') y estados conceptuales (ej. ``Alerta'' o ``Falla''), reaccionando automáticamente a patrones específicos para los que han sido entrenadas.
+\end{itemize}
+
+
+
+\subsection{Memoria de Contexto (Estado de Activación)}
+Representa una memoria volátil de muy corto plazo que gestiona la relevancia temporal del concepto.
+\begin{itemize}
+    \item \textbf{Gating Memory:} Las puertas de entrada y salida (\textit{Input/Output Gates}) mantienen un rastro de las activaciones recientes. Un estado de ``pre-excitación'' permite que, si el nodo ``Carro'' fue activado recientemente, los conceptos relacionados se procesen con mayor prioridad y velocidad.
+    \item \textbf{Filtrado Semántico:} Esta memoria permite la desambiguación. Por ejemplo, el nodo ``Motor'' puede ignorar señales sobre ``Electricidad'' si la memoria de contexto previa (establecida por el nodo ``Carro'') indica un entorno de ``Combustión Interna''.
+\end{itemize}
+
+
+
 \end{document}
