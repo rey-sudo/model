@@ -4,7 +4,7 @@ import hashlib
 
 
 class ConceptNode:
-    def __init__(self, matrix_ref: Any, index: Tuple[int,...], concept):
+    def __init__(self, matrix_ref: Any, index: Tuple[int,...], concept_name):
         """
         Inicialización del nodo basada en la identidad del concepto.
         """
@@ -12,13 +12,15 @@ class ConceptNode:
         # 1. Identidad e Inmutabilidad
         self.index = index
         self.matrix = matrix_ref
-        self.name = concept
-        self.seed = self._generate_deterministic_seed(concept)
+        self.name = concept_name
+        self.seed = self._generate_deterministic_seed(concept_name)
         
         # 2. Red Neuronal Local (Micro-red de 1,000 neuronas)
         # Usamos la semilla para que los pesos iniciales sean siempre los mismos
         self.rs = np.random.RandomState(self.seed)
-        self.weights = self.rs.randn(1000, 1000) * 0.01
+        
+        scale = np.sqrt(2.0 / 1000)
+        self.weights = self.rs.randn(1000, 1000) * scale
         self.bias = np.zeros((1000, 1))
         
         # 3. Estructura de Relaciones (Punteros a Coordenadas Inmutables)
@@ -42,9 +44,11 @@ class ConceptNode:
             return [self.matrix._node_storage.get(c) for c in definition_coords]
         return []
 
-    def _generate_deterministic_seed(self, s):
-        """Genera una semilla de 32 bits a partir del SHA-256 del nombre."""
-        return int(hashlib.sha256(s.encode()).hexdigest(), 16) % (2**32)
+    def _generate_deterministic_seed(self, concept_name):
+        # Usamos el prefijo 'WEIGHTS' para que la semilla de la red neuronal
+        # sea distinta a la de la coordenada, pero igual de predecible.
+        hash_input = f"WEIGHTS_{concept_name}"
+        return int(hashlib.sha256(hash_input.encode()).hexdigest(), 16) % (2**32)
 
     def activate(self, input_vector):
         """
