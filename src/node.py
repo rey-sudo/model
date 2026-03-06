@@ -50,6 +50,18 @@ class ConceptNode:
         hash_input = f"WEIGHTS_{concept_name}"
         return int(hashlib.sha256(hash_input.encode()).hexdigest(), 16) % (2**32)
 
+    def get_identity_vector(self):
+        """
+        Retorna el vector de identidad inmutable del concepto.
+        Se genera de forma determinista a partir de la semilla original.
+        """
+        # Creamos un generador local para no alterar el estado de self.rs
+        rs_identity = np.random.RandomState(self.seed)
+        
+        # Generamos un vector de 1000x1 que representa el "Axioma" del nodo
+        identity = rs_identity.randn(1000, 1) * 0.1
+        return identity
+    
     def activate(self, input_vector):
         """
         Procesa una señal entrante y produce una salida.

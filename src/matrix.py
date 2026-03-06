@@ -24,6 +24,7 @@ class ConceptMatrix:
         self.shape = shape
         self._matrix_storage: dict[Tuple[int, ...], Value] = {}
         self._node_storage = {}
+        self.friction_threshold = 0.8
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -156,43 +157,35 @@ class ConceptMatrix:
 
 
     def send_signal(self, source_coords, target_coords, signal_vector):
-        """
-        Gestiona el paso de una señal entre dos nodos, aplicando la 
-        Fricción Semántica del medio antes de la activación.
-        """
         target_node = self._node_storage.get(target_coords)
         if not target_node:
             return None
 
-        # 1. Obtener el Vector de Identidad del nodo destino
-        # (Es el estado ideal o la definición base del concepto)
-        identity_vector = target_node.get_identity_vector() 
+        # 1. Asegurar dimensiones 1000x1
+        signal_vector = np.array(signal_vector).reshape(1000, 1)
+        identity_vector = target_node.get_identity_vector().reshape(1000, 1)
 
-        # 2. Calcular Fricción Semántica (Basada en la discrepancia angular)
-        # cos_sim = (A · B) / (|A| * |B|)
-        norm_signal = np.linalg.norm(signal_vector)
-        norm_identity = np.linalg.norm(identity_vector)
+        # 2. Cálculo de Fricción (Coseno de Similitud invertido)
+        norm_s = np.linalg.norm(signal_vector)
+        norm_i = np.linalg.norm(identity_vector)
         
-        if norm_signal == 0 or norm_identity == 0:
+        if norm_s == 0 or norm_i == 0:
             friction = 1.0
         else:
-            cos_sim = np.dot(signal_vector.flatten(), identity_vector.flatten()) / (norm_signal * norm_identity)
-            # Invertimos: a menor similitud, mayor fricción (de 0.0 a 1.0)
+            # Similitud de 1.0 (alineados) a 0.0 (ortogonales)
+            dot_product = np.dot(signal_vector.flatten(), identity_vector.flatten())
+            cos_sim = dot_product / (norm_s * norm_i)
             friction = 1.0 - max(0, cos_sim)
 
-        # 3. Modular la fricción por la Madurez del nodo destino
-        # Si el nodo es inmutable (madurez=1), la fricción es implacable.
+        # 3. Aplicar Madurez y Umbral
         effective_friction = friction * target_node.maturity
 
-        # 4. Aplicar Filtro de Integridad
         if effective_friction > self.friction_threshold:
-            print(f"ALERTA: Señal bloqueada por Fricción Crítica ({effective_friction:.2f})")
-            return None # La señal "muere" en el espacio intersticial
+            # La señal es bloqueada por el Kernel
+            return None 
 
-        # 5. Atenuación de la señal y Activación
-        # La señal llega debilitada proporcionalmente a la fricción
+        # 4. Atenuación y Activación
         attenuated_signal = signal_vector * (1.0 - effective_friction)
-        
         return target_node.activate(attenuated_signal)
 
 
