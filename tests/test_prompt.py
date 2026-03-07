@@ -3,8 +3,12 @@ Test: Entrenar ConceptMatrix y hacer consultas semánticas por propagación de s
 """
 
 import numpy as np
+from prompt_toolkit import PromptSession
 from src.matrix import ConceptMatrix
-
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.styles import Style
+from prompt_toolkit.formatted_text import HTML
 
 # ──────────────────────────────────────────────
 # 1. CONFIGURACIÓN
@@ -414,3 +418,121 @@ for prompt in prompts:
 print(f"\n{'=' * 60}")
 print("Test completado.")
 print("=" * 60)
+
+
+# ──────────────────────────────────────────────
+# 7. REPL INTERACTIVO (prompt_toolkit)
+# ──────────────────────────────────────────────
+
+HELP_TEXT = """
+  Comandos disponibles:
+  ─────────────────────────────────────────────
+  <palabra>          → propagar señal desde ese concepto
+  :train <oración>   → entrenar con una oración nueva
+  :hops <n>          → cambiar profundidad máxima (default: 6)
+  :top <n>           → cambiar cantidad de resultados (default: 8)
+  :conceptos         → listar todos los nodos registrados
+  :stats             → estadísticas de la matriz
+  :help              → mostrar este menú
+  :salir             → cerrar el REPL
+  ─────────────────────────────────────────────
+"""
+
+repl_style = Style.from_dict({
+    "prompt": "#00aa00 bold",
+})
+
+
+def repl():
+    max_hops = 6
+    top_k    = 8
+
+    session = PromptSession(
+        history=InMemoryHistory(),
+        style=repl_style,
+    )
+
+    print(f"\n{'=' * 60}")
+    print("  ConceptMatrix REPL  —  escribe :help para ver comandos")
+    print(f"{'=' * 60}\n")
+
+    while True:
+        try:
+            raw = session.prompt(HTML("<prompt>  › </prompt>")).strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n  Cerrando REPL.\n")
+            break
+
+        if not raw:
+            continue
+
+        # ── comandos especiales ──────────────────────
+        if raw in (":salir", ":exit", ":q"):
+            print("\n  Hasta luego.\n")
+            break
+
+        elif raw == ":help":
+            print(HELP_TEXT)
+
+        elif raw == ":stats":
+            print(f"\n  Celdas ocupadas : {cm.nnz}")
+            print(f"  Nodos activos   : {len(cm._node_storage)}")
+            print(f"  Densidad        : {cm.density:.2e}")
+            print(f"  max_hops        : {max_hops}")
+            print(f"  top_k           : {top_k}\n")
+
+        elif raw == ":conceptos":
+            nombres = sorted(n.name for n in cm._node_storage.values())
+            print(f"\n  {len(nombres)} conceptos registrados:")
+            cols = 4
+            for i in range(0, len(nombres), cols):
+                fila = nombres[i:i + cols]
+                print("  " + "  ".join(f"{n:<18}" for n in fila))
+            print()
+
+        elif raw.startswith(":hops "):
+            try:
+                max_hops = int(raw.split()[1])
+                print(f"  max_hops → {max_hops}\n")
+            except (ValueError, IndexError):
+                print("  Uso: :hops <número>\n")
+
+        elif raw.startswith(":top "):
+            try:
+                top_k = int(raw.split()[1])
+                print(f"  top_k → {top_k}\n")
+            except (ValueError, IndexError):
+                print("  Uso: :top <número>\n")
+
+        elif raw.startswith(":train "):
+            sentence = raw[7:].strip()
+            if sentence:
+                cm.train(sentence, learning_rate=0.08)
+                print(f"  ✓ Entrenado: \"{sentence}\"\n")
+            else:
+                print("  Uso: :train <oración>\n")
+
+        # ── query conversacional ─────────────────────
+        else:
+            word = raw.lower().split()[0]
+            results = query(word, max_hops=max_hops, top_k=top_k)
+
+            if not results:
+                print(f"\n  Modelo › No tengo asociaciones para «{word}».\n")
+            else:
+                conceptos  = [name for name, _ in results]
+                primario   = conceptos[0]
+                secundarios = conceptos[1:]
+
+                if secundarios:
+                    lista = ", ".join(secundarios[:-1])
+                    ultimo = secundarios[-1]
+                    cola = f"{lista} y {ultimo}" if lista else ultimo
+                    frase = f"{word} evoca {primario}, que a su vez resuena con {cola}."
+                else:
+                    frase = f"{word} evoca directamente {primario}."
+
+                print(f"\n  Modelo › {frase}\n")
+
+
+repl()
