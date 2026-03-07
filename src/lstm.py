@@ -1,3 +1,5 @@
+
+
 """
 ╔══════════════════════════════════════════════════════════════════════╗
 ║        TRANSFORMER  —  PREDICTOR DE SIGUIENTE PALABRA               ║
@@ -56,9 +58,45 @@ class WordTokenizer:
 
     @staticmethod
     def tokenize(text: str) -> list:
+        import unicodedata
+        # ── 1. Dividir CamelCase ANTES de lowercase ──────────────
+        #    "otherYou"  →  "other You"
+        text = re.sub(r"([a-z])([A-Z])", r"\1 \2", text)
+        text = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1 \2", text)
+
+        # ── 2. Normalizar unicode ─────────────────────────────────
+        text = unicodedata.normalize("NFKD", text)
+        # Apóstrofes curvos → recto ASCII
+        text = re.sub(r"[\u2018\u2019\u201a\u201b\u02bc\u02b9]", "'", text)
+        # Comillas tipográficas → rectas
+        text = re.sub(r"[\u201c\u201d\u201e\u201f]", '"', text)
+        # Guiones especiales (em-dash, en-dash) → guión normal
+        text = re.sub(r"[\u2013\u2014\u2012\u2010]", "-", text)
+
         text = text.lower()
-        text = re.sub(r"([.,!?;:\"\'¿¡()\[\]{}])", r" \1 ", text)
-        return [t for t in text.split() if t.strip()]
+
+        # ── 3. Separar puntuación y guiones ──────────────────────
+        text = re.sub(r"([.,!?;:\"'¿¡()\[\]{}/\\])", r" \1 ", text)
+        text = re.sub(r"-", " - ", text)
+
+        # ── 4. Separar dígitos pegados a letras ──────────────────
+        #    "banco2024" → "banco 2024"
+        text = re.sub(r"([a-záéíóúüñ])([0-9])", r"\1 \2", text)
+        text = re.sub(r"([0-9])([a-záéíóúüñ])", r"\1 \2", text)
+
+        # ── 5. Tokenizar y filtrar ────────────────────────────────
+        tokens = [t.strip() for t in text.split() if t.strip()]
+        # Descartar tokens de control o vacíos; limitar longitud máxima
+        tokens = [t for t in tokens if 1 <= len(t) <= 30]
+        return tokens
+
+    @staticmethod
+    def _is_suspicious(token: str) -> bool:
+        """Detecta tokens que parecen ser palabras pegadas sin espacio."""
+        # Umbral: más de 20 caracteres alfabéticos seguidos sin ser una URL
+        if len(token) > 20 and re.match(r"^[a-záéíóúüñ]+$", token):
+            return True
+        return False
 
     def build(self, corpus: list) -> None:
         counter: Counter = Counter()
@@ -69,11 +107,20 @@ class WordTokenizer:
             self.word2idx[sp] = i
             self.idx2word[i]  = sp
         idx = len(self.SPECIALS)
+        suspicious = []
         for word, freq in sorted(counter.items(), key=lambda x: -x[1]):
+            if self._is_suspicious(word):
+                suspicious.append(word)
+                continue          # no añadir tokens sospechosos al vocab
             self.word2idx[word] = idx
             self.idx2word[idx]  = word
             idx += 1
         print(f"📚  Vocabulario: {len(self.word2idx)} tokens únicos")
+        if suspicious:
+            print(f"⚠️   Tokens ignorados por ser posibles palabras pegadas:")
+            for s in suspicious:
+                print(f"      '{s}'  →  ¿quisiste decir: '{' '.join(s)}' ?")
+            print("    Tip: asegúrate de separar las palabras con espacios.")
 
     def encode(self, text: str) -> list:
         unk = self.word2idx["<UNK>"]
@@ -400,6 +447,7 @@ if BACKEND == "pytorch":
 class TransformerEngine:
 
     DEFAULT_CORPUS = [
+        # --- CONTEXTO: BANK (Financiero, Ribera, Inclinación, Conjunto) ---
         "The bank was closed because the financial officer was late",
         "The river bank has a lot of green vegetation",
         "The central bank raised interest rates today",
@@ -408,38 +456,68 @@ class TransformerEngine:
         "The bank manager arrived late to the meeting",
         "The financier reviewed all the bank documents",
         "The bank approved the credit for the company",
-        "The river and the bank are part of the natural landscape",
         "A bank of fish swam along the quiet river",
+        "You can bank on his honesty for this project",
+        "He deposited his paycheck at the local bank branch",
+        "The aircraft began to bank steeply to the left",
+        "The data bank contains thousands of medical records",
+        "A heavy bank of clouds moved in from the west",
+        "The blood bank is calling for more donors this month",
+        "She decided to bank the fire to keep the room warm overnight",
+
+        # --- CONTEXTO: RIVER & NATURE (Ríos, Paisaje, Agua) ---
+        "The river and the bank are part of the natural landscape",
+        "The river water was cold because it snowed in the mountains",
+        "The river rose every time it rained in the mountains",
+        "The park has many trees and colorful flowers",
+        "Many rare birds live in the dense vegetation near the river",
+        "The river flows into the sea at the end of the valley",
+        "They built a dam to control the river's powerful current",
+
+        # --- CONTEXTO: FINANCE & BUSINESS (Dinero, Crédito, Emprendedores) ---
         "The financier arrived late to the bank due to traffic",
-        "The bank closed at five o'clock sharp",
+        "The financier invested in several renewable energy startups",
+        "The entrepreneur pitched her idea to the board of directors",
+        "The company closed its doors because it lost a lot of money",
+        "Inflation affects how much money people can save in the bank",
+        "The credit score of the company improved significantly this year",
+        "The financier studied the market trends before making a move",
+
+        # --- CONTEXTO: TIME & LOGISTICS (Tarde, Tráfico, Retrasos) ---
         "The train was late because there was a serious accident",
+        "The flight was canceled because there was a heavy storm",
+        "The boss arrived late because there was a lot of traffic today",
+        "The plane took off late due to the bad weather today",
+        "The doctor arrived at the hospital very early in the morning",
+        "The late professor was honored at the university ceremony",
+        "Better late than never, as the old saying goes",
+        "The meeting was postponed because the manager was stuck in traffic",
+
+        # --- CONTEXTO: CAUSALITY (Porque, Debido a) ---
         "The shop closed because they ran out of products",
         "The team won because they trained very hard every day",
         "The project failed because there was a lack of planning",
         "The child cried because he lost his favorite toy",
         "The lights went out because the electric generator failed",
-        "The flight was canceled because there was a heavy storm",
         "The customer left because the service was poor",
         "The plant died because nobody watered it for a week",
-        "The boss arrived late because there was a lot of traffic today",
+        "The student passed the exam because they studied hard",
+        "The ice melted because the temperature rose significantly",
+        "She smiled because the surprise worked perfectly",
+
+        # --- CONTEXTO: PHYSICAL ACTIONS & OBJECTS (Cerrar, Correr, Equipos) ---
+        "The bank closed at five o'clock sharp",
         "The cat was on the table because it was hungry",
         "The dog ran to the park and played with the children",
         "The door was locked and nobody could enter the building",
         "The sun rose early and warmed the entire city",
-        "The student passed the exam because they studied hard",
-        "The company closed its doors because it lost a lot of money",
-        "The doctor arrived at the hospital very early in the morning",
-        "The plane took off late due to the bad weather today",
-        "The river water was cold because it snowed in the mountains",
         "The engineer designed the bridge with great technical precision",
-        "The river rose every time it rained in the mountains",
-        "The park has many trees and colorful flowers",
         "The boy ran towards his mother when he saw her arrive",
-        "You can bank on his honesty for this project",
-        "He deposited his paycheck at the local bank branch",
-        "The aircraft began to bank steeply to the left",
-        "There is a grassy bank where we can have our picnic",
-        "The data bank contains thousands of medical records"
+        "The surgeon performed the operation with extreme precision",
+        "We need a backup generator in case of a power outage",
+        "The medical staff worked tirelessly during the emergency",
+        "The shopkeeper closed the gate before the storm began",
+        "There is a grassy bank where we can have our picnic"
     ]
 
     def __init__(self, d_model=64, n_heads=4, n_layers=2,
@@ -648,6 +726,9 @@ BANNER = """
 ╚══════════════════════════════════════════════════════════════════════╝
 """
 
+
+
+
 def print_prediction(results, prompt):
     best, bp = results[0]
     print(f"\n  Prompt     : « {prompt} »")
@@ -692,7 +773,32 @@ def main():
             if not trained: print("⚠️  Primero: train"); continue
             try: print_prediction(engine.predict(arg, top_k, temperature), arg)
             except Exception as e: print(f"❌  {e}")
-
+            
+        elif cmd == "p":
+            if not arg: print("⚠️  Uso: predict <frase>"); continue
+            if not trained: print("⚠️  Primero: train"); continue
+            try:
+                context = arg
+                print(context, end=" ", flush=True)
+                
+                for i in range(20):  
+                    result = engine.predict(context, top_k, temperature);
+                    
+                    
+                    
+                    token = result[0][0]
+                    
+                    #print(" " + token, end="", flush=True)
+                    
+                    context += f" {token}"
+                    
+                    print(context)
+                    
+                print("\n")
+                
+                
+            except Exception as e: print(f"❌  {e}")
+            
         elif cmd == "attn":
             if not arg: print("⚠️  Uso: attn <frase>"); continue
             if not trained: print("⚠️  Primero: train"); continue
