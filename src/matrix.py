@@ -236,7 +236,7 @@ class ConceptMatrix:
         """
         # (coords, vector, energía_actual, nivel_actual)
         queue = [(start_coords, initial_signal, 1.0, 0)]  
-        results = []
+        results = {}
         visited = {} # Usamos dict para guardar la mejor energía alcanzada
 
         while queue:
@@ -255,7 +255,7 @@ class ConceptMatrix:
                 continue
             
             visited[current_coords] = energy
-            results.append((node.name, energy))
+            results[node.name] = max(results.get(node.name, 0), energy)
             
             # 2. Obtener señales de salida del nodo actual
             output_signal = node.activate(current_signal)
@@ -304,7 +304,7 @@ class ConceptMatrix:
                     queue.append((target_coords, next_signal, next_energy, hop + 1))
             
         # Ordenamos resultados por energía para la tabla final
-        return sorted(results, key=lambda x: x[1], reverse=True)
+        return sorted(results.items(), key=lambda x: x[1], reverse=True)
 
     def get_definitions_by_index(self, index: Tuple[int, ...]):
         """
