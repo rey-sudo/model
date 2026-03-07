@@ -76,19 +76,13 @@ class ConceptNode:
         self.activation_count += 1
         return output
 
-    def add_pointer(self, target_coords, strength=0.1):
-        """
-        Crea o refuerza un enlace hacia otra coordenada absoluta.
-        """
-        if target_coords not in self.pointers:
-            self.pointers[target_coords] = strength
+    def add_pointer(self, target_coords, strength=0.1, delta=0):
+        key = (target_coords, delta)
+        if key not in self.pointers:
+            self.pointers[key] = strength
         else:
-            # El refuerzo es inversamente proporcional a la madurez
-            refuerzo = strength * (1.0 - self.maturity)
-            self.pointers[target_coords] += refuerzo
-            
-        # Limitar la fuerza del enlace a 1.0
-        self.pointers[target_coords] = min(1.0, self.pointers[target_coords])
+            self.pointers[key] += strength * (1.0 - self.maturity)
+        self.pointers[key] = min(1.0, self.pointers[key])
 
     def update_local_weights(self, gradient, learning_rate=0.01):
         """
@@ -104,9 +98,9 @@ class ConceptNode:
             self.maturity = min(1.0, self.maturity + 0.001)
 
     def get_top_pointers(self, limit=5):
-        """Retorna las coordenadas de los conceptos más relacionados."""
         sorted_ptrs = sorted(self.pointers.items(), key=lambda x: x[1], reverse=True)
-        return sorted_ptrs[:limit]
+        # devuelve (coords, delta, strength)
+        return [(coords, delta, strength) for (coords, delta), strength in sorted_ptrs[:limit]]
     
     def train_node_resonance(self, sample_vector, target_affinity, learning_rate=0.01):
             """
@@ -127,3 +121,21 @@ class ConceptNode:
             
             # 4. Actualizar pesos usando tu método existente
             self.update_local_weights(gradient, learning_rate)    
+            
+    def get_best_pointer(self, delta: int = +1):
+        """
+        Retorna el ConceptNode más fuerte en la dirección indicada.
+        delta=+1 → palabra que suele venir después
+        delta=-1 → palabra que suele venir antes
+        """
+        candidatos = {
+            coords: strength
+            for (coords, d), strength in self.pointers.items()
+            if d == delta
+        }
+
+        if not candidatos:
+            return None
+
+        best_coords = max(candidatos, key=candidatos.get)
+        return self.matrix._node_storage.get(best_coords)    

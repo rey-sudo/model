@@ -22,288 +22,224 @@ cm = ConceptMatrix(shape=(MATRIX_SHAPE, MATRIX_SHAPE, MATRIX_SHAPE))
 # 2. CORPUS DE ENTRENAMIENTO
 # ──────────────────────────────────────────────
 
+
 ecosistema_lexico = [
-    {
-        "concept": "bosque",
-        "definition": [
-            "sustantivo", "masculino", "ecosistema", "donde", "la", "vegetación",
-            "predominante", "son", "los", "árboles", "y", "matas", "que", "cubre",
-            "una", "extensión", "grande", "de", "terreno"
-        ]
-    },
-    {
-        "concept": "árbol",
-        "definition": [
-            "sustantivo", "masculino", "planta", "perenne", "de", "tronco",
-            "leñoso", "y", "elevado", "que", "se", "ramifica", "a", "cierta",
-            "altura", "del", "suelo", "formando", "una", "copa"
-        ]
-    },
-    {
-        "concept": "suelo",
-        "definition": [
-            "sustantivo", "masculino", "superficie", "de", "la", "corteza",
-            "terrestre", "biológicamente", "activa", "que", "proviene", "de",
-            "la", "desintegración", "de", "las", "rocas", "y", "residuos", "orgánicos"
-        ]
-    },
-    {
-        "concept": "fauna",
-        "definition": [
-            "sustantivo", "femenino", "conjunto", "de", "los", "animales", "de",
-            "un", "país", "región", "o", "medio", "determinado", "que", "viven",
-            "en", "un", "estado", "temporal", "o", "permanente"
-        ]
-    },
-    {
-        "concept": "clima",
-        "definition": [
-            "sustantivo", "masculino", "condiciones", "atmosféricas",
-            "propias", "de", "un", "lugar", "constituido", "por", "la", "cantidad",
-            "y", "frecuencia", "de", "lluvias", "humedad", "y", "temperatura"
-        ]
-    },
-    {
-        "concept": "ecosistema",
-        "definition": [
-            "sustantivo", "masculino", "comunidad", "de", "seres", "vivos",
-            "que", "interactúan", "entre", "sí", "y", "con", "su", "entorno",
-            "físico", "formando", "un", "sistema", "ecológico"
-        ]
-    },
-    {
-        "concept": "planta",
-        "definition": [
-            "sustantivo", "femenino", "ser", "vivo", "autótrofo", "que",
-            "realiza", "la", "fotosíntesis", "para", "producir", "su",
-            "propio", "alimento", "a", "partir", "de", "luz", "y", "agua"
-        ]
-    },
-    {
-        "concept": "vegetación",
-        "definition": [
-            "conjunto", "plantas", "árboles", "flora",
-            "que", "cubre", "superficie", "terreno",
-            "ecosistema", "región"
-        ]
-    },
-    {
-        "concept": "comunidad",
-        "definition": [
-            "conjunto", "seres", "vivos",
-            "conviven", "interactúan", "mismo",
-            "entorno", "comparten", "recursos", "espacio"
-        ]
-    },
-    {
-        "concept": "condiciones",
-        "definition": [
-            "conjunto", "factores", "físicos",
-            "temperatura", "humedad", "luz",
-            "determinan", "entorno", "ecosistema"
-        ]
-    },
-    {
-        "concept": "flora",
-        "definition": [
-            "conjunto", "plantas", "vegetación",
-            "propias", "región", "ecosistema",
-            "convive", "fauna"
-        ]
-    },
-    {
-        "concept": "perenne",
-        "definition": [
-            "que", "dura", "todo",
-            "año", "no", "pierde",
-            "hojas", "planta", "árbol", "permanente"
-        ]
-    },
-    {
-        "concept": "atmósfera",
-        "definition": [
-            "capa", "gases", "rodea",
-            "tierra", "contiene", "aire",
-            "oxígeno", "clima", "temperatura"
-        ]
-    },
-    {
-        "concept": "terreno",
-        "definition": [
-            "extensión", "suelo", "tierra",
-            "superficie", "donde", "crecen",
-            "plantas", "bosque", "ecosistema"
-        ]
-    },
-    {
-        "concept": "raíz",
-        "definition": [
-            "parte", "planta", "árbol",
-            "subterránea", "absorbe", "agua",
-            "nutrientes", "suelo", "fija", "terreno"
-        ]
-    },
-    {
-        "concept": "agua",
-        "definition": [
-            "recurso", "líquido", "esencial",
-            "vida", "seres", "vivos",
-            "planta", "fauna", "ecosistema", "lluvia"
-        ]
-    },
-    {
-        "concept": "luz",
-        "definition": [
-            "energía", "solar", "radiante",
-            "permite", "fotosíntesis", "planta",
-            "crecimiento", "vegetación", "calor", "clima"
-        ]
-    },
-    {
-        "concept": "fotosíntesis",
-        "definition": [
-            "proceso", "planta", "convierte",
-            "luz", "agua", "dióxido",
-            "carbono", "alimento", "oxígeno"
-        ]
-    },
-    {
-        "concept": "nutrientes",
-        "definition": [
-            "sustancias", "suelo", "agua",
-            "necesarias", "crecimiento", "planta",
-            "árbol", "flora", "vida"
-        ]
-    },
-    {
-        "concept": "biodiversidad",
-        "definition": [
-            "variedad", "seres", "vivos",
-            "fauna", "flora", "ecosistema",
-            "bosque", "región", "especie"
-        ]
-    },
-    {
-        "concept": "subterránea",
-        "definition": [
-            "debajo", "superficie", "suelo",
-            "tierra", "raíz", "agua",
-            "nutrientes", "profundidad", "oscuridad"
-        ]
-    },
-    {
-        "concept": "convive",
-        "definition": [
-            "coexiste", "comparte", "espacio",
-            "entorno", "ecosistema", "comunidad",
-            "fauna", "flora", "relación", "equilibrio"
-        ]
-    },
-    {
-        "concept": "calor",
-        "definition": [
-            "energía", "térmica", "temperatura",
-            "sol", "luz", "clima",
-            "atmósfera", "permite", "vida", "crecimiento"
-        ]
-    },
-    {
-        "concept": "oxígeno",
-        "definition": [
-            "gas", "atmósfera", "esencial",
-            "respiración", "seres", "vivos",
-            "producido", "fotosíntesis", "planta", "vida"
-        ]
-    },
-    {
-        "concept": "región",
-        "definition": [
-            "área", "territorio", "geográfico",
-            "ecosistema", "bosque", "fauna",
-            "flora", "clima", "biodiversidad", "comunidad"
-        ]
-    },
-    {
-        "concept": "crecimiento",
-        "definition": [
-            "proceso", "aumento", "desarrollo",
-            "planta", "árbol", "raíz",
-            "nutrientes", "agua", "luz", "suelo"
-        ]
-    },
-    {
-        "concept": "permanente",
-        "definition": [
-            "constante", "duradero", "estable",
-            "perenne", "ecosistema", "fauna",
-            "flora", "comunidad", "entorno"
-        ]
-    },
-    {
-        "concept": "parte",
-        "definition": [
-            "porción", "componente", "elemento",
-            "raíz", "tronco", "hojas",
-            "planta", "árbol", "copa", "suelo"
-        ]
-    },
-    {
-        "concept": "hojas",
-        "definition": [
-            "órgano", "planta", "árbol",
-            "fotosíntesis", "luz", "agua",
-            "vegetación", "perenne", "verde", "copa"
-        ]
-    },
-    {
-        "concept": "ser",
-        "definition": [
-            "entidad", "vivo", "existente",
-            "planta", "animal", "fauna",
-            "ecosistema", "comunidad", "vida"
-        ]
-    },
-    {
-        "concept": "vivos",
-        "definition": [
-            "organismos", "activos", "existentes",
-            "fauna", "flora", "planta",
-            "árbol", "ecosistema", "comunidad", "vida"
-        ]
-    },
-    {
-        "concept": "subterránea",
-        "definition": [
-            "debajo", "superficie", "suelo",
-            "tierra", "raíz", "agua",
-            "nutrientes", "profundidad", "oscuridad"
-        ]
-    },
-    {
-        "concept": "convive",
-        "definition": [
-            "coexiste", "comparte", "espacio",
-            "entorno", "ecosistema", "comunidad",
-            "fauna", "flora", "relación", "equilibrio"
-        ]
-    },
-    {
-        "concept": "calor",
-        "definition": [
-            "energía", "térmica", "temperatura",
-            "sol", "luz", "clima",
-            "atmósfera", "permite", "vida", "crecimiento"
-        ]
-    },
-    {
-        "concept": "oxígeno",
-        "definition": [
-            "gas", "atmósfera", "esencial",
-            "respiración", "seres", "vivos",
-            "producido", "fotosíntesis", "planta", "vida"
-        ]
-    }
+  {
+    "concept": "forest",
+    "definition": [
+      "noun", "a", "large", "area", "of", "land", "covered", "with", "trees", "and", "underbrush"
+    ]
+  },
+  {
+    "concept": "tree",
+    "definition": [
+      "noun", "a", "woody", "perennial", "plant", "having", "a", "single", "usually", "elongate", "main", "stem", "generally", "with", "few", "or", "no", "branches", "on", "its", "lower", "part"
+    ]
+  },
+  {
+    "concept": "soil",
+    "definition": [
+      "noun", "the", "upper", "layer", "of", "earth", "in", "which", "plants", "grow", "a", "black", "or", "dark", "brown", "material", "typically", "consisting", "of", "a", "mixture", "of", "organic", "remains", "clay", "and", "rock", "particles"
+    ]
+  },
+  {
+    "concept": "fauna",
+    "definition": [
+      "noun", "the", "animals", "of", "a", "particular", "region", "habitat", "or", "geological", "period"
+    ]
+  },
+  {
+    "concept": "climate",
+    "definition": [
+      "noun", "the", "weather", "conditions", "prevailing", "in", "an", "area", "in", "general", "or", "over", "a", "long", "period"
+    ]
+  },
+  {
+    "concept": "ecosystem",
+    "definition": [
+      "noun", "a", "biological", "community", "of", "interacting", "organisms", "and", "their", "physical", "environment"
+    ]
+  },
+  {
+    "concept": "plant",
+    "definition": [
+      "noun", "a", "living", "organism", "typically", "growing", "in", "a", "permanent", "site", "absorbing", "water", "and", "inorganic", "substances", "through", "its", "roots", "and", "synthesizing", "nutrients", "in", "its", "leaves", "by", "photosynthesis"
+    ]
+  },
+  {
+    "concept": "vegetation",
+    "definition": [
+      "noun", "plants", "considered", "collectively", "especially", "those", "found", "in", "a", "particular", "area", "or", "habitat"
+    ]
+  },
+  {
+    "concept": "community",
+    "definition": [
+      "noun", "a", "group", "of", "interdependent", "organisms", "of", "different", "species", "growing", "or", "living", "together", "in", "a", "specified", "habitat"
+    ]
+  },
+  {
+    "concept": "conditions",
+    "definition": [
+      "noun", "plural", "the", "circumstances", "or", "factors", "that", "affect", "the", "way", "in", "which", "people", "live", "or", "work", "especially", "with", "regard", "to", "their", "well-being"
+    ]
+  },
+  {
+    "concept": "flora",
+    "definition": [
+      "noun", "the", "plants", "of", "a", "particular", "region", "habitat", "or", "geological", "period"
+    ]
+  },
+  {
+    "concept": "perennial",
+    "definition": [
+      "adjective", "of", "a", "plant", "living", "for", "several", "years", "typically", "with", "new", "growth", "of", "herbaceous", "parts", "from", "a", "part", "that", "survives", "from", "season", "to", "season"
+    ]
+  },
+  {
+    "concept": "atmosphere",
+    "definition": [
+      "noun", "the", "envelope", "of", "gases", "surrounding", "the", "earth", "or", "another", "planet"
+    ]
+  },
+  {
+    "concept": "terrain",
+    "definition": [
+      "noun", "a", "stretch", "of", "land", "especially", "with", "regard", "to", "its", "physical", "features"
+    ]
+  },
+  {
+    "concept": "root",
+    "definition": [
+      "noun", "the", "part", "of", "a", "plant", "which", "attaches", "it", "to", "the", "ground", "or", "to", "a", "support", "conveying", "water", "and", "nourishment", "to", "the", "rest", "of", "the", "plant"
+    ]
+  },
+  {
+    "concept": "water",
+    "definition": [
+      "noun", "a", "colorless", "transparent", "odorless", "liquid", "that", "forms", "the", "seas", "lakes", "rivers", "and", "rain", "and", "is", "the", "basis", "of", "the", "fluids", "of", "living", "organisms"
+    ]
+  },
+  {
+    "concept": "light",
+    "definition": [
+      "noun", "the", "natural", "agent", "that", "stimulates", "sight", "and", "makes", "things", "visible"
+    ]
+  },
+  {
+    "concept": "photosynthesis",
+    "definition": [
+      "noun", "the", "process", "by", "which", "green", "plants", "and", "some", "other", "organisms", "use", "sunlight", "to", "synthesize", "foods", "from", "carbon", "dioxide", "and", "water"
+    ]
+  },
+  {
+    "concept": "nutrients",
+    "definition": [
+      "noun", "plural", "substances", "that", "provide", "nourishment", "essential", "for", "growth", "and", "the", "maintenance", "of", "life"
+    ]
+  },
+  {
+    "concept": "biodiversity",
+    "definition": [
+      "noun", "the", "variety", "of", "life", "in", "the", "world", "or", "in", "a", "particular", "habitat", "or", "ecosystem"
+    ]
+  },
+  {
+    "concept": "underground",
+    "definition": [
+      "adjective", "situated", "done", "or", "used", "beneath", "the", "surface", "of", "the", "ground"
+    ]
+  },
+  {
+    "concept": "coexists",
+    "definition": [
+      "verb", "exist", "at", "the", "same", "time", "or", "in", "the", "same", "place"
+    ]
+  },
+  {
+    "concept": "heat",
+    "definition": [
+      "noun", "the", "quality", "of", "being", "hot", "high", "temperature"
+    ]
+  },
+  {
+    "concept": "oxygen",
+    "definition": [
+      "noun", "a", "colorless", "odorless", "reactive", "gas", "the", "chemical", "element", "of", "atomic", "number", "8", "and", "the", "life-supporting", "component", "of", "the", "air"
+    ]
+  },
+  {
+    "concept": "region",
+    "definition": [
+      "noun", "an", "area", "or", "division", "especially", "part", "of", "a", "country", "or", "the", "world", "having", "definable", "characteristics", "but", "not", "always", "fixed", "boundaries"
+    ]
+  },
+  {
+    "concept": "growth",
+    "definition": [
+      "noun", "the", "process", "of", "increasing", "in", "physical", "size"
+    ]
+  },
+  {
+    "concept": "permanent",
+    "definition": [
+      "adjective", "lasting", "or", "intended", "to", "last", "or", "remain", "unchanged", "indefinitely"
+    ]
+  },
+  {
+    "concept": "part",
+    "definition": [
+      "noun", "an", "amount", "or", "section", "which", "with", "others", "makes", "up", "the", "whole", "of", "something"
+    ]
+  },
+  {
+    "concept": "leaves",
+    "definition": [
+      "noun", "plural", "flattened", "structures", "of", "a", "higher", "plant", "typically", "green", "and", "bladelike", "that", "are", "attached", "to", "a", "stem", "and", "are", "the", "main", "organs", "of", "photosynthesis"
+    ]
+  },
+  {
+    "concept": "being",
+    "definition": [
+      "noun", "the", "nature", "or", "essence", "of", "a", "person", "or", "thing"
+    ]
+  },
+  {
+    "concept": "living",
+    "definition": [
+      "adjective", "alive", "not", "dead"
+    ]
+  },
+  {
+    "concept": "underground",
+    "definition": [
+      "adjective", "situated", "done", "or", "used", "beneath", "the", "surface", "of", "the", "ground"
+    ]
+  },
+  {
+    "concept": "coexists",
+    "definition": [
+      "verb", "exist", "at", "the", "same", "time", "or", "in", "the", "same", "place"
+    ]
+  },
+  {
+    "concept": "heat",
+    "definition": [
+      "noun", "the", "quality", "of", "being", "hot", "high", "temperature"
+    ]
+  },
+  {
+    "concept": "oxygen",
+    "definition": [
+      "noun", "a", "colorless", "odorless", "reactive", "gas", "the", "life-supporting", "component", "of", "the", "air"
+    ]
+  }
 ]
+
+
+
+
+
 
 # ──────────────────────────────────────────────
 # 3. FASE 1 — Registrar definiciones en la matriz
@@ -329,16 +265,25 @@ print("FASE 2: Entrenamiento Hebbiano con corpus...")
 print("=" * 60)
 
 corpus = [
-    "el bosque tiene árboles y suelo fértil",
-    "el árbol crece desde el suelo hacia el cielo",
-    "el ecosistema incluye fauna y flora del bosque",
-    "el clima determina la fauna y vegetación del bosque",
-    "el suelo del bosque sostiene la planta y el árbol",
-    "la planta necesita suelo clima y luz para crecer",
-    "la fauna vive en el ecosistema del bosque",
-    "el ecosistema depende del clima suelo y fauna",
-    "árbol y planta forman la vegetación del bosque",
-    "bosque ecosistema árbol suelo fauna clima planta",
+    "The forest has trees and fertile soil",
+
+    "The tree grows from the ground to the sky",
+
+    "The ecosystem includes the forest's fauna and flora",
+
+    "The climate determines the forest's fauna and vegetation",
+
+    "The forest soil supports the plants and trees",
+
+    "Plants need soil, climate, and light to grow",
+
+    "Fauna lives in the forest ecosystem",
+
+    "The ecosystem depends on climate, soil, and fauna",
+
+    "Trees and plants make up the forest's vegetation",
+
+    "forest ecosystem tree soil fauna climate plant"
 ]
 
 for i, sentence in enumerate(corpus, 1):
@@ -378,7 +323,7 @@ def query(concept_word: str, max_hops: int = 6, top_k: int = 8) -> list:
 
 
 def query_frase(frase: str, max_hops: int = 6, top_k: int = 8) -> list:
-    words = [w for w in frase.lower().split() if w not in STOPWORDS]
+    words = frase.lower().split()
     
     if not words:
         return []
@@ -406,47 +351,8 @@ def query_frase(frase: str, max_hops: int = 6, top_k: int = 8) -> list:
     return sorted(energias_totales.items(), key=lambda x: x[1], reverse=True)[:top_k]
 
 
-def print_response(prompt_word: str):
-    print(f"\n{'─' * 60}")
-    print(f"  PROMPT  →  \"{prompt_word}\"")
-    print(f"{'─' * 60}")
-    results = query(prompt_word)
-
-    if not results:
-        print("  (sin resonancia — concepto aislado)")
-        return
-
-    print(f"  {'Concepto':<20} {'Energía':>10}  {'Barra'}")
-    print(f"  {'─'*20} {'─'*10}  {'─'*20}")
-    max_e = results[0][1] if results else 1
-    for name, energy in results:
-        bar_len = int((energy / max_e) * 20)
-        bar = "█" * bar_len
-        print(f"  {name:<20} {energy:>10.6f}  {bar}")
 
 
-# ──────────────────────────────────────────────
-# 6. FASE 4 — Prompts de consulta
-# ──────────────────────────────────────────────
-
-print("=" * 60)
-print("FASE 3: Consultas semánticas por propagación de señal")
-print("=" * 60)
-
-prompts = [
-    "bosque",       # Concepto central — debería activar árbol, suelo, fauna
-    "árbol",        # Debería resonar con bosque, planta, suelo
-    "ecosistema",   # Debería activar fauna, clima, bosque
-    "clima",        # Debería activar bosque, fauna, ecosistema
-    "planta",       # Debería resonar con árbol, suelo, bosque
-]
-
-for prompt in prompts:
-    print_response(prompt)
-
-print(f"\n{'=' * 60}")
-print("Test completado.")
-print("=" * 60)
 
 
 # ──────────────────────────────────────────────
@@ -540,6 +446,13 @@ def repl():
                 print(f"  ✓ Entrenado: \"{sentence}\"\n")
             else:
                 print("  Uso: :train <oración>\n")
+
+        elif raw.startswith(":generar "):
+            partes = raw.split()
+            seed   = partes[1] if len(partes) > 1 else "el"
+            largo  = int(partes[2]) if len(partes) > 2 else 6
+            frase  = cm.generar(seed, longitud=largo)
+            print(f"\n  Generado › {frase}\n")
 
         # ── query conversacional ─────────────────────
         else:

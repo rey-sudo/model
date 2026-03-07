@@ -152,7 +152,7 @@ class ConceptMatrix:
         y Sincronización de Resonancia Neuronal.
         """
         
-        words = [w for w in text.lower().split() if w not in STOPWORDS]
+        words = text.lower().split()
         
         # 1. Recuperar o crear los objetos ConceptNode
         sequence = []
@@ -179,7 +179,7 @@ class ConceptMatrix:
                 strength = learning_rate * dist_factor
                 
                 # El nodo crea o fortalece el puntero hacia su vecino
-                node.add_pointer(neighbor.index, strength=strength)
+                node.add_pointer(neighbor.index, strength=strength, delta=j - i)
 
                 # --- CAPA 2: Sincronización de Resonancia (El "Cómo") ---
                 # El nodo actual extrae la identidad del vecino
@@ -263,7 +263,7 @@ class ConceptMatrix:
             # 3. Explorar punteros (relaciones)
             top_ptrs = node.get_top_pointers(limit=10) # Aumentamos para no perder ramas
             
-            for target_coords, strength in top_ptrs:
+            for target_coords, delta, strength in top_ptrs:
                 target_node = self._node_storage.get(target_coords)
                 if not target_node: continue
                 
@@ -324,7 +324,26 @@ class ConceptMatrix:
         print(f"Aviso: La coordenada {index} está vacía.")
         return []
 
+    def generar(self, seed_word: str, longitud: int = 6) -> str:
+        """
+        Genera una secuencia siguiendo los punteros delta=+1 más fuertes.
+        """
+        coords = self.get_coo_from_symbol(seed_word)
+        if coords not in self._node_storage:
+            self.add_node(coords, seed_word)
 
+        nodo = self._node_storage[coords]
+        oracion = [seed_word]
+
+        for _ in range(longitud):
+            siguiente = nodo.get_best_pointer(delta=+1)
+            if siguiente is None:
+                break
+            oracion.append(siguiente.name)
+            nodo = siguiente
+
+        return " ".join(oracion)        
+    
     # ------------------------------------------------------------------
     # Stats
     # ------------------------------------------------------------------
