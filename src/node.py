@@ -107,3 +107,23 @@ class ConceptNode:
         """Retorna las coordenadas de los conceptos más relacionados."""
         sorted_ptrs = sorted(self.pointers.items(), key=lambda x: x[1], reverse=True)
         return sorted_ptrs[:limit]
+    
+    def train_node_resonance(self, sample_vector, target_affinity, learning_rate=0.01):
+            """
+            Entrena la red interna del nodo para reaccionar a vectores específicos.
+            target_affinity: 1.0 (afinidad total), 0.0 (neutro), -1.0 (rechazo/oposición)
+            """
+            # 1. Forward pass (ya lo tienes en activate)
+            prediction = self.activate(sample_vector)
+            
+            # 2. Calcular el error respecto a la afinidad deseada
+            # Simplificamos: queremos que el promedio de la activación sea el target
+            current_affinity = np.mean(prediction)
+            error = current_affinity - target_affinity
+            
+            # 3. Gradiente simple para ajustar los pesos internos
+            # (Delta rule simplificada para la matriz de 1000x1000)
+            gradient = error * np.dot(prediction, sample_vector.T)
+            
+            # 4. Actualizar pesos usando tu método existente
+            self.update_local_weights(gradient, learning_rate)    

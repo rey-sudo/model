@@ -136,10 +136,12 @@ class ConceptMatrix:
 
     def train(self, text: str, learning_rate: float = 0.05):
         """
-        Entrenamiento por asociación temporal (Aprendizaje Hebbiano).
+        Entrenamiento por asociación temporal (Aprendizaje Hebbiano)
+        y Sincronización de Resonancia Neuronal.
         """
         words = text.lower().split()
-        # 1. Convertir palabras en nodos (recuperar de la Matrix)
+        
+        # 1. Recuperar o crear los objetos ConceptNode
         sequence = []
         for word in words:
             coords = self.get_coo_from_symbol(word)
@@ -147,10 +149,9 @@ class ConceptMatrix:
                 self.add_node(coords, concept=word)
             sequence.append(self._node_storage[coords])
 
-        # 2. Refuerzo de Ventana (Contexto)
-        # Por cada nodo, reforzamos la conexión con los vecinos inmediatos
+        # 2. Refuerzo de Ventana (Contexto y Redes Internas)
         for i, node in enumerate(sequence):
-            # Miramos 2 palabras adelante y 2 atrás (Ventana de contexto)
+            # Ventana de contexto: 2 palabras adelante y 2 atrás
             start = max(0, i - 2)
             end = min(len(sequence), i + 3)
             
@@ -158,14 +159,29 @@ class ConceptMatrix:
                 if i == j: continue
                 
                 neighbor = sequence[j]
+                
+                # --- CAPA 1: Asociación de Punteros (El "Dónde") ---
                 # Calculamos la distancia (a más cerca, más fuerza)
                 dist_factor = 1.0 / abs(i - j)
                 strength = learning_rate * dist_factor
                 
                 # El nodo crea o fortalece el puntero hacia su vecino
                 node.add_pointer(neighbor.index, strength=strength)
+
+                # --- CAPA 2: Sincronización de Resonancia (El "Cómo") ---
+                # El nodo actual extrae la identidad del vecino
+                neighbor_identity = neighbor.get_identity_vector()
                 
-        print(f"Entrenamiento completado: {len(words)} tokens procesados.")
+                # Entrenamos la red interna del nodo para que RECONOZCA al vecino.
+                # Usamos la fuerza de la asociación (strength) como el target de afinidad.
+                # Si están muy cerca (dist_factor 1.0), la afinidad buscada es alta.
+                node.train_node_resonance(
+                    sample_vector=neighbor_identity, 
+                    target_affinity=dist_factor, 
+                    learning_rate=learning_rate
+                )
+                
+        print(f"Entrenamiento completado: {len(words)} tokens procesados con sincronización neuronal.")
 
 
     def send_signal(self, source_coords, target_coords, signal_vector):
@@ -205,71 +221,76 @@ class ConceptMatrix:
         """
         Propaga una señal aplicando decaimiento, fricción y resonancia ontológica.
         """
-        queue = [(start_coords, initial_signal, 1.0)]  # (coords, vector, energía_actual)
+        # (coords, vector, energía_actual, nivel_actual)
+        queue = [(start_coords, initial_signal, 1.0, 0)]  
         results = []
-        visited = set()
-
-        print(f"--- Iniciando Propagación desde {start_coords} ---")
+        visited = {} # Usamos dict para guardar la mejor energía alcanzada
 
         while queue:
-            current_coords, current_signal, energy = queue.pop(0)
+            current_coords, current_signal, energy, hop = queue.pop(0)
             
-            # El umbral de extinción ahora es más dinámico gracias a la resonancia
-            if energy < 0.05 or max_hops <= 0: 
+            # 1. Condición de parada: Umbral de extinción o profundidad máxima
+            if energy < self.extinction_threshold or hop >= max_hops: 
                 continue
                 
             node = self._node_storage.get(current_coords)
-            if not node or current_coords in visited:
+            if not node:
+                continue
+
+            # Evitar ciclos, pero permitir caminos más eficientes
+            if current_coords in visited and visited[current_coords] >= energy:
                 continue
             
-            visited.add(current_coords)
-            
-            # 1. El nodo procesa la señal
-            output_signal = node.activate(current_signal)
+            visited[current_coords] = energy
             results.append((node.name, energy))
             
-            # 2. Explorar punteros (relaciones)
-            top_ptrs = node.get_top_pointers(limit=5) # Subimos a 5 para ver más resonancias
+            # 2. Obtener señales de salida del nodo actual
+            output_signal = node.activate(current_signal)
+            
+            # 3. Explorar punteros (relaciones)
+            top_ptrs = node.get_top_pointers(limit=10) # Aumentamos para no perder ramas
             
             for target_coords, strength in top_ptrs:
                 target_node = self._node_storage.get(target_coords)
-                if not target_node:
-                    continue
+                if not target_node: continue
+                
+                # --- RESONANCIA ONTOLÓGICA ---
+                # El nodo destino juzga la señal entrante
+                validacion_vector = target_node.activate(current_signal)
+                
+                activaciones = np.abs(target_node.activate(current_signal))
+                activaciones = np.atleast_1d(activaciones) # Forzamos que sea array incluso si es un escalar
+                n_neuronas = activaciones.size
 
-                # --- NUEVA LÓGICA: RESONANCIA ONTOLÓGICA ---
-                # Comparamos definiciones para modular la energía
-                res_factor = self.calculate_resonance(node, target_node)
+                # 2. LÓGICA DE RESONANCIA ROBUSTA (Sin np.partition para evitar crashes)
+                if n_neuronas > 10:
+                    # Si la red es grande, usamos el promedio del 10% superior manualmente
+                    k = max(1, int(n_neuronas * 0.1))
+                    # Usamos sort simple que es más seguro para arrays pequeños/medianos
+                    top_k = np.sort(activaciones)[-k:]
+                    res_factor_top = np.mean(top_k)
+                else:
+                    # Si la red es pequeña (como tu caso de 1 sola neurona), promedio directo
+                    res_factor_top = np.mean(activaciones)
+
+                # 3. EL FILTRO DE VERDAD (Cuchillo Ontológico)
+                # Si el nodo 'Oscuridad' fue entrenado a 0.0, aquí se cortará la señal
+                if res_factor_top < 0.5:
+                    res_factor = 0.00001  # Bloqueo total
+                else:
+                    res_factor = 1.0      # Paso libre (Luz y Puentes)
+
+                # 4. Cálculo de energía final
+                next_energy = min(1.0, energy * strength * res_factor)
                 
-                # La energía ahora es producto de: 
-                # Hábito (strength) * Lógica (res_factor) * Decaimiento (0.9)
-                next_energy = energy * strength * res_factor * 0.9
-                
-                # Intentamos enviar la señal (aplica fricción vectorial)
+                # Fricción vectorial (pérdida de integridad del mensaje)
                 next_signal = self.send_signal(current_coords, target_coords, output_signal)
                 
-                if next_signal is not None:
-                    queue.append((target_coords, next_signal, next_energy))
+                if next_signal is not None and next_energy >= self.extinction_threshold:
+                    queue.append((target_coords, next_signal, next_energy, hop + 1))
             
-            max_hops -= 1
-            
-        return results
-
-    def calculate_resonance(self, node_a, node_b):
-        """
-        Función auxiliar para medir la afinidad entre definiciones inmutables.
-        """
-        set_a = set(node_a.matrix.get_definitions_by_index(node_a.index))
-        set_b = set(node_b.matrix.get_definitions_by_index(node_b.index))
-        
-        matches = set_a.intersection(set_b)
-        
-        if len(matches) > 0:
-            # Bono: 1.0 + 15% por cada coincidencia semántica
-            return min(1.0 + (len(matches) * 0.15), 2.0)
-        
-        # Penalización: Si no hay nada en común, el flujo se resiste
-        return 0.7
-
+        # Ordenamos resultados por energía para la tabla final
+        return sorted(results, key=lambda x: x[1], reverse=True)
 
     def get_definitions_by_index(self, index: Tuple[int, ...]):
         """
