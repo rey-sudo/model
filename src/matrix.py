@@ -25,6 +25,7 @@ class ConceptMatrix:
         self._matrix_storage: dict[Tuple[int, ...], Value] = {}
         self._node_storage = {}
         self.friction_threshold = 0.8
+        self.extinction_threshold = 0.000001
 
     # ------------------------------------------------------------------
     # Internal helpers
