@@ -8,7 +8,22 @@
 \usepackage{bm}
 \geometry{a4paper, margin=1in}
 \usetikzlibrary{positioning, calc, arrows.meta, shapes.geometric}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
 
+\newtcolorbox{mymath}[1][]{
+	colback=gray!5!white,    % Fondo gris muy tenue
+	colframe=gray!75!black,  % Borde gris oscuro
+	fonttitle=\bfseries,     % Título en negrita
+	coltitle=white,          % Color del texto del título
+	enhanced,                % Habilita opciones avanzadas
+	attach boxed title to top left={yshift=-2mm, xshift=2mm}, % Título flotante
+	boxed title style={colback=gray!75!black},
+	sharp corners,           % Esquinas rectas (estilo académico)
+	boxrule=0.5pt,           % Grosor del borde
+	#1                       % Permite pasar argumentos extra
+}
 
 \title{\textbf{Concepts is all you need} }
 \author{Sparse Point Evolutionary Knowledge Tracking Architecture}
@@ -27,6 +42,47 @@ A diferencia de los LLMs, que almacenan el conocimiento de forma difusa y probab
 
 
 \section{Introduction}
+
+
+I believe the path we're exploring regarding artificial intelligence is misguided. I think what we've currently created—LLMs, Transformers—are merely advanced and sophisticated word processors that are useful but inert in the sense that they lack unique, living units from which all processing originates. My proposal is to take a different path and follow the model that nature has created with the human brain.
+
+I've always wondered how the brain performs complex mathematical calculations at the neuronal level. How can a group of neurons perform a calculation? It can't be any other way than that neurons have logical properties. That is, an individual neuron is a NAND logic gate.
+
+
+
+
+
+\begin{tcolorbox}[
+	title=python, 
+	label=def:python,
+	coltitle=black,
+	colback=gray!10,    
+	colframe=gray!50,   
+	height=3cm,          
+	width=\textwidth,   
+	sharp corners     
+	]
+
+
+\begin{lstlisting}
+	
+	def nand(a, b):
+		return not (a and b)
+	
+\end{lstlisting}
+
+
+	\vfill 
+\end{tcolorbox}
+
+
+
+
+
+
+
+
+
 The proposed model is defined as a sparse three-dimensional data structure denoted as \textit{ConceptMatrix}($CM$). Where each active coordinate $C(x, y, z)$ represents a concept; 
 Each concept has a definition which is a list of other concepts, that is, a list of other coordinates.
 The coordinates act as a unique, deterministic, immutable identifier index ($O(1)$) of a concept.
