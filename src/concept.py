@@ -1,6 +1,8 @@
 from typing import Self
+from src.neuron.neuron import Neuron
 
-
+neuron = Neuron()
+    
 class Rain:
     def __init__(self, state: int):
         self.state = state
@@ -48,9 +50,12 @@ fall = Rain(1)
 down = Rain(1)
 
 
-result = [rain.fall().x, rain.fall().up().x]
+result = [rain.x, neuron.not_(rain.fall().x), rain.fall().up().x]
 
 print(result)
-
+print(all(result))
+#rain -> fall -> rain -> fall
+#rain -> fall -> down -> rain -> fall -> down
 #rain -> fall -> down
+
 
