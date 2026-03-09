@@ -1,5 +1,7 @@
 class Neuron:
-
+    def __init__(self, state: int = 0):
+        self.state = state
+    
     def _validar(self, *args):
         if not all(v in (0, 1) for v in args):
             raise ValueError(f"Invalid Value: {args}")
