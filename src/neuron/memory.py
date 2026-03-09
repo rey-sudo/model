@@ -16,9 +16,9 @@ ruta_actual = Path.cwd()
 # ─────────────────────────────────────────────────────────────────
 # 1.  PREPROCESAMIENTO: imagen 200×200 → vector bipolar (-1 / +1)
 # ─────────────────────────────────────────────────────────────────
-CANVAS   = 500   # tamaño de imagen de entrada
-GRID     = 500    # resolución de la "retina" (28×28 = 784 features)
-LABEL_DIM = 128   # dimensión del vector de etiqueta
+CANVAS   = 200 * 10   # tamaño de imagen de entrada
+GRID     = 28  * 10  # resolución de la "retina" (28×28 = 784 features)
+LABEL_DIM = 32 * 10  # dimensión del vector de etiqueta
 
 FONT_BOLD= ruta_actual / "fonts/LiberationSans-Regular.ttf"
 
@@ -56,22 +56,6 @@ def _base(size=CANVAS):
     img = Image.new("L", (size, size), 255)
     return img, ImageDraw.Draw(img)
 
-def gen_circulo(size=CANVAS):
-    img, d = _base(size); m=8
-    d.ellipse([m, m, size-m, size-m], fill=0); return img
-
-def gen_estrella(size=CANVAS):
-    img, d = _base(size)
-    cx = cy = size / 2
-    r_out = size / 2 - 10
-    r_in  = r_out * 0.4
-    pts = []
-    for k in range(10):
-        angle = np.pi / 2 + k * 2 * np.pi / 10
-        r = r_out if k % 2 == 0 else r_in
-        pts.append((cx + r * np.cos(angle), cy - r * np.sin(angle)))
-    d.polygon(pts, fill=0); return img
-
 def gen_texto(word: str, size: int = CANVAS) -> Image.Image:
     img, d = _base(size)
     font_size = size
@@ -94,10 +78,10 @@ def gen_image(path: str, size: int = CANVAS) -> Image.Image:
     return img
 
 PATTERN_GENERATORS = {
-    "circulo":   gen_circulo,
-    "estrella":  gen_estrella,
     "carro" : lambda: gen_texto("carro"),
-    "gato" : lambda: gen_image("gato.jpg")
+    "manzana" : lambda: gen_texto("manzana"),
+    "pera" : lambda: gen_texto("pera"),
+    #"gato" : lambda: gen_image("gato.jpg") # solo si los demas son imagenes
 }
 
 LABELS = list(PATTERN_GENERATORS.keys())
@@ -326,7 +310,7 @@ def generate_image(label: str, size: int = CANVAS,
 # 8.  EJEMPLO DE USO DIRECTO
 # ─────────────────────────────────────────────────────────────────
 def ejemplo_uso():
-    label = "gato"
+    label = "manzana"
     
     img = gen_texto(label)
     img.save(ruta_actual / "input" / f"{label}_generada.png")
