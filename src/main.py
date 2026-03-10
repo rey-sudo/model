@@ -14,9 +14,9 @@ ban = BAN()
 frase = "a car is a road vehicle that is powered by an engine and is able to carry a small number of people."
 chunks = []
 
-RETINA_W = 28 * 8
+GRID = 28 * 7
 
-RETINA = (RETINA_W, RETINA_W)
+RETINA = (GRID, GRID)
 
 def preprocesar_texto(frase):
     palabras = frase.split()
