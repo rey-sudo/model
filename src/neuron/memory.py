@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from pathlib import Path
 
+
 ruta_actual = Path.cwd()
 # ─────────────────────────────────────────────────────────────────
 # 1.  PREPROCESAMIENTO: imagen 200×200 → vector bipolar (-1 / +1)
@@ -78,10 +79,10 @@ def gen_image(path: str, size: int = CANVAS) -> Image.Image:
     return img
 
 PATTERN_GENERATORS = {
-    "carro de dos" : lambda: gen_texto("carro de dos"),
+    "carro" : lambda: gen_texto("carro"),
     "manzana" : lambda: gen_texto("manzana"),
     "pera" : lambda: gen_texto("pera"),
-    #"gato" : lambda: gen_image("gato.jpg") # solo si los demas son imagenes
+    "banano" : lambda: gen_texto("banano")
 }
 
 LABELS = list(PATTERN_GENERATORS.keys())
@@ -208,9 +209,50 @@ LABEL_VECS_AUG = {f"{lbl}_{j}": LABEL_VECS[lbl]
                   for lbl in LABELS
                   for j in range(10)}
 
+
+def train(n_augment: int = 10, method: str = "pseudoinverse", verbose: bool = True) -> BAM:
+    global LABELS, LABEL_VECS   # ← reconstruir siempre desde PATTERN_GENERATORS
+
+    LABELS     = list(PATTERN_GENERATORS.keys())
+    LABEL_VECS = {lbl: encode_label(i) for i, lbl in enumerate(LABELS)}
+
+    all_A, all_B = {}, {}
+
+    for i, (label, gen) in enumerate(PATTERN_GENERATORS.items()):
+        img = gen()
+        img.save(Path.cwd() / "output" / f"{label}_{i}_generada.png")
+
+        for j, vec in enumerate(augment(img, n=n_augment)):
+            key = f"{label}_{j}"
+            all_A[key] = vec
+            all_B[key] = encode_label(i)
+
+        if verbose:
+            print(f"  ✓ '{label}'  →  {n_augment} variantes generadas  →  guardada en /output")
+
+    net = BAM(n_features=GRID * GRID, label_dim=LABEL_DIM)
+    net.fit(all_A, all_B, method=method)
+
+    if verbose:
+        print(f"\n✅ BAM entrenada")
+        print(f"   Patrones  : {LABELS}")
+        print(f"   Muestras  : {len(all_A)}  ({n_augment} aug × {len(LABELS)} patrones)")
+        print(f"   Método    : {method}")
+        print(f"   W_fwd     : {net.W.shape}")
+        print(f"   W_back    : {net.W_back.shape}")
+
+    return net
+
+
+
+
+
+
+
+
 # Instanciar y entrenar la BAM con pseudo-inversa
 bam = BAM(n_features=N_FEATURES, label_dim=LABEL_DIM)
-bam.fit(TRAIN_VECS_AUG, LABEL_VECS_AUG, method="pseudoinverse")
+bam = train()
 
 print(f"✓ BAM entrenada  |  features={N_FEATURES}  |  patrones={len(LABELS)}  |  W shape={bam.W.shape}")
 
@@ -305,22 +347,54 @@ def generate_image(label: str, size: int = CANVAS,
     arr = np.where(arr < 128, 0, 255).astype(np.uint8)
     return Image.fromarray(arr, mode="L")          # ← imagen PIL 200×200
 
+def classify_from_input(filename: str, verbose: bool = True) -> str:
+    """
+    Toma una imagen de la carpeta /input y devuelve el label identificado.
 
-# ─────────────────────────────────────────────────────────────────
-# 8.  EJEMPLO DE USO DIRECTO
-# ─────────────────────────────────────────────────────────────────
-def ejemplo_uso():
-    label = "carro de dos"
+    Parámetros
+    ----------
+    filename : str  — nombre del archivo (ej. "manzana_test.png")
+    verbose  : bool — imprime scores de similitud por etiqueta
+
+    Retorno
+    -------
+    str — etiqueta detectada
+    """
+    ruta = ruta_actual / "input" / filename
     
-    img = gen_texto(label)
-    img.save(ruta_actual / "input" / f"{label}_generada.png")
-    print(f"  PIL Image   → '{classify_image(img)}'")
+    if not ruta.exists():
+        raise FileNotFoundError(f"No se encontró '{ruta}'. Archivos disponibles: "
+                                f"{[f.name for f in (ruta_actual / 'input').iterdir()]}")
+
+    img = Image.open(ruta).convert("L")
     
-    img_out = generate_image(label)          
-    img_out.save(ruta_actual / "output" / f"{label}_generada.png")
+        # ── DEBUG: guarda exactamente lo que ve la BAM ──────────────
+    img_debug = img.resize((GRID, GRID), Image.LANCZOS)
+    img_debug.save(ruta_actual / "output" / f"DEBUG_{filename}")
+    # ────────────────────────────────────────────────────────────
     
+    vec = preprocess(img)
+    label, scores = bam.classify(vec, LABEL_VECS)
+    
+    print(label, scores)
+    
+    if verbose:
+        print(f"\n📂 Imagen  : {filename}")
+        print(f"🏆 Label   : {label}")
+        print("📊 Scores  :")
+        for lbl, score in sorted(scores.items(), key=lambda x: -x[1]):
+            bar = "█" * int((score + 1) / 2 * 20)  # score ∈ [-1,1] → barra 0-20
+            marker = " ← ganador" if lbl == label else ""
+            print(f"   {lbl:<12} {score:+.4f}  {bar}{marker}")
+
+    return label
 
 
 
+
+def main():
+    result = classify_from_input("1.png")
+    print(result)
+    
 if __name__ == "__main__":
-    ejemplo_uso()
+    main()
