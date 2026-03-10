@@ -26,7 +26,7 @@ import scipy.sparse as sp
 # ─────────────────────────────────────────────────────────────────
 # Configuración — debe coincidir con bam_vision.py si se usan juntos
 # ─────────────────────────────────────────────────────────────────
-GRID      = 28 * 8   # retina features
+GRID      = 28 * 6   # retina features
 LABEL_DIM = 32 * 22   #  32 * labels - dims por vector de etiqueta
 
 INPUT_DIR  = Path.cwd() / "input"
@@ -92,7 +92,6 @@ class BAN:
     Matrices
     --------
     W_fwd  = A⁺ · B   →   imagen  → etiqueta  (forward)
-    W_back = B⁺ · A   →   etiqueta → imagen   (backward / reconstrucción exacta)
 
     Attributes
     ----------
@@ -101,10 +100,9 @@ class BAN:
     A_mat       : ndarray (N, GRID²)  — matriz de imágenes de entrenamiento
     B_mat       : ndarray (N, LABEL_DIM) — matriz de etiquetas
     W_fwd       : ndarray (GRID², LABEL_DIM)
-    W_back      : ndarray (LABEL_DIM, GRID²)
     """
 
-    def __init__(self, bidirectional: bool = False):
+    def __init__(self):
         self.labels     : list[str]            = []
         self.label_vecs : dict[str, np.ndarray] = {}
         self._A_rows    : list[np.ndarray]     = []   # acumula vectores imagen
@@ -112,11 +110,7 @@ class BAN:
         self.A_mat      : np.ndarray | None    = None
         self.B_mat      : np.ndarray | None    = None
         self.W_fwd      : np.ndarray | None    = None
-        self.W_back     : np.ndarray | None    = None
         self._fitted    : bool                 = False
-        self._canonical_A: dict[str, np.ndarray] = {}
-        self._canonical_A_size: dict[str, tuple[int, int]] = {}
-        self.bidirectional = bidirectional
         self._seen_hashes: set = set()
         
     # ── Entrenamiento ────────────────────────────────────────────
@@ -163,10 +157,6 @@ class BAN:
             self.labels.append(label)
             self.label_vecs[label] = _encode_label(idx)
 
-            if self.bidirectional:
-                self._canonical_A[label]     = sp.csr_matrix(vec_A)
-                self._canonical_A_size[label]     = original_size 
-                
         vec_B = self.label_vecs[label]
 
         # ── Acumular par ─────────────────────────────────────────
@@ -194,9 +184,6 @@ class BAN:
         B_dense    = self.B_mat.astype(np.float32)
 
         self.W_fwd = np.linalg.pinv(A_dense) @ B_dense
-
-        if self.bidirectional:
-            self.W_back = np.linalg.pinv(B_dense) @ A_dense
 
         self._fitted = True
 
@@ -247,25 +234,6 @@ class BAN:
 
         return winner, scores
 
-    # ── API inversa: label → imagen ──────────────────────────────
-    def get_image_from_label(self, label: str, save: bool = True) -> Image.Image:
-        if not self.bidirectional:
-            raise RuntimeError(
-                "W_back no disponible. Instancia BAN con bidirectional=True."
-            )
-        
-        label = label.strip().lower()
-        if label not in self._canonical_A:
-            raise ValueError(f"Etiqueta desconocida: '{label}'. Disponibles: {self.labels}")
-
-        # Reconstrucción exacta desde el vector canónico almacenado
-        img = _vec_to_image(self._canonical_A[label], size=self._canonical_A_size[label])
-
-        if save:
-            img.save(OUTPUT_DIR / f"{label}_ban_reconstruida.png")
-
-        return img
-
     # ── Utilidades ───────────────────────────────────────────────
     def summary(self):
         """Imprime el estado actual de la BAN."""
@@ -274,7 +242,6 @@ class BAN:
         print(f"   Muestras  : {len(self._A_rows)}")
         if self._fitted:
             print(f"   W_fwd     : {self.W_fwd.shape}")
-            print(f"   W_back    : {self.W_back.shape if self.bidirectional else 'deshabilitado'}")
         else:
             print("   Estado    : sin entrenar")
         print("─────────────────────────────────────────────────────\n")
@@ -286,20 +253,16 @@ class BAN:
 
         A_rows_mb    = sum(mb_sparse(v) for v in self._A_rows)
         B_rows_mb    = sum(v.nbytes for v in self._B_rows)      / 1024 / 1024
-        canonical_mb = sum(mb_sparse(v) for v in self._canonical_A.values()) \
-                    if self.bidirectional else 0
 
-        total = (A_rows_mb + B_rows_mb + canonical_mb +
-                mb(self.W_fwd) + mb(self.W_back) +
+        total = (A_rows_mb + B_rows_mb  +
+                mb(self.W_fwd) +
                 mb_sparse(self.A_mat) if sp.issparse(self.A_mat) else mb(self.A_mat) +
                 mb(self.B_mat))
 
         report = {
             "_A_rows"      : f"{A_rows_mb:.2f} MB",
             "_B_rows"      : f"{B_rows_mb:.2f} MB",
-            "_canonical_A" : f"{canonical_mb:.2f} MB" if self.bidirectional else "deshabilitado",
             "W_fwd"        : f"{mb(self.W_fwd):.2f} MB",
-            "W_back"       : f"{mb(self.W_back):.2f} MB" if self.bidirectional else "deshabilitado",
             "A_mat"        : f"{mb_sparse(self.A_mat):.2f} MB" if sp.issparse(self.A_mat) else f"{mb(self.A_mat):.2f} MB",
             "B_mat"        : f"{mb(self.B_mat):.2f} MB",
             "TOTAL"        : f"{total:.2f} MB",
@@ -368,7 +331,3 @@ if __name__ == "__main__":
 
     result = ban.classify_("4.png")
     print(f"clasificacion: {result}")
-
-    #================================================ REVERSE
-    label = "banco abierto"
-    img = ban.get_image_from_label(label)

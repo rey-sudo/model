@@ -9,7 +9,7 @@ INPUT_PATH = ruta_actual / "input"
 OUTPUT_PATH = ruta_actual / "output"
 
 
-ban = BAN(bidirectional=False)
+ban = BAN()
 
 frase = "a car is a road vehicle that is powered by an engine and is able to carry a small number of people."
 chunks = []
