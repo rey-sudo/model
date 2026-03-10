@@ -13,8 +13,9 @@ ban = BAN()
 frase = " a car is a road vehicle that is powered by an engine and is able to carry a small number of people."
 chuncks = []
 
+RETINA_W = 28 * 10
 
-RETINA = (28 * 10, 28 * 10)
+RETINA = (RETINA_W, RETINA_W)
 
 def construir_frases(frase):
     palabras = frase.split()
@@ -22,7 +23,7 @@ def construir_frases(frase):
     for i in range(0, len(palabras) + 1):
         frs = " ".join(palabras[:i])
         chuncks.append(frs)
-        word_to_image(path=INPUT_PATH, filename=str(i), frase=frs, padding=1, wrap=True, size=(RETINA))
+        word_to_image(path=INPUT_PATH, filename=str(i), frase=frs, padding=10, wrap=True, size=(RETINA), fuente_size=16)
     
     print(chuncks)    
      

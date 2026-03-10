@@ -36,7 +36,7 @@ def word_to_image(
     size: tuple[int, int] | int | None = None,  # lienzo fijo; sobreescribe dimensiones calculadas
     # ── Opciones de estilo ──────────────────────────────────────
     fuente_path: str | None = None,          # ruta a un .ttf/.otf
-    fuente_size: int = 48,
+    fuente_size: int = 16,
     color_texto: str | tuple = "black",
     color_fondo: str | tuple = "white",
 ) -> Path:
