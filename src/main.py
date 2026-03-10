@@ -18,7 +18,7 @@ RETINA_W = 28 * 8
 
 RETINA = (RETINA_W, RETINA_W)
 
-def construir_frases(frase):
+def preprocesar_texto(frase):
     palabras = frase.split()
     
     for i in range(0, len(palabras) + 1):
@@ -33,10 +33,11 @@ def entrenar_memoria():
         
     ban.summary()
     ban.memory_usage()
+    ban.save("models/ban_v1.pkl")
 
 def reconstruir_frase(clasificacion):
     prefix, frases_scores = clasificacion
-
+    # add temperature
     # obtener frases válidas
     sentences = [s for s in frases_scores.keys() if s.strip()]
 
@@ -52,15 +53,18 @@ def reconstruir_frase(clasificacion):
 
     return result, " ".join(result)
 
+def detectar_frase():
+    ban = BAN.load("models/ban_v1.pkl")
+    ban.memory_usage()
+    
+    result = ban.classify_("3.png")
+    words, sentence = reconstruir_frase(result)
+    print(f"{sentence}")    
 
 
-
-
-
-
-construir_frases(frase)
+preprocesar_texto(frase)
 entrenar_memoria()
-
+detectar_frase()
 
 
 

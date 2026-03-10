@@ -16,6 +16,7 @@ API
     img           = ban.get_image_from_label("carro")
 """
 
+import pickle
 from typing import Tuple
 import numpy as np
 from PIL import Image, ImageOps, ImageFilter
@@ -305,6 +306,39 @@ class BAN:
         print("─────────────────────────────────────────────────────\n")
 
         return report
+
+    def save(self, path: str | Path) -> None:
+        """
+        Guarda la instancia BAN completa en un archivo binario.
+
+        Uso
+        ---
+        ban.save("models/ban_v1.pkl")
+        """
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "wb") as f:
+            pickle.dump(self, f)
+        print(f"  💾 BAN guardada → {path}  ({path.stat().st_size / 1024 / 1024:.2f} MB)")
+
+
+    @staticmethod
+    def load(path: str | Path) -> "BAN":
+        """
+        Carga una instancia BAN desde un archivo binario.
+
+        Uso
+        ---
+        ban = BAN.load("models/ban_v1.pkl")
+        """
+        path = Path(path)
+        if not path.exists():
+            raise FileNotFoundError(f"No se encontró '{path}'.")
+        with open(path, "rb") as f:
+            instance = pickle.load(f)
+        print(f"  ✅ BAN cargada  ← {path}  |  patrones={instance.labels}")
+        return instance
+
 
 
 # ─────────────────────────────────────────────────────────────────
