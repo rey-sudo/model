@@ -10,10 +10,10 @@ OUTPUT_PATH = ruta_actual / "output"
 
 ban = BAN()
 
-frase = " a car is a road vehicle that is powered by an engine and is able to carry a small number of people."
+frase = "a car is a road vehicle that is powered by an engine and is able to carry a small number of people."
 chuncks = []
 
-RETINA_W = 28 * 10
+RETINA_W = 28 * 8
 
 RETINA = (RETINA_W, RETINA_W)
 
@@ -40,8 +40,10 @@ def detectar_frase():
     result = ban.classify_("3.png")
     print(f"clasificacion: {result}")    
 
+def extraer_imagen_label():
+    ban.get_image_from_label("a car is a road vehicle")
 
 construir_frases(frase)
 entrenar_memoria()
 detectar_frase()
-
+extraer_imagen_label()
