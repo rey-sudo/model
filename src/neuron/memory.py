@@ -5,9 +5,6 @@ from PIL import Image, ImageOps, ImageFilter
 from pathlib import Path
 import scipy.sparse as sp
 
-# ─────────────────────────────────────────────────────────────────
-# Configuración — debe coincidir con bam_vision.py si se usan juntos
-# ─────────────────────────────────────────────────────────────────
 GRID      = 28 * 7   # retina features
 LABEL_DIM = 32 * 22   #  32 * labels - dims por vector de etiqueta
 
