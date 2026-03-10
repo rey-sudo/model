@@ -11,7 +11,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from pathlib import Path
-
+from pathlib import Path
+import os
 
 ruta_actual = Path.cwd()
 # ─────────────────────────────────────────────────────────────────
@@ -23,11 +24,39 @@ LABEL_DIM = 32 * 10  # dimensión del vector de etiqueta
 
 FONT_BOLD= ruta_actual / "fonts/LiberationSans-Regular.ttf"
 
+def autocrop(img: Image.Image, padding: float = 0.05) -> Image.Image:
+    """
+    Recorta la imagen al bounding box del contenido oscuro,
+    añadiendo un margen proporcional.
+    """
+    arr = np.array(img)
+    threshold = arr.mean()
+
+    # Máscara de píxeles con contenido (oscuros)
+    mask = arr < threshold
+    rows = np.any(mask, axis=1)
+    cols = np.any(mask, axis=0)
+
+    if not rows.any() or not cols.any():
+        return img  # imagen vacía, no recortar
+
+    r_min, r_max = np.where(rows)[0][[0, -1]]
+    c_min, c_max = np.where(cols)[0][[0, -1]]
+
+    # Añadir padding
+    pad_r = int((r_max - r_min) * padding)
+    pad_c = int((c_max - c_min) * padding)
+    h, w  = arr.shape
+
+    r_min = max(0, r_min - pad_r)
+    r_max = min(h, r_max + pad_r)
+    c_min = max(0, c_min - pad_c)
+    c_max = min(w, c_max + pad_c)
+
+    return img.crop((c_min, r_min, c_max, r_max))
+
+
 def preprocess(image_input) -> np.ndarray:
-    """
-    Convierte cualquier imagen 200×200 a vector bipolar de longitud GRID².
-    Acepta: PIL.Image | np.ndarray | ruta str/Path
-    """
     if isinstance(image_input, (str, Path)):
         img = Image.open(image_input).convert("L")
     elif isinstance(image_input, np.ndarray):
@@ -40,12 +69,12 @@ def preprocess(image_input) -> np.ndarray:
     else:
         raise TypeError("Formato no soportado")
 
-    # Redimensionar a GRID×GRID (retina)
+    # ── Autocrop: elimina canvas vacío alrededor del contenido ──
+    img = autocrop(img)
+
     img = img.resize((GRID, GRID), Image.LANCZOS)
-    # Suavizar + umbral de Otsu simplificado
     arr = np.array(img, dtype=float)
     threshold = arr.mean()
-    # Bipolar: píxel oscuro (patrón dibujado) → +1, fondo → -1
     vec = np.where(arr < threshold, 1.0, -1.0)
     return vec.flatten()
 
@@ -82,7 +111,9 @@ PATTERN_GENERATORS = {
     "carro" : lambda: gen_texto("carro"),
     "manzana" : lambda: gen_texto("manzana"),
     "pera" : lambda: gen_texto("pera"),
-    "banano" : lambda: gen_texto("banano")
+    "banano" : lambda: gen_texto("banano"),
+    "puta": lambda: gen_texto("puta"),
+    "banco abierto": lambda: gen_texto("banco abierto")
 }
 
 LABELS = list(PATTERN_GENERATORS.keys())
@@ -175,6 +206,65 @@ class BAM:
 # ─────────────────────────────────────────────────────────────────
 N_FEATURES = GRID * GRID
 
+
+
+def get_fonts() -> list[Path]:
+    """Busca todas las fuentes disponibles en el sistema."""
+    font_dirs = [
+        Path("/usr/share/fonts"),
+        Path("/usr/local/share/fonts"),
+        Path.home() / ".fonts",
+        ruta_actual / "fonts",
+    ]
+    fonts = []
+    for d in font_dirs:
+        if d.exists():
+            fonts += list(d.rglob("*.ttf")) + list(d.rglob("*.otf"))
+    return fonts if fonts else [FONT_BOLD]  # fallback a la fuente default
+
+
+def gen_texto_multifont(word: str, size: int = CANVAS) -> list[Image.Image]:
+    """
+    Genera imágenes del texto combinando todas las fuentes disponibles
+    con múltiples tamaños relativos al canvas.
+    """
+    # Tamaños como fracción del canvas: 40%, 55%, 70%, 85%
+    size_factors = [0.40, 0.55, 0.70, 0.85]
+
+    imagenes = []
+    for font_path in [FONT_BOLD]: #get_fonts
+        for factor in size_factors:
+            try:
+                img, d = _base(size)
+                target_w = size * factor
+                target_h = size * factor
+
+                font_size = size
+                while font_size > 8:
+                    font = ImageFont.truetype(str(font_path), font_size)
+                    bbox = d.textbbox((0, 0), word, font=font)
+                    w = bbox[2] - bbox[0]
+                    h = bbox[3] - bbox[1]
+                    if w <= target_w and h <= target_h:
+                        break
+                    font_size -= 2
+
+                x = (size - w) // 2 - bbox[0]
+                y = (size - h) // 2 - bbox[1]
+                d.text((x, y), word, fill=0, font=font)
+                imagenes.append(img)
+            except Exception:
+                continue
+
+    if not imagenes:
+        imagenes.append(gen_texto(word, size))  # fallback
+
+    if verbose := True:
+        print(f"    {len(get_fonts())} fuentes × {len(size_factors)} tamaños = {len(imagenes)} imágenes base")
+
+    return imagenes
+
+
 # ── Data augmentation: múltiples variantes por patrón ─────────────
 def augment(img: Image.Image, n: int = 8) -> list[np.ndarray]:
     """Genera n versiones aumentadas de la imagen."""
@@ -211,24 +301,31 @@ LABEL_VECS_AUG = {f"{lbl}_{j}": LABEL_VECS[lbl]
 
 
 def train(n_augment: int = 10, method: str = "pseudoinverse", verbose: bool = True) -> BAM:
-    global LABELS, LABEL_VECS   # ← reconstruir siempre desde PATTERN_GENERATORS
+    global LABELS, LABEL_VECS
 
     LABELS     = list(PATTERN_GENERATORS.keys())
     LABEL_VECS = {lbl: encode_label(i) for i, lbl in enumerate(LABELS)}
 
     all_A, all_B = {}, {}
+    key_idx = 0
 
     for i, (label, gen) in enumerate(PATTERN_GENERATORS.items()):
-        img = gen()
-        img.save(Path.cwd() / "output" / f"{label}_{i}_generada.png")
+        img_base = gen()
+        img_base.save(Path.cwd() / "output" / f"{label}_generada.png")
 
-        for j, vec in enumerate(augment(img, n=n_augment)):
-            key = f"{label}_{j}"
-            all_A[key] = vec
-            all_B[key] = encode_label(i)
+        # ── Variantes por fuente ─────────────────────────────────
+        imagenes = gen_texto_multifont(label) if label in LABELS else [img_base]
+
+        total_variantes = 0
+        for img in imagenes:
+            for vec in augment(img, n=n_augment):
+                all_A[f"{label}_{key_idx}"] = vec
+                all_B[f"{label}_{key_idx}"] = encode_label(i)
+                key_idx += 1
+                total_variantes += 1
 
         if verbose:
-            print(f"  ✓ '{label}'  →  {n_augment} variantes generadas  →  guardada en /output")
+            print(f"  ✓ '{label}'  →  {len(imagenes)} fuentes × {n_augment} aug = {total_variantes} muestras")
 
     net = BAM(n_features=GRID * GRID, label_dim=LABEL_DIM)
     net.fit(all_A, all_B, method=method)
@@ -236,7 +333,7 @@ def train(n_augment: int = 10, method: str = "pseudoinverse", verbose: bool = Tr
     if verbose:
         print(f"\n✅ BAM entrenada")
         print(f"   Patrones  : {LABELS}")
-        print(f"   Muestras  : {len(all_A)}  ({n_augment} aug × {len(LABELS)} patrones)")
+        print(f"   Muestras  : {len(all_A)}")
         print(f"   Método    : {method}")
         print(f"   W_fwd     : {net.W.shape}")
         print(f"   W_back    : {net.W_back.shape}")
@@ -248,11 +345,9 @@ def train(n_augment: int = 10, method: str = "pseudoinverse", verbose: bool = Tr
 
 
 
-
-
 # Instanciar y entrenar la BAM con pseudo-inversa
 bam = BAM(n_features=N_FEATURES, label_dim=LABEL_DIM)
-bam = train()
+bam = train(n_augment=10)
 
 print(f"✓ BAM entrenada  |  features={N_FEATURES}  |  patrones={len(LABELS)}  |  W shape={bam.W.shape}")
 
@@ -345,7 +440,7 @@ def generate_image(label: str, size: int = CANVAS,
     # Umbral final para imagen limpia
     arr = np.array(img_out)
     arr = np.where(arr < 128, 0, 255).astype(np.uint8)
-    return Image.fromarray(arr, mode="L")          # ← imagen PIL 200×200
+    return Image.fromarray(arr, mode="L")         
 
 def classify_from_input(filename: str, verbose: bool = True) -> str:
     """
@@ -367,11 +462,6 @@ def classify_from_input(filename: str, verbose: bool = True) -> str:
                                 f"{[f.name for f in (ruta_actual / 'input').iterdir()]}")
 
     img = Image.open(ruta).convert("L")
-    
-        # ── DEBUG: guarda exactamente lo que ve la BAM ──────────────
-    img_debug = img.resize((GRID, GRID), Image.LANCZOS)
-    img_debug.save(ruta_actual / "output" / f"DEBUG_{filename}")
-    # ────────────────────────────────────────────────────────────
     
     vec = preprocess(img)
     label, scores = bam.classify(vec, LABEL_VECS)
@@ -395,6 +485,10 @@ def classify_from_input(filename: str, verbose: bool = True) -> str:
 def main():
     result = classify_from_input("1.png")
     print(result)
+    
+    label = "banco abierto"
+    img_out = generate_image(label)          
+    img_out.save(ruta_actual / "output" / f"{label}_generada.png")
     
 if __name__ == "__main__":
     main()
