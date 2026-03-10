@@ -292,24 +292,3 @@ class BAN:
         return instance
 
 
-
-# ─────────────────────────────────────────────────────────────────
-# Ejemplo de uso
-# ─────────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    ban = BAN()
-    
-    #================================================ TRAIN
-    (ban
-        .train_from_("1.png",   "banco abierto")
-        .train_from_("2.png",   "banco abierto")
-        .train_from_("3.png",   "banco abierto")
-        .train_from_("4.png",   "carro")
-    )
-
-    ban.summary()
-    
-    #================================================ CLASSIFY
-
-    result = ban.classify_("4.png")
-    print(f"clasificacion: {result}")
