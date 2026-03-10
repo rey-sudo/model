@@ -1,61 +1,42 @@
-from src.matrix import ConceptMatrix
+from pathlib import Path
+from src.neuron.memory import BAN
+from src.utils import word_to_image
+
+ruta_actual = Path.cwd()
+
+INPUT_PATH = ruta_actual / "input"
+OUTPUT_PATH = ruta_actual / "output"
 
 
+ban = BAN()
 
-ecosistema_lexico = [
-    {
-        "concept": "bosque",
-        "definition": [
-            "sustantivo", "masculino", "ecosistema", "donde", "la", "vegetación", 
-            "predominante", "son", "los", "árboles", "y", "matas", "que", "cubre", 
-            "una", "extensión", "grande", "de", "terreno"
-        ]
-    },
-    {
-        "concept": "árbol",
-        "definition": [
-            "sustantivo", "masculino", "planta", "perenne", "de", "tronco", 
-            "leñoso", "y", "elevado", "que", "se", "ramifica", "a", "cierta", 
-            "altura", "del", "suelo", "formando", "una", "copa"
-        ]
-    },
-    {
-        "concept": "suelo",
-        "definition": [
-            "sustantivo", "masculino", "superficie", "de", "la", "corteza", 
-            "terrestre", "biológicamente", "activa", "que", "proviene", "de", 
-            "la", "desintegración", "de", "las", "rocas", "y", "residuos", "orgánicos"
-        ]
-    },
-    {
-        "concept": "fauna",
-        "definition": [
-            "sustantivo", "femenino", "conjunto", "de", "los", "animales", "de", 
-            "un", "país", "región", "o", "medio", "determinado", "que", "viven", 
-            "en", "un", "estado", "temporal", "o", "permanente"
-        ]
-    },
-    {
-        "concept": "clima",
-        "definition": [
-            "sustantivo", "masculino", "conjunto de", "condiciones", "atmosféricas", 
-            "propias", "de", "un", "lugar", "constituido", "por", "la", "cantidad", 
-            "y", "frecuencia", "de", "lluvias", "humedad", "y", "temperatura"
-        ]
-    }
-]
+frase = "el perro es un animal que kaka koko cucu keke"
+chuncks = []
+
+def construir_frases(frase):
+    palabras = frase.split()
+    
+    for i in range(0, len(palabras) + 1):
+        frs = " ".join(palabras[:i])
+        chuncks.append(frs)
+        word_to_image(path=INPUT_PATH, filename=str(i), frase=frs, padding=1)
+    
+    print(chuncks)    
+     
+
+def entrenar_memoria():
+    for i, p in enumerate(chuncks):
+        ban.train_from_(f"{i}.png",   p)
+        
+    ban.summary()
 
 
-MATRIX_SHAPE= 1_000_000_000
-
-cm = ConceptMatrix(shape=(MATRIX_SHAPE, MATRIX_SHAPE, MATRIX_SHAPE))
-
-for item in ecosistema_lexico:
-    result = cm.add_concept(item["concept"], item["definition"])
-    print(cm.get(result))
+def detectar_frase():
+    result = ban.classify_("input.png")
+    print(f"clasificacion: {result}")    
 
 
-
-#cm.plot(title="ConceptMatrix", save_html="concept_matrix_3d.html")
+construir_frases(frase)
+entrenar_memoria()
 
 
