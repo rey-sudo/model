@@ -18,9 +18,9 @@ ruta_actual = Path.cwd()
 # ─────────────────────────────────────────────────────────────────
 # 1.  PREPROCESAMIENTO: imagen 200×200 → vector bipolar (-1 / +1)
 # ─────────────────────────────────────────────────────────────────
-CANVAS   = 200 * 1   # tamaño de imagen de entrada
-GRID     = 28  * 1  # resolución de la "retina" (28×28 = 784 features)
-LABEL_DIM = 32 * 1  # dimensión del vector de etiqueta
+CANVAS   = 200 * 2   # tamaño de imagen de entrada
+GRID     = 28  * 2  # resolución de la "retina" (28×28 = 784 features)
+LABEL_DIM = 32 * 2  # dimensión del vector de etiqueta
 
 FONT_BOLD= ruta_actual / "fonts/LiberationSans-Regular.ttf"
 
@@ -281,25 +281,6 @@ def augment(img: Image.Image, n: int = 8) -> list[np.ndarray]:
         variants.append(preprocess(Image.fromarray(aug.clip(0,255).astype(np.uint8))))
     return variants
 
-# Construir matrices de entrenamiento expandidas con augmentation
-_all_A, _all_B = [], []
-for i, (lbl, gen) in enumerate(PATTERN_GENERATORS.items()):
-    for vec in augment(gen(), n=10):
-        _all_A.append(vec)
-        _all_B.append(LABEL_VECS[lbl])
-
-# También guardar un vector limpio por etiqueta (para referencia)
-TRAIN_VECS = {lbl: preprocess(gen()) for lbl, gen in PATTERN_GENERATORS.items()}
-
-# Dicts para la API de fit
-TRAIN_VECS_AUG = {f"{lbl}_{j}": _all_A[i*10+j]
-                  for i, lbl in enumerate(LABELS)
-                  for j in range(10)}
-LABEL_VECS_AUG = {f"{lbl}_{j}": LABEL_VECS[lbl]
-                  for lbl in LABELS
-                  for j in range(10)}
-
-
 def train(n_augment: int = 10, method: str = "pseudoinverse", verbose: bool = True) -> BAM:
     global LABELS, LABEL_VECS
 
@@ -311,8 +292,9 @@ def train(n_augment: int = 10, method: str = "pseudoinverse", verbose: bool = Tr
 
     for i, (label, gen) in enumerate(PATTERN_GENERATORS.items()):
         img_base = gen()
+        
         img_base.save(Path.cwd() / "output" / f"{label}_generada.png")
-
+        
         # ── Variantes por fuente ─────────────────────────────────
         imagenes = gen_texto_multifont(label) if label in LABELS else [img_base]
 
@@ -323,7 +305,8 @@ def train(n_augment: int = 10, method: str = "pseudoinverse", verbose: bool = Tr
                 all_B[f"{label}_{key_idx}"] = encode_label(i)
                 key_idx += 1
                 total_variantes += 1
-
+            
+            
         if verbose:
             print(f"  ✓ '{label}'  →  {len(imagenes)} fuentes × {n_augment} aug = {total_variantes} muestras")
 
@@ -442,7 +425,7 @@ def generate_image(label: str, size: int = CANVAS,
     arr = np.where(arr < 128, 0, 255).astype(np.uint8)
     return Image.fromarray(arr, mode="L")         
 
-def classify_from_input(filename: str, verbose: bool = True) -> str:
+def classify_from_input(filename: str, verbose: bool = True):
     """
     Toma una imagen de la carpeta /input y devuelve el label identificado.
 
@@ -477,14 +460,14 @@ def classify_from_input(filename: str, verbose: bool = True) -> str:
             marker = " ← ganador" if lbl == label else ""
             print(f"   {lbl:<12} {score:+.4f}  {bar}{marker}")
 
-    return label
+    return label, scores, vec
 
 
 
 
 def main():
-    result = classify_from_input("1.png")
-    print(result)
+    label, scores, vec = classify_from_input("1.png")
+    print(label)
     
     label = "banco abierto"
     img_out = generate_image(label)          
