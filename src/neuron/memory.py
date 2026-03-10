@@ -16,15 +16,16 @@ API
     img           = ban.get_image_from_label("carro")
 """
 
+from typing import Tuple
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageOps, ImageFilter
 from pathlib import Path
 
 # ─────────────────────────────────────────────────────────────────
 # Configuración — debe coincidir con bam_vision.py si se usan juntos
 # ─────────────────────────────────────────────────────────────────
-GRID      = 28 * 10   # retina 280×280 → 78,400 features
-LABEL_DIM = 32 * 10   # 320 dims por vector de etiqueta
+GRID      = 28 * 15   # retina 280×280 → 78,400 features
+LABEL_DIM = 32 * 15   # 320 dims por vector de etiqueta
 
 INPUT_DIR  = Path.cwd() / "input"
 OUTPUT_DIR = Path.cwd() / "output"
@@ -34,33 +35,8 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 # ─────────────────────────────────────────────────────────────────
 # Preprocesamiento
 # ─────────────────────────────────────────────────────────────────
-def _autocrop(img: Image.Image, padding: float = 0.05) -> Image.Image:
-    """Recorta al bounding box del contenido oscuro + margen."""
-    arr       = np.array(img)
-    threshold = arr.mean()
-    mask      = arr < threshold
-    rows      = np.any(mask, axis=1)
-    cols      = np.any(mask, axis=0)
 
-    if not rows.any() or not cols.any():
-        return img
-
-    r_min, r_max = np.where(rows)[0][[0, -1]]
-    c_min, c_max = np.where(cols)[0][[0, -1]]
-
-    pad_r = int((r_max - r_min) * padding)
-    pad_c = int((c_max - c_min) * padding)
-    h, w  = arr.shape
-
-    return img.crop((
-        max(0, c_min - pad_c),
-        max(0, r_min - pad_r),
-        min(w, c_max + pad_c),
-        min(h, r_max + pad_r),
-    ))
-
-
-def _preprocess(image_input) -> np.ndarray:
+def _preprocess(image_input, spatial: bool = False) -> Tuple[np.ndarray, Tuple[int,int]]:
     """Imagen → vector bipolar (-1 / +1) de longitud GRID²."""
     if isinstance(image_input, (str, Path)):
         img = Image.open(image_input).convert("L")
@@ -72,11 +48,15 @@ def _preprocess(image_input) -> np.ndarray:
         img = image_input.convert("L")
     else:
         raise TypeError(f"Formato no soportado: {type(image_input)}")
-
-    img = _autocrop(img)
-    img = img.resize((GRID, GRID), Image.LANCZOS)
+    
+    #spatial
+         
+    img = ImageOps.pad(img, (GRID, GRID), color=255)  
     arr = np.array(img, dtype=float)
-    return np.where(arr < arr.mean(), 1.0, -1.0).flatten()
+    size = img.size
+    result = np.where(arr < arr.mean(), 1.0, -1.0).flatten()
+    
+    return result, size
 
 
 def _encode_label(idx: int, dim: int = LABEL_DIM) -> np.ndarray:
@@ -85,13 +65,13 @@ def _encode_label(idx: int, dim: int = LABEL_DIM) -> np.ndarray:
     return rng.choice([-1.0, 1.0], size=dim)
 
 
-def _vec_to_image(vec: np.ndarray, size: int = 200) -> Image.Image:
+def _vec_to_image(vec: np.ndarray, size: Tuple[int,int] = (200,200)) -> Image.Image:
     """Vector bipolar → PIL.Image escalada a size×size."""
     grid     = vec.reshape(GRID, GRID)
     arr      = ((1 - grid) / 2 * 255).astype(np.uint8)
     img_small = Image.fromarray(arr, mode="L")
     img_small = img_small.filter(ImageFilter.GaussianBlur(radius=0.6))
-    img_out   = img_small.resize((size, size), Image.LANCZOS)
+    img_out   = img_small.resize((size), Image.LANCZOS)
     arr_out   = np.array(img_out)
     arr_out   = np.where(arr_out < 128, 0, 255).astype(np.uint8)
     return Image.fromarray(arr_out, mode="L")
@@ -130,8 +110,11 @@ class BAN:
         self.W_back     : np.ndarray | None    = None
         self._fitted    : bool                 = False
         self._canonical_A: dict[str, np.ndarray] = {}
+        self._canonical_A_size: dict[str, tuple[int, int]] = {}
+        self._spatial: dict[str, bool] = {}
     # ── Entrenamiento ────────────────────────────────────────────
     def train_from_(self, filename: str, label: str,
+                    spatial: bool = False,
                     save_output: bool = True) -> "BAN":
         """
         Registra un par (imagen, label) y reajusta las matrices.
@@ -157,7 +140,8 @@ class BAN:
             )
 
         # ── Vector imagen ────────────────────────────────────────
-        vec_A = _preprocess(ruta)
+
+        vec_A, original_size = _preprocess(ruta, spatial=spatial) 
         
         for existing_vec in self._A_rows:
             if np.array_equal(existing_vec, vec_A):
@@ -171,6 +155,8 @@ class BAN:
             self.labels.append(label)
             self.label_vecs[label] = _encode_label(idx)
             self._canonical_A[label]     = vec_A 
+            self._canonical_A_size[label]     = original_size 
+            self._spatial[label]     = spatial
 
         vec_B = self.label_vecs[label]
 
@@ -183,7 +169,7 @@ class BAN:
 
         # ── Guardar imagen procesada ─────────────────────────────
         if save_output:
-            img_out = _vec_to_image(vec_A)
+            img_out = _vec_to_image(vec_A, original_size)
             img_out.save(OUTPUT_DIR / f"{label}_ban_entrenada.png")
 
         print(f"  ✓ '{label}'  ←  {filename}  |  "
@@ -204,6 +190,7 @@ class BAN:
         return np.sign(A @ self.W_fwd + 1e-9)
 
     def classify_(self, image_input,
+                  spatial: bool = False,
                   verbose: bool = True) -> tuple[str, dict]:
         """
         Clasifica una imagen y retorna (label, scores).
@@ -223,7 +210,7 @@ class BAN:
         if isinstance(image_input, str):
             image_input = INPUT_DIR / image_input
 
-        vec   = _preprocess(image_input)
+        vec, _   = _preprocess(image_input, spatial=spatial)
         B_hat = self._forward(vec)
 
         scores = {}
@@ -245,13 +232,13 @@ class BAN:
         return winner, scores
 
     # ── API inversa: label → imagen ──────────────────────────────
-    def get_image_from_label(self, label: str, size: int = 200, save: bool = True) -> Image.Image:
+    def get_image_from_label(self, label: str, save: bool = True) -> Image.Image:
         label = label.strip().lower()
         if label not in self._canonical_A:
             raise ValueError(f"Etiqueta desconocida: '{label}'. Disponibles: {self.labels}")
 
         # Reconstrucción exacta desde el vector canónico almacenado
-        img = _vec_to_image(self._canonical_A[label], size=size)
+        img = _vec_to_image(self._canonical_A[label], size=self._canonical_A_size[label])
 
         if save:
             img.save(OUTPUT_DIR / f"{label}_ban_reconstruida.png")

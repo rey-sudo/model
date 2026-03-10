@@ -10,7 +10,7 @@ OUTPUT_PATH = ruta_actual / "output"
 
 ban = BAN()
 
-frase = "el perro es un animal que kaka koko cucu keke"
+frase = " a car is a road vehicle that is powered by an engine and is able to carry a small number of people."
 chuncks = []
 
 def construir_frases(frase):
@@ -26,17 +26,17 @@ def construir_frases(frase):
 
 def entrenar_memoria():
     for i, p in enumerate(chuncks):
-        ban.train_from_(f"{i}.png",   p)
+        ban.train_from_(filename=f"{i}.png", label=p, spatial=True)
         
     ban.summary()
 
 
 def detectar_frase():
-    result = ban.classify_("input.png")
+    result = ban.classify_("3.png")
     print(f"clasificacion: {result}")    
 
 
 construir_frases(frase)
 entrenar_memoria()
-
+detectar_frase()
 

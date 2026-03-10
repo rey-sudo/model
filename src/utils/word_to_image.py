@@ -24,7 +24,7 @@ def word_to_image(
     frase: str,
     filename: str,                 # nombre del archivo de salida (sin o con extensión)
     formato: str = "PNG",
-    padding: int = 20,
+    padding: int = 1,
     # ── Opciones de estilo ──────────────────────────────────────
     fuente_path: str | None = None,   # ruta a un .ttf/.otf; None = fuente por defecto
     fuente_size: int = 48,            # tamaño en puntos (ignorado con fuente por defecto)
