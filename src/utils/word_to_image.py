@@ -3,18 +3,19 @@ frase_a_imagen.py
 Convierte una palabra o frase en una imagen.
 
 Argumentos:
-    path    : ruta de destino donde se guarda la imagen (ej. "salida/imagen.png")
-    frase   : texto a renderizar
-    formato : formato de salida — "PNG", "JPEG", "WEBP", "BMP", "GIF", "TIFF"
+    path     : directorio o ruta completa de destino
+    frase    : texto a renderizar
+    filename : nombre del archivo de salida (sin o con extensión)
+    formato  : formato de salida — "PNG", "JPEG", "WEBP", "BMP", "GIF", "TIFF"
     padding  : espacio en píxeles alrededor del texto
                si es 1 la imagen se ajusta exactamente al contenido con 1 px de margen
-    filename : nombre del archivo de salida (sin o con extensión).
-               Si se omite, se genera desde la frase.
+    wrap     : si True, hace wrap del texto para que la imagen sea cuadrada
 
 Dependencias:
     pip install Pillow
 """
 
+import re
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
@@ -22,29 +23,26 @@ from PIL import Image, ImageDraw, ImageFont
 def word_to_image(
     path: str,
     frase: str,
-    filename: str,                 # nombre del archivo de salida (sin o con extensión)
+    filename: str,                  # nombre del archivo de salida (sin o con extensión)
     formato: str = "PNG",
-    padding: int = 1,
+    padding: int = 20,
+    wrap: bool = False,             # True → wrap del texto para imagen cuadrada
     # ── Opciones de estilo ──────────────────────────────────────
-    fuente_path: str | None = None,   # ruta a un .ttf/.otf; None = fuente por defecto
-    fuente_size: int = 48,            # tamaño en puntos (ignorado con fuente por defecto)
+    fuente_path: str | None = None, # ruta a un .ttf/.otf; None = fuente por defecto
+    fuente_size: int = 48,          # tamaño en puntos
     color_texto: str | tuple = "black",
     color_fondo: str | tuple = "white",
 ) -> Path:
     """
-    Genera una imagen que contiene `frase` y la guarda en `path`.
+    Genera una imagen que contiene `frase` y la guarda en `path/filename`.
+
+    Con wrap=True el texto se distribuye en múltiples líneas buscando
+    la proporción más cercana a un cuadrado.
 
     Returns
     -------
     Path
         Ruta absoluta del archivo creado.
-
-    Raises
-    ------
-    ValueError
-        Si el formato no está soportado.
-    FileNotFoundError
-        Si `fuente_path` apunta a un archivo inexistente.
     """
 
     # ── Validar formato ─────────────────────────────────────────
@@ -55,29 +53,17 @@ def word_to_image(
             f"Formato '{formato}' no soportado. "
             f"Usa uno de: {', '.join(sorted(FORMATOS_SOPORTADOS))}"
         )
-    # Pillow usa "JPEG" para .jpg
     fmt_pillow = "JPEG" if fmt == "JPG" else fmt
 
-    # ── Resolver path y filename ────────────────────────────────
-    import re
+    # ── Resolver dest ────────────────────────────────────────────
     dest = Path(path)
     extension = fmt.lower() if fmt != "JPG" else "jpg"
+    fn = Path(filename)
+    nombre_archivo = fn.stem + (fn.suffix if fn.suffix else f".{extension}")
 
-    if filename:
-        # Usar el nombre proporcionado; añadir extensión si no la tiene
-        fn = Path(filename)
-        nombre_archivo = fn.stem + (fn.suffix if fn.suffix else f".{extension}")
-    else:
-        # Derivar nombre desde la frase sanitizando caracteres no válidos
-        nombre_base = re.sub(r'[^\w\-]', '_', frase.strip()).strip('_')
-        nombre_base = re.sub(r'_+', '_', nombre_base)
-        nombre_archivo = f"{nombre_base}.{extension}"
-
-    # Si path es directorio (o ruta sin extensión), combinar con el nombre
     if dest.is_dir() or not dest.suffix:
         dest = dest / nombre_archivo
-    elif filename:
-        # path tiene extensión pero se pasó filename → usar directorio de path + filename
+    else:
         dest = dest.parent / nombre_archivo
 
     # ── Cargar fuente ───────────────────────────────────────────
@@ -88,34 +74,76 @@ def word_to_image(
         font = ImageFont.truetype(str(fp), fuente_size)
     else:
         try:
-            # Intenta cargar DejaVuSans si está disponible en el sistema
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", fuente_size)
+            font = ImageFont.truetype(
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", fuente_size
+            )
         except (IOError, OSError):
-            # Última opción: fuente bitmap incorporada en Pillow
             font = ImageFont.load_default()
 
-    # ── Calcular tamaño del texto ────────────────────────────────
-    # Usamos un canvas temporal para medir con precisión
-    dummy = Image.new("RGB", (1, 1))
-    draw  = ImageDraw.Draw(dummy)
+    # ── Helper: medir un bloque de texto ────────────────────────
+    _dummy_draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
 
-    bbox   = draw.textbbox((0, 0), frase, font=font)
-    # bbox → (left, top, right, bottom)
-    text_w = bbox[2] - bbox[0]
-    text_h = bbox[3] - bbox[1]
-    # Offset para posicionar el texto (algunos glyphs tienen descenso negativo)
-    offset_x = -bbox[0]
-    offset_y = -bbox[1]
+    def medir(texto: str) -> tuple[int, int, int, int]:
+        """Devuelve (w, h, offset_x, offset_y) del texto."""
+        bb = _dummy_draw.multiline_textbbox((0, 0), texto, font=font, spacing=4)
+        return bb[2] - bb[0], bb[3] - bb[1], -bb[0], -bb[1]
 
-    # ── Tamaño final de la imagen ────────────────────────────────
-    img_w = text_w + padding * 2
-    img_h = text_h + padding * 2
+    # ── Calcular layout ──────────────────────────────────────────
+    if not wrap:
+        # ── Sin wrap: una sola línea ─────────────────────────────
+        text_w, text_h, offset_x, offset_y = medir(frase)
+        texto_final = frase
+        img_w = text_w + padding * 2
+        img_h = text_h + padding * 2
 
-    # ── Crear imagen y dibujar texto ─────────────────────────────
-    # JPEG no soporta transparencia → forzar RGB
+    else:
+        # ── Con wrap: buscar el ancho de línea que produce imagen más cuadrada
+        palabras = frase.split()
+
+        def wrap_en(max_chars: int) -> str:
+            """Hace wrap simple por número máximo de caracteres por línea."""
+            lineas, linea = [], ""
+            for palabra in palabras:
+                candidata = (linea + " " + palabra).strip()
+                if len(candidata) <= max_chars or not linea:
+                    linea = candidata
+                else:
+                    lineas.append(linea)
+                    linea = palabra
+            if linea:
+                lineas.append(linea)
+            return "\n".join(lineas)
+
+        total_chars = len(frase)
+        mejor_texto = frase
+        mejor_diff  = float("inf")
+        mejor_w = mejor_h = 0
+
+        # Medir la frase sin wrap como baseline
+        w0, h0, _, _ = medir(frase)
+        mejor_w, mejor_h = w0, h0
+
+        # Probar distintos anchos de línea (de 1 palabra a toda la frase)
+        for max_chars in range(1, total_chars + 1):
+            candidato = wrap_en(max_chars)
+            w, h, _, _ = medir(candidato)
+            if w == 0 or h == 0:
+                continue
+            diff = abs(w - h)
+            if diff < mejor_diff:
+                mejor_diff  = diff
+                mejor_texto = candidato
+                mejor_w, mejor_h = w, h
+
+        texto_final = mejor_texto
+        _, _, offset_x, offset_y = medir(texto_final)
+        # El lado del cuadrado es el mayor de los dos ejes + padding
+        # Mínimo garantizado: siempre >= texto + 2*padding
+        lado = max(mejor_w, mejor_h, 1) + padding * 2
+        img_w = img_h = lado  # imagen cuadrada
+
+    # ── Crear imagen ─────────────────────────────────────────────
     mode = "RGB" if fmt_pillow in ("JPEG", "BMP", "GIF") else "RGBA"
-
-    # Si el fondo es transparente y el modo es RGB, usar blanco
     fondo = color_fondo
     if mode == "RGB" and isinstance(fondo, tuple) and len(fondo) == 4 and fondo[3] == 0:
         fondo = "white"
@@ -123,41 +151,31 @@ def word_to_image(
     img  = Image.new(mode, (img_w, img_h), fondo)
     draw = ImageDraw.Draw(img)
 
-    pos_x = padding + offset_x
-    pos_y = padding + offset_y
-    draw.text((pos_x, pos_y), frase, font=font, fill=color_texto)
+    if wrap:
+        # Centrar el bloque de texto dentro del cuadrado
+        tw, th, offset_x, offset_y = medir(texto_final)
+        pos_x = (img_w - tw) // 2 + offset_x
+        pos_y = (img_h - th) // 2 + offset_y
+        draw.multiline_text(
+            (pos_x, pos_y), texto_final,
+            font=font, fill=color_texto,
+            align="center", spacing=4,
+        )
+    else:
+        draw.text(
+            (padding + offset_x, padding + offset_y),
+            texto_final, font=font, fill=color_texto,
+        )
 
     # ── Guardar ─────────────────────────────────────────────────
     dest.parent.mkdir(parents=True, exist_ok=True)
-
-    save_kwargs = {}
+    save_kwargs = {"quality": 95} if fmt_pillow == "JPEG" else {}
     if fmt_pillow == "JPEG":
-        save_kwargs["quality"] = 95
-        # JPEG no admite RGBA
         img = img.convert("RGB")
 
     img.save(dest, format=fmt_pillow, **save_kwargs)
-    #print(f"✅ Imagen guardada en: {dest.resolve()}  ({img_w}×{img_h} px)")
+    shape = "cuadrada" if wrap else "rectangular"
+    print(f"✅ Imagen {shape} guardada en: {dest.resolve()}  ({img_w}×{img_h} px)")
     return dest.resolve()
 
 
-# ── Demo ─────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    ejemplos = [
-        # padding = 1  →  imagen ajustada al texto con 1 px de margen
-        dict(path="demo/ajustado.png",     frase="¡Hola, mundo!",            formato="PNG",  padding=1),
-        # padding generoso, fondo oscuro, texto blanco
-        dict(path="demo/oscuro.png",       frase="Python es genial",         formato="PNG",  padding=30,
-             color_fondo="#1e1e2e", color_texto="#cdd6f4", fuente_size=64),
-        # JPEG
-        dict(path="demo/comprimido.jpg",   frase="Texto en JPEG",            formato="JPEG", padding=16),
-        # Fondo transparente
-        dict(path="demo/transparente.png", frase="Fondo transparente",       formato="PNG",  padding=20,
-             color_fondo=(0, 0, 0, 0), color_texto="navy"),
-        # Frase larga
-        dict(path="demo/frase_larga.png",  frase="Convertir texto en imagen es muy útil",
-             formato="PNG", padding=12, fuente_size=36),
-    ]
-
-    for kw in ejemplos:
-        frase_a_imagen(**kw)

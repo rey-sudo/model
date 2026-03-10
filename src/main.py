@@ -19,7 +19,7 @@ def construir_frases(frase):
     for i in range(0, len(palabras) + 1):
         frs = " ".join(palabras[:i])
         chuncks.append(frs)
-        word_to_image(path=INPUT_PATH, filename=str(i), frase=frs, padding=1)
+        word_to_image(path=INPUT_PATH, filename=str(i), frase=frs, padding=1, wrap=True)
     
     print(chuncks)    
      

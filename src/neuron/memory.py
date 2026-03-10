@@ -24,8 +24,8 @@ from pathlib import Path
 # ─────────────────────────────────────────────────────────────────
 # Configuración — debe coincidir con bam_vision.py si se usan juntos
 # ─────────────────────────────────────────────────────────────────
-GRID      = 28 * 15   # retina 280×280 → 78,400 features
-LABEL_DIM = 32 * 15   # 320 dims por vector de etiqueta
+GRID      = 28 * 10   # retina 280×280 → 78,400 features
+LABEL_DIM = 32 * 10   # 320 dims por vector de etiqueta
 
 INPUT_DIR  = Path.cwd() / "input"
 OUTPUT_DIR = Path.cwd() / "output"
