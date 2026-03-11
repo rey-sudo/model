@@ -7,16 +7,16 @@ ruta_actual = Path.cwd()
 
 INPUT_PATH = ruta_actual / "input"
 OUTPUT_PATH = ruta_actual / "output"
+GRID = 28 * 7
+RETINA = (GRID, GRID)
 
-
-ban = BAN()
-
-frase = "a car is a road vehicle that is powered by an engine and is able to carry a small number of people."
+frase = "the car is"
 chunks = []
 
-GRID = 28 * 7
 
-RETINA = (GRID, GRID)
+ban1 = BAN()
+ban2 = BAN()
+ban3 = BAN()
 
 def preprocesar_texto(frase):
     palabras = frase.split()
@@ -28,11 +28,22 @@ def preprocesar_texto(frase):
         
 def entrenar_memoria():
     for i, p in enumerate(chunks):
-        ban.train_from_(filename=f"{i}.png", label=p)
         
-    ban.summary()
-    ban.memory_usage()
-    ban.save("models/ban_v1.pkl")
+        if i == 0:
+            continue
+        
+        if i == 1:
+            ban1.train_from_(filename=f"{i}.png", label=p)
+
+        if i == 2:
+            ban2.train_from_upstream_(filename=f"{i}.png", label=p, upstream=ban1)
+          
+        if i == 3:
+            ban3.train_from_upstream_(filename=f"{i}.png", label=p, upstream=[ban1, ban2])
+        
+    #ban.summary()
+    #ban.memory_usage()
+    #ban.save("models/ban_v1.pkl")
 
 def reconstruir_frase(clasificacion):
     prefix, frases_scores = clasificacion
@@ -53,12 +64,9 @@ def reconstruir_frase(clasificacion):
     return result, " ".join(result)
 
 def detectar_frase():
-    ban = BAN.load("models/ban_v1.pkl")
-    ban.memory_usage()
+    result = ban3.classify_chained_("2.png",  upstream=[ban1, ban2, ban3])
     
-    result = ban.classify_("3.png")
-    words, sentence = reconstruir_frase(result)
-    print(f"{sentence}")    
+    print(result)
 
 
 preprocesar_texto(frase)

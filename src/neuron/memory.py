@@ -121,15 +121,7 @@ class BAN:
         # ── Vector imagen ────────────────────────────────────────
 
         vec_A, original_size = _preprocess(ruta) 
-        
-        _fingerprint = vec_A.toarray().tobytes()
-        if _fingerprint in self._seen_hashes:
-            print(f"  ⚠️  '{label}' ya registrado, se omite")
-            return self
-        
-        self._seen_hashes.add(_fingerprint)
-                
-
+    
         # ── Vector etiqueta ──────────────────────────────────────
         if label not in self.label_vecs:
             idx = len(self.labels)
@@ -154,6 +146,105 @@ class BAN:
               f"patrones={len(self.labels)}  muestras={len(self._A_rows)}")
 
         return self  # permite encadenar
+
+
+    def train_from_upstream_(self, filename: str, label: str,
+                            upstream: "BAN | list[BAN]",   # ← cambio
+                            save_output: bool = False) -> "BAN":
+
+        label = label.strip().lower()
+        ruta  = INPUT_DIR / filename
+
+        # propagar por toda la cadena — igual que classify_chained_
+        vec_img, _ = _preprocess(ruta)
+        chain = upstream if isinstance(upstream, list) else [upstream]
+
+        representation = vec_img
+        for ban in chain:
+            representation = sp.csr_matrix(
+                ban._forward(representation).reshape(1, -1)
+            )
+
+        vec_A = representation  # shape consistente con la cadena
+
+        # 3. registrar etiqueta de BAN2
+        if label not in self.label_vecs:
+            idx = len(self.labels)
+            self.labels.append(label)
+            self.label_vecs[label] = _encode_label(idx)
+
+        vec_B = self.label_vecs[label]
+
+        # 4. acumular y reajustar
+        self._A_rows.append(vec_A)
+        self._B_rows.append(vec_B)
+        self._fit()
+
+        print(f"  ✓ '{label}'  ←  {filename}  (via upstream {[b.labels for b in chain]})")
+        return self
+
+
+    def classify_chained_(self, image_input,
+                        upstream: "BAN | list[BAN]",
+                        verbose: bool = True) -> tuple[str, dict]:
+
+        if isinstance(image_input, str):
+            image_input = INPUT_DIR / image_input
+        if isinstance(image_input, Path) and not image_input.exists():
+            raise FileNotFoundError(f"No se encontró '{image_input}'.")
+
+        chain = upstream if isinstance(upstream, list) else [upstream]
+
+        # ── validar que toda la cadena esté entrenada ────────────────
+        for ban in chain:
+            if not ban._fitted:
+                raise RuntimeError(f"BAN {ban.labels or 'sin label'} no entrenada.")
+        if not self._fitted:
+            raise RuntimeError("Esta BAN no está entrenada.")
+
+        # ── propagar ─────────────────────────────────────────────────
+        vec_img, _ = _preprocess(image_input)
+        representation = vec_img
+        intermediate_scores = []   # ← acumula scores de cada BAN del chain
+
+        for ban in chain:
+            b_hat = ban._forward(representation)
+
+            # ── scores intermedios de esta BAN ───────────────────────
+            step_scores = {}
+            for lbl, lv in ban.label_vecs.items():
+                num = float(np.dot(b_hat, lv))
+                den = (np.linalg.norm(b_hat) * np.linalg.norm(lv)) + 1e-9
+                step_scores[lbl] = num / den
+            intermediate_scores.append({
+                "ban"    : ban.labels,
+                "winner" : max(step_scores, key=step_scores.get),
+                "scores" : step_scores,
+            })
+
+            representation = sp.csr_matrix(b_hat.reshape(1, -1))
+
+        # ── clasificación final ──────────────────────────────────────
+        B_hat = self._forward(representation)
+        scores = {}
+        for lbl, lv in self.label_vecs.items():
+            num         = float(np.dot(B_hat, lv))
+            den         = (np.linalg.norm(B_hat) * np.linalg.norm(lv)) + 1e-9
+            scores[lbl] = num / den
+        winner = max(scores, key=scores.get)
+
+        if verbose:
+            for step in intermediate_scores:
+                print(f"\n📡 {step['ban']}  →  winner: '{step['winner']}'")
+                for lbl, sc in sorted(step['scores'].items(), key=lambda x: -x[1]):
+                    print(f"   {lbl:<20} {sc:+.5f}")
+
+            print(f"\n🏆 Final ({self.labels})  →  '{winner}'")
+            for lbl, sc in sorted(scores.items(), key=lambda x: -x[1]):
+                marker = " ← ganador" if lbl == winner else ""
+                print(f"   {lbl:<20} {sc:+.5f}{marker}")
+
+        return winner, scores, intermediate_scores   # ← tercer valor nuevo
 
     def _fit(self):
         self.A_mat = sp.vstack(self._A_rows)
