@@ -2,6 +2,7 @@ from pathlib import Path
 from src.neuron.memory import BAN
 from src.utils import word_to_image
 from collections import Counter
+from src.utils import image_to_svg_paths
 
 ruta_actual = Path.cwd()
 
@@ -25,6 +26,10 @@ def preprocesar_texto(frase):
         frs = " ".join(palabras[:i])
         chunks.append(frs)
         word_to_image(path=INPUT_PATH, filename=str(i), frase=frs, padding=2, wrap=True, size=(RETINA), fuente_size=12)
+        
+        route = INPUT_PATH /  f"{str(i)}.png"
+        route_out = INPUT_PATH /  f"{str(i)}.svg"
+        image_to_svg_paths(input_path=route, output_path=route_out)
     
 
 def entrenar_memoria():
