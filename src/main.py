@@ -1,22 +1,15 @@
 from pathlib import Path
-from src.neuron.memory import PlasticBAN
+from src.neuron.memory import BAN
 from src.utils import word_to_image
-from src.utils.build_phrase import reconstruir_frase
+from collections import Counter
 
 ruta_actual = Path.cwd()
 
 INPUT_PATH = ruta_actual / "input"
 OUTPUT_PATH = ruta_actual / "output"
 
-ban = PlasticBAN(
-        ltp_rate        = 0.01,
-        ltd_rate        = 0.005,
-        decay           = 0.0005,
-        fatigue_k       = 0.05,
-        fatigue_recovery= 0.995,
-        radius          = 0.20,
-        consolidation_k = 0.05,
-    )
+
+ban = BAN()
 
 frase = "a car is a road vehicle that is powered by an engine and is able to carry a small number of people."
 chunks = []
@@ -36,16 +29,32 @@ def preprocesar_texto(frase):
 def entrenar_memoria():
     for i, p in enumerate(chunks):
         ban.train_from_(filename=f"{i}.png", label=p)
-        #ban.reinforce_(filename=f"{i}.png", label=p, repetitions=1)
-
-    ban.save("models/ban_v1.pkl")
-
-def detectar_frase():
-    ban = PlasticBAN.load("models/ban_v1.pkl")
+        
     ban.summary()
     ban.memory_usage()
-    ban.plasticity_report()
-    print(ban.synaptic_snapshot())
+    ban.save("models/ban_v1.pkl")
+
+def reconstruir_frase(clasificacion):
+    prefix, frases_scores = clasificacion
+    # add temperature
+    # obtener frases válidas
+    sentences = [s for s in frases_scores.keys() if s.strip()]
+
+    split_sentences = [s.split() for s in sentences]
+    max_len = max(len(s) for s in split_sentences)
+
+    result = []
+
+    for i in range(max_len):
+        words = [s[i] for s in split_sentences if len(s) > i]
+        word = Counter(words).most_common(1)[0][0]
+        result.append(word)
+
+    return result, " ".join(result)
+
+def detectar_frase():
+    ban = BAN.load("models/ban_v1.pkl")
+    ban.memory_usage()
     
     result = ban.classify_("3.png")
     words, sentence = reconstruir_frase(result)
@@ -53,9 +62,7 @@ def detectar_frase():
 
 
 preprocesar_texto(frase)
-#entrenar_memoria()
+entrenar_memoria()
 detectar_frase()
-
-
 
 
