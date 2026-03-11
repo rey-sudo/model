@@ -187,7 +187,7 @@ class BAN:
         self._B_rows.append(vec_B)
         self._fit()
 
-        print(f"  ✓ '{label}'  ←  {filename}  (via upstream {[b.labels for b in chain]})")
+        #print(f"  ✓ '{label}'  ←  {filename}  (via upstream {[b.labels for b in chain]})")
         return self
 
 
