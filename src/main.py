@@ -40,10 +40,11 @@ def entrenar_memoria():
           
         if i == 3:
             ban3.train_from_upstream_(filename=f"{i}.png", label=p, upstream=[ban1, ban2])
+
         
-    #ban.summary()
-    #ban.memory_usage()
-    #ban.save("models/ban_v1.pkl")
+    #ban1.summary()
+    #ban1.memory_usage()
+    #ban3.save("models/ban_v1.pkl")
 
 def reconstruir_frase(clasificacion):
     prefix, frases_scores = clasificacion
@@ -64,7 +65,7 @@ def reconstruir_frase(clasificacion):
     return result, " ".join(result)
 
 def detectar_frase():
-    result = ban3.classify_chained_("2.png",  upstream=[ban1, ban2, ban3])
+    result = ban3.classify_chained_("1.png",  upstream=[ban1, ban2, ban3])
     
     print(result)
 

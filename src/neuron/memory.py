@@ -121,7 +121,14 @@ class BAN:
         # ── Vector imagen ────────────────────────────────────────
 
         vec_A, original_size = _preprocess(ruta) 
-    
+
+        _fingerprint = vec_A.toarray().tobytes()
+        if _fingerprint in self._seen_hashes:
+            print(f"  ⚠️  '{label}' ya registrado, se omite")
+            return self
+        
+        self._seen_hashes.add(_fingerprint)    
+
         # ── Vector etiqueta ──────────────────────────────────────
         if label not in self.label_vecs:
             idx = len(self.labels)
