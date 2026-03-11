@@ -35,13 +35,13 @@ def preprocesar_texto(frase):
     return resultado_tuplas
 
 def entrenar_frase(red: dict, frase: str):
-    resultado = preprocesar_texto(frase)
+    phrase_chunks = preprocesar_texto(frase)
 
-    for i in range(1, len(resultado) + 1):
+    for i in range(1, len(phrase_chunks) + 1):
         red[i] = BAN()
         print(f"\n--- Entrenando BAN{i} con toda la secuencia ---")
 
-        for img, label in resultado:
+        for img, label in phrase_chunks:
             nodos_contexto = [red[j] for j in range(1, i) if j in red]
 
             if nodos_contexto:
@@ -89,6 +89,7 @@ def clasificar_documento(imagen: str, verbose: bool = True):
     
 
 entrenar_documento()
+print(REDES)
 clasificar_documento("3.png")
 
 
