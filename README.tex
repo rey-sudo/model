@@ -11,6 +11,29 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage[most]{tcolorbox}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[colorlinks=true, linkcolor=blue]{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+\geometry{margin=2.5cm}
+
+
+
+\newtcolorbox{razonbox}[1]{
+	colback=blue!4!white,
+	colframe=blue!40!black,
+	fonttitle=\bfseries,
+	title=#1,
+	breakable
+}
+
+\tcbuselibrary{skins, breakable}
 \newtcolorbox{mymath}[1][]{
 	colback=gray!5!white,    % Fondo gris muy tenue
 	colframe=gray!75!black,  % Borde gris oscuro
@@ -23,29 +46,21 @@
 	boxrule=0.5pt,           % Grosor del borde
 	#1                       % Permite pasar argumentos extra
 }
-\usepackage{amsmath, amssymb, amsthm}
-\usepackage{mathtools}
-\usepackage{bm}
-\usepackage{geometry}
-\usepackage{booktabs}
-\usepackage{array}
-\usepackage[colorlinks=true, linkcolor=blue]{hyperref}
- 
-\geometry{margin=2.5cm}
 
-\newtheorem{theorem}{Teorema}
-\newtheorem{proposition}{Proposición}
-\newtheorem{corollary}{Corolario}
-\newtheorem{definition}{Definición}
-\newtheorem{property}{Propiedad}
-
+\newtheorem{theorem}{Teorema}[section]
+\newtheorem{proposition}[theorem]{Proposición}
+\newtheorem{corollary}[theorem]{Corolario}
+\newtheorem{lemma}[theorem]{Lema}
+\newtheorem{definition}{Definición}[section]
+\newtheorem{property}{Propiedad}[section]
+\newtheorem{example}{Ejemplo}[section]
 
 
 %%%%%%%%%%%%%%%
 
 
 
-\title{\textbf{Concepts is all you need} \\[0.5em] \large Sparse Point Evolutionary Knowledge Tracking Architecture}
+\title{\textbf{All you need is a concept} \\[0.5em] \large Sparse Point Evolutionary Knowledge Tracking Architecture}
 \author{Juan José Caballero Rey \thanks{ Contacto: sudo.delete.evil@gmail.com} \\ \small{Software Dev}}
 \date{Marzo 2026}
 
@@ -140,7 +155,7 @@ $$\begin{array}{|c|c|c|}
 	\hline
 	& \text{Plant} \downarrow & \\ \hline
 	\text{Seed} \longrightarrow & \mathbf{\text{Tree}} & \text{Wood} \longrightarrow \\ \hline
-	& \text{Oak} \downarrow & \\ \hline
+	& \text{Pine} \downarrow & \\ \hline
 \end{array}$$
 
 $$\begin{array}{|c|c|c|} 
@@ -154,371 +169,619 @@ $$\begin{array}{|c|c|c|}
 
 
 
+% ═════════════════════════════════════════════════════════════════
+\section{Matrix Concept}
+% ═════════════════════════════════════════════════════════════════
+
+\subsection{Definición del sistema}
 
 
-% ─────────────────────────────────────────────────────────────────────────────
-\section{Espacio Semántico Basado en Primitivos}
-% ─────────────────────────────────────────────────────────────────────────────
 
-\subsection{Definiciones Fundamentales}
-
-\begin{definition}[Primitivo Semántico]
-	Un \textbf{primitivo semántico} es un elemento atómico de significado que no puede
-	descomponerse en unidades más simples dentro del sistema. El conjunto de todos los
-	primitivos se denota:
+\begin{definition}[Opción A — Pesos Iguales]
+	En la \textbf{Opción~A}, la definición de un concepto es un conjunto (no una
+	secuencia ordenada) de primitivos semánticos:
 	\[
-	\mathcal{P} = \{p_1, p_2, \ldots, p_N\}, \qquad p_i \in \mathcal{P}
+	\mathcal{D}(c) \;\subset\; \mathcal{P}, \qquad
+	\mathcal{D}(c) \cap \mathcal{C} = \emptyset
 	\]
-	donde $N = |\mathcal{P}|$ es la dimensión del espacio semántico.
-\end{definition}
-
-\begin{definition}[Concepto]
-	Un \textbf{concepto} $c$ es un par ordenado:
+	La firma bipolar del concepto $c$ se obtiene como la suma con pesos iguales de
+	las firmas de sus primitivos:
 	\[
-	c = \bigl(\text{idx}(c),\; \delta(c)\bigr)
+	\bm{\psi}(c) \;=\; \mathrm{sign}\!\left(
+	\sum_{p \,\in\, \mathcal{D}(c)} \bm{\phi}(p)
+	\right) \;\in\; \{-1,+1\}^m
 	\]
-	donde:
-	\begin{itemize}
-		\item $\text{idx}(c) \in \Sigma^*$ es el índice léxico (puede ser compuesto:
-		\texttt{banco\_financiero}, \texttt{banco\_mueble})
-		\item $\delta(c) \subset \mathcal{P}$ es la definición — subconjunto ordenado
-		de primitivos, con $\delta(c) \cap \mathcal{C} = \emptyset$
-		(ningún elemento de la definición es un concepto compuesto)
-	\end{itemize}
-\end{definition}
-
-\begin{definition}[Diccionario Semántico]
-	El \textbf{diccionario semántico} es la función:
+	donde $\bm{\phi}(p) \in \{-1,+1\}^m$ es la firma determinista del primitivo $p$
+	generada mediante:
 	\[
-	\mathcal{D} : \mathcal{C} \longrightarrow \mathcal{P}^*
+	\bm{\phi}(p) \;=\; \mathrm{sign}\!\Bigl(\mathrm{RNG}\bigl(\mathrm{hash}(p)\bigr)\Bigr)
 	\]
-	que asigna a cada concepto $c \in \mathcal{C}$ una secuencia ordenada de primitivos
-	$\mathcal{D}(c) = (p_{i_1}, p_{i_2}, \ldots, p_{i_k})$ con $p_{i_j} \in \mathcal{P}$
-	para todo $j$.
 \end{definition}
-
-% ─────────────────────────────────────────────────────────────────────────────
-\subsection{Matriz de Coordenadas Semánticas}
-% ─────────────────────────────────────────────────────────────────────────────
 
 \begin{definition}[Matriz Semántica]
-	Sea $|\mathcal{C}| = C$ el número de conceptos y $|\mathcal{P}| = N$ el número de
-	primitivos. La \textbf{matriz semántica} es:
+	Sea $C = |\mathcal{C}|$ el número de conceptos y $N = |\mathcal{P}|$ el número
+	de primitivos. La \textbf{matriz semántica} es:
 	\[
-	M \in \{0, 1\}^{C \times N}
-	\]
-	con entradas:
-	\[
+	M \;\in\; \{0,1\}^{C \times N}, \qquad
 	M_{ij} =
 	\begin{cases}
 		1 & \text{si } p_j \in \mathcal{D}(c_i) \\
 		0 & \text{en otro caso}
 	\end{cases}
 	\]
-	La fila $i$-ésima $\mathbf{m}_i \in \{0,1\}^N$ es la \textbf{coordenada semántica}
-	del concepto $c_i$ en el espacio de primitivos.
+	La fila $\mathbf{m}_i = M_{i,:} \in \{0,1\}^N$ es la \textbf{coordenada semántica}
+	del concepto $c_i$.
 \end{definition}
 
-\begin{property}[Unicidad de Coordenadas]
-	Dos conceptos $c_a$ y $c_b$ tienen el mismo significado si y solo si sus coordenadas
-	coinciden:
+\begin{property}[Isomorfismo firma–coordenada]
+	Con pesos iguales, la similitud coseno entre firmas es función directa de la
+	similitud de Jaccard entre conjuntos de primitivos. Para cualquier par
+	$c_a, c_b \in \mathcal{C}$, cuando $m \to \infty$:
 	\[
-	\mathcal{D}(c_a) = \mathcal{D}(c_b) \iff \mathbf{m}_a = \mathbf{m}_b
+	\cos\!\bigl(\bm{\psi}(c_a),\,\bm{\psi}(c_b)\bigr)
+	\;\xrightarrow[m\to\infty]{}\;
+	2\,J\!\bigl(\mathcal{D}(c_a),\,\mathcal{D}(c_b)\bigr) - 1
 	\]
-	En caso contrario, $\mathbf{m}_a \neq \mathbf{m}_b$ garantiza distinción semántica.
-\end{property}
-
-% ─────────────────────────────────────────────────────────────────────────────
-\subsection{Métricas Semánticas}
-% ─────────────────────────────────────────────────────────────────────────────
-
-\begin{definition}[Distancia Semántica]
-	La \textbf{distancia semántica} entre dos conceptos $c_a$ y $c_b$ es la distancia
-	euclidiana entre sus coordenadas:
+	donde la similitud de Jaccard es:
 	\[
-	d(c_a, c_b) = \|\mathbf{m}_a - \mathbf{m}_b\|_2
-	= \sqrt{\sum_{j=1}^{N} (M_{aj} - M_{bj})^2}
-	\]
-\end{definition}
-
-\begin{proposition}[Cota de la Distancia]
-	Para cualquier par de conceptos $c_a, c_b \in \mathcal{C}$:
-	\[
-	0 \;\leq\; d(c_a, c_b) \;\leq\; \sqrt{N}
-	\]
-	donde:
-	\begin{itemize}
-		\item $d(c_a, c_b) = 0 \iff \mathcal{D}(c_a) = \mathcal{D}(c_b)$
-		\hfill (conceptos idénticos)
-		\item $d(c_a, c_b) = \sqrt{N} \iff \mathcal{D}(c_a) \cap \mathcal{D}(c_b) = \emptyset$
-		\hfill (conceptos opuestos)
-	\end{itemize}
-\end{proposition}
-
-\begin{proof}
-	Dado que $M_{ij} \in \{0,1\}$, cada término $(M_{aj} - M_{bj})^2 \in \{0, 1\}$,
-	por lo tanto $d(c_a, c_b)^2 \leq N$, de donde $d(c_a, c_b) \leq \sqrt{N}$.
-	La cota inferior es inmediata por propiedades de la norma euclidiana.
-\end{proof}
-
-\begin{definition}[Similitud Semántica]
-	La \textbf{similitud semántica} entre dos conceptos se define mediante el
-	coeficiente de Jaccard sobre sus conjuntos de primitivos:
-	\[
-	\text{sim}(c_a, c_b)
-	= \frac{|\mathcal{D}(c_a) \cap \mathcal{D}(c_b)|}
-	{|\mathcal{D}(c_a) \cup \mathcal{D}(c_b)|}
-	= \frac{\mathbf{m}_a \cdot \mathbf{m}_b}
+	J(A,B) \;=\; \frac{|A \cap B|}{|A \cup B|}
+	\;=\; \frac{\mathbf{m}_a \cdot \mathbf{m}_b}
 	{\|\mathbf{m}_a\|_1 + \|\mathbf{m}_b\|_1
 		- \mathbf{m}_a \cdot \mathbf{m}_b}
 	\]
-	con $\text{sim}(c_a, c_b) \in [0, 1]$.
-\end{definition}
-
-% ─────────────────────────────────────────────────────────────────────────────
-\subsection{Operaciones sobre el Espacio}
-% ─────────────────────────────────────────────────────────────────────────────
-
-\begin{definition}[Sección por Primitivo]
-	La \textbf{sección} del espacio inducida por el primitivo $p_j$ es el conjunto de
-	todos los conceptos que lo contienen:
-	\[
-	S(p_j) = \bigl\{\, c_i \in \mathcal{C} \;\mid\; M_{ij} = 1 \,\bigr\}
-	\]
-	Geométricamente, $S(p_j)$ es el hiperplano de corte $x_j = 1$ en $\{0,1\}^N$.
-\end{definition}
-
-\begin{definition}[Intersección Semántica]
-	Dado un conjunto de primitivos $Q = \{p_{j_1}, \ldots, p_{j_k}\} \subset \mathcal{P}$,
-	la \textbf{intersección semántica} es:
-	\[
-	S(Q) = \bigcap_{p \in Q} S(p)
-	= \bigl\{\, c_i \in \mathcal{C} \;\mid\; M_{ij} = 1 \;\forall\, p_j \in Q \,\bigr\}
-	\]
-	Esta operación implementa razonamiento por condiciones necesarias: $S(Q)$ contiene
-	exactamente los conceptos que satisfacen \textit{todos} los rasgos en $Q$.
-\end{definition}
-
-\begin{definition}[Composición de Conceptos]
-	Dados dos conceptos $c_a, c_b \in \mathcal{C}$, su \textbf{composición semántica}
-	produce un nuevo vector de coordenadas:
-	\[
-	\mathbf{m}_{a \oplus b} = \text{sign}\!\left(\mathbf{m}_a + \mathbf{m}_b\right)
-	\in \{0,1\}^N
-	\]
-	donde $\text{sign}(x) = 1$ si $x > 0$ y $0$ en otro caso. La composición
-	corresponde a la unión de primitivos: $\mathcal{D}(c_a) \cup \mathcal{D}(c_b)$.
-\end{definition}
-
-% ─────────────────────────────────────────────────────────────────────────────
-\subsection{Firma BAN y Espacio Semántico}
-% ─────────────────────────────────────────────────────────────────────────────
-
-\begin{definition}[Firma de Primitivo]
-	A cada primitivo $p_j \in \mathcal{P}$ se le asigna una \textbf{firma bipolar}
-	determinista:
-	\[
-	\bm{\phi}(p_j) \in \{-1, +1\}^m, \qquad m = \text{LABEL\_DIM}
-	\]
-	generada mediante una función hash determinista:
-	\[
-	\bm{\phi}(p_j) = \text{sign}\!\left(\text{RNG}\bigl(\text{hash}(p_j)\bigr)\right)
-	\]
-	donde $\text{RNG}(\cdot)$ es un generador pseudoaleatorio con semilla fija.
-\end{definition}
-
-\begin{definition}[Firma de Concepto]
-	La \textbf{firma semántica} del concepto $c_i$ con definición
-	$\mathcal{D}(c_i) = (p_{i_1}, \ldots, p_{i_k})$ es:
-	\[
-	\bm{\psi}(c_i) = \text{sign}\!\left(
-	\sum_{l=1}^{k} w_l \cdot \bm{\phi}(p_{i_l})
-	\right) \in \{-1, +1\}^m
-	\]
-	donde el peso posicional decrece con el orden:
-	\[
-	w_l = \frac{1}{l}, \qquad l = 1, 2, \ldots, k
-	\]
-	El primer primitivo (categoría padre) tiene el mayor peso; los rasgos
-	distintivos pesan proporcionalmente menos.
-\end{definition}
-
-\begin{property}[Preservación de Similitud]
-	La similitud coseno entre firmas preserva la similitud semántica entre conceptos.
-	Para $c_a, c_b \in \mathcal{C}$:
-	\[
-	\cos\!\left(\bm{\psi}(c_a),\, \bm{\psi}(c_b)\right)
-	= \frac{\bm{\psi}(c_a) \cdot \bm{\psi}(c_b)}
-	{\|\bm{\psi}(c_a)\| \cdot \|\bm{\psi}(c_b)\|}
-	\;\approx\; \text{sim}(c_a, c_b)
-	\]
-	con la aproximación mejorando conforme $m \to \infty$ por el
-	Teorema del Límite Central aplicado a los bits de la firma.
+	La firma bipolar y la coordenada binaria son representaciones isomorfas del
+	mismo contenido semántico.
 \end{property}
 
-% ─────────────────────────────────────────────────────────────────────────────
-\subsection{Desambiguación por Fusión de Hadamard}
-% ─────────────────────────────────────────────────────────────────────────────
-
-\begin{definition}[Producto de Hadamard Ponderado]
-	Dada una firma de consulta $\bm{q} \in \{-1,+1\}^m$ y el prototipo del concepto
-	activo $\bm{\psi}(c^*) \in \{-1,+1\}^m$ con radio $r^* \in (0,1]$, la
-	\textbf{fusión semántica} es:
-	\[
-	\bm{f} = \text{sign}\!\left(\alpha\, \bm{\psi}(c^*) + \beta\, \bm{q}\right)
-	\]
-	donde los pesos satisfacen $\alpha + \beta = 1$, $\alpha, \beta > 0$, y:
-	\[
-	\alpha = \min(r^*, 0.9), \qquad \beta = 1 - \alpha
-	\]
-	El radio $r^*$ pondera automáticamente la certeza del contexto activo.
-\end{definition}
-
-\begin{theorem}[Supresión de Ambigüedad]
-	Sea $c_x$ un concepto ambiguo con dos interpretaciones $c_a$, $c_b$ tales que
-	$\bm{\psi}(c_a) \cdot \bm{\psi}(c_b) < 0$ (interpretaciones opuestas). Si el
-	concepto activo es $c^* = c_a$, entonces la fusión $\bm{f}$ satisface:
-	\[
-	\cos(\bm{f},\, \bm{\psi}(c_a)) \;\gg\; \cos(\bm{f},\, \bm{\psi}(c_b))
-	\]
-	La interpretación $c_b$ queda suprimida en la firma fusionada.
-\end{theorem}
-
-\begin{proof}[Demostración (esquema)]
-	Las dimensiones donde $\bm{\psi}(c^*)$ y $\bm{q}$ tienen el mismo signo se
-	refuerzan; las dimensiones donde difieren se atenúan en proporción $\alpha/\beta$.
-	Dado que $c^* = c_a$ comparte más dimensiones con $\bm{\psi}(c_a)$ que con
-	$\bm{\psi}(c_b)$, el score coseno de $c_a$ domina tras la fusión.
-\end{proof}
-
-% ─────────────────────────────────────────────────────────────────────────────
-\subsection{Proyección al Espacio Tridimensional}
-% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Proyección tridimensional}
 
 \begin{definition}[Proyección SVD]
-	La \textbf{proyección tridimensional} del espacio semántico se obtiene mediante
-	Descomposición en Valores Singulares (SVD) de la matriz $M$:
+	La proyección tridimensional del espacio semántico se obtiene mediante la
+	Descomposición en Valores Singulares de $M$:
 	\[
-	M = U \Sigma V^\top, \qquad
-	M \in \mathbb{R}^{C \times N},\quad
-	U \in \mathbb{R}^{C \times C},\quad
-	\Sigma \in \mathbb{R}^{C \times N},\quad
-	V \in \mathbb{R}^{N \times N}
+	M \;=\; U\,\Sigma\,V^\top, \qquad
+	\tilde{M} \;=\; U_{:,1:3}\;\mathrm{diag}(\sigma_1,\sigma_2,\sigma_3)
+	\;\in\; \mathbb{R}^{C \times 3}
 	\]
-	La proyección 3D de los conceptos es:
+	La fracción de varianza semántica representada en 3D es:
 	\[
-	\tilde{M} = U_{:,1:3}\, \text{diag}(\sigma_1, \sigma_2, \sigma_3)
-	\in \mathbb{R}^{C \times 3}
+	\eta_3 \;=\; \frac{\sigma_1^2 + \sigma_2^2 + \sigma_3^2}
+	{\displaystyle\sum_{k} \sigma_k^2}
 	\]
-	donde $\sigma_1 \geq \sigma_2 \geq \sigma_3$ son los tres valores singulares
-	más grandes y $U_{:,1:3}$ son sus vectores singulares izquierdos correspondientes.
 \end{definition}
 
-\begin{property}[Preservación de Varianza]
-	La proyección $\tilde{M}$ maximiza la varianza explicada entre todas las
-	proyecciones ortogonales de rango 3. La fracción de varianza preservada es:
+\begin{property}[Fidelidad geométrica de la Opción A]
+	Dado que la Opción~A no introduce distorsión por orden, la proyección
+	$\tilde{M}$ preserva fielmente las distancias semánticas:
 	\[
-	\eta_3 = \frac{\sigma_1^2 + \sigma_2^2 + \sigma_3^2}
-	{\sum_{k=1}^{\min(C,N)} \sigma_k^2}
+	\bigl\|\tilde{\mathbf{m}}_a - \tilde{\mathbf{m}}_b\bigr\|_2
+	\;\approx\; \sqrt{\eta_3}\;\cdot\;
+	\bigl\|\mathbf{m}_a - \mathbf{m}_b\bigr\|_2
 	\]
-	Cuanto mayor sea $\eta_3$, más fiel es la representación tridimensional
-	a la estructura semántica completa.
+	Si dos conceptos tienen los mismos primitivos, ocupan el mismo punto en $\tilde{M}$.
 \end{property}
 
-% ─────────────────────────────────────────────────────────────────────────────
-\subsection{Propiedades del Sistema}
-% ─────────────────────────────────────────────────────────────────────────────
+% ═════════════════════════════════════════════════════════════════
+\section{Tipos de Razonamiento}
+% ═════════════════════════════════════════════════════════════════
 
-\begin{property}[Sin Degradación Jerárquica]
-	Dado que toda definición usa exclusivamente primitivos
-	($\mathcal{D}(c) \subset \mathcal{P}$, sin referencias a otros conceptos),
-	la firma $\bm{\psi}(c)$ se calcula en un solo nivel:
-	\[
-	\bm{\psi}(c) = \text{sign}\!\left(
-	\sum_{l=1}^{k} \frac{1}{l}\, \bm{\phi}(p_{i_l})
-	\right)
-	\]
-	No existe acumulación de error por composición de centroides.
-	La señal semántica es siempre directa: $\text{primitivo} \to \text{firma}$.
-\end{property}
+Todo razonamiento en la Opción~A se reduce a operaciones algebraicas sobre las
+filas y columnas de la matriz $M$. No se requieren reglas explícitas, grafos de
+inferencia ni motores externos.
 
-\begin{property}[Actualización Incremental O(m)]
-	El prototipo $\bm{\psi}(c)$ se actualiza de forma incremental sin recalcular
-	desde cero. Dado que se mantiene la suma acumulada
-	$\mathbf{s}_c = \sum_{t=1}^{n} \bm{\phi}^{(t)}$, al agregar la instancia
-	$\bm{\phi}^{(n+1)}$:
-	\[
-	\mathbf{s}_c \leftarrow \mathbf{s}_c + \bm{\phi}^{(n+1)}, \qquad
-	\bm{\psi}(c) \leftarrow \text{sign}(\mathbf{s}_c)
-	\]
-	Costo por actualización: $O(m)$. Costo de clasificación: $O(C \cdot m)$,
-	independiente del número total de instancias $n$.
-\end{property}
+% ─────────────────────────────────────────────────────────────────
+\subsection{Razonamiento por Condición Necesaria}
+% ─────────────────────────────────────────────────────────────────
 
-\begin{property}[Inferencia por Álgebra de Conjuntos]
-	Las siguientes consultas son ejecutables en tiempo $O(C)$ mediante
-	operaciones sobre las filas de $M$:
-	
-	\begin{align}
-		\text{Sección}(p_j) &= \{\,c_i \mid M_{ij} = 1\,\} \\[4pt]
-		\text{Intersección}(Q) &= \{\,c_i \mid M_{ij} = 1 \;\forall\, p_j \in Q\,\} \\[4pt]
-		\text{Exclusión}(Q, E) &= \text{Intersección}(Q) \setminus \{\,c_i \mid M_{ij} = 1 \;\exists\, p_j \in E\,\}
-	\end{align}
-	
-	Estas operaciones implementan razonamiento lógico elemental sin grafo
-	y sin reglas de inferencia explícitas.
-\end{property}
+\begin{razonbox}{Tipo 1 — Condición Necesaria}
+	\textbf{Pregunta:} ¿Qué conceptos poseen \emph{todos} los primitivos en $Q$?
+\end{razonbox}
 
-\begin{theorem}[Frontera Semántica]
-	Dos conceptos $c_a$ y $c_b$ están separados en el espacio semántico si y solo
-	si sus definiciones difieren en al menos un primitivo:
+\begin{definition}[Sección por Conjunto de Primitivos]
+	Dado un conjunto de consulta $Q = \{p_{j_1}, \ldots, p_{j_k}\} \subset \mathcal{P}$,
+	la \textbf{sección semántica} es:
 	\[
-	d(c_a, c_b) > 0 \iff \mathcal{D}(c_a) \neq \mathcal{D}(c_b)
+	S(Q) \;=\; \bigcap_{p \in Q} S(p)
+	\;=\; \bigl\{\,c_i \in \mathcal{C}
+	\;\mid\; M_{ij} = 1\;\;\forall\, p_j \in Q\,\bigr\}
 	\]
-	El conjunto de primitivos que define la frontera entre ellos es:
+	Matricialmente, definiendo la máscara $\mathbf{q} \in \{0,1\}^N$ con
+	$q_j = \mathbf{1}[p_j \in Q]$:
 	\[
-	\partial(c_a, c_b)
-	= \bigl(\mathcal{D}(c_a) \setminus \mathcal{D}(c_b)\bigr)
-	\cup
-	\bigl(\mathcal{D}(c_b) \setminus \mathcal{D}(c_a)\bigr)
+	S(Q) \;=\; \bigl\{\,c_i \;\mid\; M\,\mathbf{q}^\top = |\,Q\,|\,\bigr\}
 	\]
-	y la distancia satisface $d(c_a, c_b) = \sqrt{|\partial(c_a, c_b)|}$.
+\end{definition}
+
+\begin{theorem}[Completitud de la Condición Necesaria]
+	$S(Q)$ contiene exactamente los conceptos para los cuales todo primitivo de $Q$
+	es condición verificada:
+	\[
+	c_i \in S(Q) \iff \mathcal{D}(c_i) \supseteq Q
+	\]
+	La complejidad es $O(C \cdot |Q|)$ — lineal en el número de conceptos.
 \end{theorem}
 
-\begin{proof}
-	Cada primitivo en $\partial(c_a, c_b)$ contribuye exactamente $1$ a la suma
-	$\sum_j (M_{aj} - M_{bj})^2$, mientras que los primitivos compartidos y los
-	ausentes en ambos contribuyen $0$. Por tanto:
+\begin{example}
+	Con $Q = \{\texttt{ruedas},\texttt{motor}\}$:
 	\[
-	d(c_a, c_b)^2 = \sum_{j=1}^{N} (M_{aj} - M_{bj})^2 = |\partial(c_a, c_b)|
+	S(Q) = \{\texttt{carro},\;\texttt{moto},\;\texttt{camion}\}
 	\]
-\end{proof}
+	Con $Q = \{\texttt{ruedas},\texttt{motor},\texttt{cuatro}\}$:
+	\[
+	S(Q) = \{\texttt{carro},\;\texttt{camion}\}
+	\]
+\end{example}
 
-% ─────────────────────────────────────────────────────────────────────────────
-\subsection{Resumen de Complejidades}
-% ─────────────────────────────────────────────────────────────────────────────
+% ─────────────────────────────────────────────────────────────────
+\subsection{Razonamiento por Exclusión}
+% ─────────────────────────────────────────────────────────────────
+
+\begin{razonbox}{Tipo 2 — Exclusión}
+	\textbf{Pregunta:} ¿Qué conceptos tienen los primitivos en $Q$ pero \emph{no}
+	tienen los primitivos en $E$?
+\end{razonbox}
+
+\begin{definition}[Sección con Exclusión]
+	Dados un conjunto requerido $Q \subset \mathcal{P}$ y un conjunto excluido
+	$E \subset \mathcal{P}$, la \textbf{sección con exclusión} es:
+	\[
+	S(Q,\,E) \;=\; S(Q) \;\setminus\; S(E)
+	\;=\; \bigl\{\,c_i \in S(Q)
+	\;\mid\; \mathcal{D}(c_i) \cap E = \emptyset\,\bigr\}
+	\]
+	Matricialmente, con máscaras $\mathbf{q},\mathbf{e} \in \{0,1\}^N$:
+	\[
+	S(Q,E) \;=\; \bigl\{\,c_i
+	\;\mid\; M\mathbf{q}^\top = |Q|
+	\;\;\wedge\;\;
+	M\mathbf{e}^\top = 0\,\bigr\}
+	\]
+\end{definition}
+
+\begin{theorem}[Frontera por Exclusión]
+	El conjunto $S(Q,E)$ implementa la conjunción de condiciones necesarias y
+	condiciones de ausencia. Define la frontera exacta entre conceptos que
+	difieren únicamente en los primitivos de $E$:
+	\[
+	\forall\, c_a \in S(Q,E),\; c_b \in S(Q) \setminus S(Q,E):
+	\qquad
+	\partial(c_a, c_b) \;\supseteq\; E
+	\]
+\end{theorem}
+
+\begin{example}
+	\[
+	S\!\bigl(\{\texttt{ruedas},\texttt{motor}\},\;\{\texttt{cuatro}\}\bigr)
+	\;=\; \{\texttt{moto}\}
+	\]
+	\[
+	S\!\bigl(\{\texttt{movil}\},\;\{\texttt{motor}\}\bigr)
+	\;=\; \{\texttt{bicicleta},\;\texttt{velero},\;\texttt{caballo}\}
+	\]
+\end{example}
+
+% ─────────────────────────────────────────────────────────────────
+\subsection{Razonamiento por Analogía}
+% ─────────────────────────────────────────────────────────────────
+
+\begin{razonbox}{Tipo 3 — Analogía}
+	\textbf{Pregunta:} $c_a$ es a $c_b$ como $c_c$ es a \underline{\hspace{1cm}}?
+\end{razonbox}
+
+\begin{definition}[Vector de Relación]
+	Dados tres conceptos $c_a, c_b, c_c \in \mathcal{C}$, el \textbf{vector de
+		relación} entre $c_a$ y $c_b$ es:
+	\[
+	\bm{\delta}_{ab} \;=\; \mathbf{m}_b - \mathbf{m}_a \;\in\; \{-1,\,0,\,+1\}^N
+	\]
+	Las componentes de $\bm{\delta}_{ab}$ codifican:
+	\[
+	\delta_{ab,j} =
+	\begin{cases}
+		+1 & p_j \in \mathcal{D}(c_b) \setminus \mathcal{D}(c_a)
+		\quad\text{(adquirido)}\\
+		-1 & p_j \in \mathcal{D}(c_a) \setminus \mathcal{D}(c_b)
+		\quad\text{(perdido)}\\
+		0 & \text{en otro caso}
+	\end{cases}
+	\]
+\end{definition}
+
+\begin{definition}[Concepto Análogo]
+	El \textbf{concepto análogo} $c_?$ se obtiene aplicando el vector de relación
+	a $c_c$ y buscando el concepto más cercano:
+	\[
+	\mathbf{v} \;=\; \mathrm{clip}\!\left(
+	\mathbf{m}_c + \bm{\delta}_{ab},\; 0,\; 1
+	\right)
+	\]
+	\[
+	c_? \;=\; \operatorname{arg\,min}_{c_i \in \mathcal{C} \setminus \{c_c\}}
+	\bigl\|\mathbf{m}_i - \mathbf{v}\bigr\|_2
+	\]
+\end{definition}
+
+\begin{theorem}[Preservación de Relación]
+	Si la relación $\bm{\delta}_{ab}$ existe limpiamente en $\mathcal{C}$
+	(es decir, existe $c_d$ tal que $\mathbf{m}_d = \mathbf{m}_c + \bm{\delta}_{ab}$),
+	entonces:
+	\[
+	c_? = c_d \qquad \text{y} \qquad
+	\bigl\|\mathbf{m}_{c_?} - \mathbf{v}\bigr\|_2 = 0
+	\]
+	La analogía es exacta cuando la relación está representada en el espacio.
+\end{theorem}
+
+\begin{example}
+	\begin{align*}
+		\texttt{carro} : \texttt{carretera}
+		&\;=\; \texttt{barco} : \underline{\;\texttt{agua}\;}
+		\quad\checkmark \\[4pt]
+		\texttt{moto} : \texttt{dos\_ruedas}
+		&\;=\; \texttt{carro} : \underline{\;\texttt{cuatro\_ruedas}\;}
+		\quad\checkmark \\[4pt]
+		\texttt{carro} : \texttt{motor}
+		&\;=\; \texttt{bicicleta} : \underline{\;\texttt{sin\_motor}\;}
+		\quad\checkmark
+	\end{align*}
+\end{example}
+
+% ─────────────────────────────────────────────────────────────────
+\subsection{Razonamiento por Generalización}
+% ─────────────────────────────────────────────────────────────────
+
+\begin{razonbox}{Tipo 4 — Generalización}
+	\textbf{Pregunta:} ¿Qué primitivos comparten \emph{todos} los conceptos de un
+	conjunto dado?
+\end{razonbox}
+
+\begin{definition}[Primitivos Comunes]
+	Dado un conjunto de conceptos $\Gamma \subset \mathcal{C}$, el conjunto de
+	\textbf{primitivos comunes} es:
+	\[
+	\Pi(\Gamma) \;=\; \bigcap_{c \in \Gamma} \mathcal{D}(c)
+	\]
+	Matricialmente, sea $I_\Gamma$ el conjunto de índices de los conceptos en
+	$\Gamma$:
+	\[
+	\Pi(\Gamma) \;=\; \bigl\{\,p_j
+	\;\mid\; \min_{i \in I_\Gamma} M_{ij} = 1\,\bigr\}
+	\]
+\end{definition}
+
+\begin{theorem}[Máximo Común Divisor Semántico]
+	$\Pi(\Gamma)$ es el conjunto más grande de primitivos que define una
+	categoría que incluye a todos los conceptos de $\Gamma$:
+	\[
+	\forall\, c \in \Gamma:\; \Pi(\Gamma) \subseteq \mathcal{D}(c)
+	\]
+	\[
+	\nexists\; p \notin \Pi(\Gamma) \text{ tal que }
+	p \in \mathcal{D}(c)\;\;\forall\,c \in \Gamma
+	\]
+\end{theorem}
+
+\begin{example}
+	\begin{align*}
+		\Pi\!\bigl(\{\texttt{carro},\texttt{moto},\texttt{bicicleta}\}\bigr)
+		&\;=\; \{\texttt{movil},\texttt{ruedas},\texttt{carretera}\} \\[4pt]
+		\Pi\!\bigl(\{\texttt{carro},\texttt{avion},\texttt{barco}\}\bigr)
+		&\;=\; \{\texttt{movil},\texttt{motor},\texttt{pasajeros}\}
+	\end{align*}
+	El resultado es la categoría implícita que engloba el grupo dado.
+\end{example}
+
+% ─────────────────────────────────────────────────────────────────
+\subsection{Razonamiento por Especialización}
+% ─────────────────────────────────────────────────────────────────
+
+\begin{razonbox}{Tipo 5 — Especialización}
+	\textbf{Pregunta:} ¿Qué hace único a $c_a$ respecto a un grupo
+	$\Gamma$?
+\end{razonbox}
+
+\begin{definition}[Frontera Semántica de Especialización]
+	Dado un concepto $c_a \in \mathcal{C}$ y un grupo de referencia
+	$\Gamma \subset \mathcal{C}$, la \textbf{frontera de especialización} es el
+	par:
+	\[
+	\partial^+(c_a, \Gamma) \;=\;
+	\mathcal{D}(c_a) \;\setminus\; \bigcup_{c \in \Gamma} \mathcal{D}(c)
+	\qquad \text{(exclusivos de } c_a\text{)}
+	\]
+	\[
+	\partial^-(c_a, \Gamma) \;=\;
+	\bigcup_{c \in \Gamma} \mathcal{D}(c) \;\setminus\; \mathcal{D}(c_a)
+	\qquad \text{(ausentes en } c_a\text{)}
+	\]
+\end{definition}
+
+\begin{property}[Distancia mínima al grupo]
+	La distancia de $c_a$ al concepto más cercano en $\Gamma$ satisface:
+	\[
+	\min_{c \in \Gamma} d(c_a, c)
+	\;=\; \sqrt{
+		\bigl|\partial(c_a,\, c^*)\bigr|}
+	\qquad
+	c^* = \operatorname{arg\,min}_{c \in \Gamma} d(c_a, c)
+	\]
+	donde $\partial(c_a, c^*) = \bigl(\mathcal{D}(c_a) \triangle \mathcal{D}(c^*)\bigr)$
+	es la diferencia simétrica con el vecino más cercano.
+\end{property}
+
+\begin{example}
+	\[
+	\partial^+\!\bigl(\texttt{carro},\;
+	\{\texttt{moto},\texttt{bicicleta}\}\bigr)
+	\;=\; \{\texttt{cuatro}\}
+	\]
+	\[
+	\partial^-\!\bigl(\texttt{carro},\;
+	\{\texttt{moto},\texttt{bicicleta}\}\bigr)
+	\;=\; \{\texttt{dos},\;\texttt{sin\_motor}\}
+	\]
+\end{example}
+
+% ─────────────────────────────────────────────────────────────────
+\subsection{Razonamiento Transitivo en el Espacio 3D}
+% ─────────────────────────────────────────────────────────────────
+
+\begin{razonbox}{Tipo 6 — Transitividad Geométrica}
+	\textbf{Pregunta:} ¿Qué conceptos son semánticamente intermedios entre
+	$c_a$ y $c_b$?
+\end{razonbox}
+
+\begin{definition}[Segmento Semántico]
+	En el espacio proyectado $\tilde{M} \in \mathbb{R}^{C \times 3}$, el
+	\textbf{segmento semántico} entre $c_a$ y $c_b$ es el conjunto de puntos:
+	\[
+	\overline{c_a c_b} \;=\;
+	\bigl\{\,\tilde{\mathbf{m}}_a + t\,
+	(\tilde{\mathbf{m}}_b - \tilde{\mathbf{m}}_a)
+	\;\mid\; t \in [0,1]\,\bigr\}
+	\]
+\end{definition}
+
+\begin{definition}[Concepto Intermedio]
+	Un concepto $c_k \in \mathcal{C}$ es \textbf{intermedio} entre $c_a$ y $c_b$ si
+	su proyección $\tilde{\mathbf{m}}_k$ está suficientemente cerca del segmento
+	$\overline{c_a c_b}$. Formalmente, sea:
+	\[
+	t_k^* \;=\; \frac{
+		(\tilde{\mathbf{m}}_k - \tilde{\mathbf{m}}_a)
+		\cdot
+		(\tilde{\mathbf{m}}_b - \tilde{\mathbf{m}}_a)
+	}{
+		\|\tilde{\mathbf{m}}_b - \tilde{\mathbf{m}}_a\|^2
+	}
+	\]
+	el parámetro de proyección, y:
+	\[
+	d_k^\perp \;=\;
+	\bigl\|\tilde{\mathbf{m}}_k -
+	\bigl[\tilde{\mathbf{m}}_a + t_k^*\,
+	(\tilde{\mathbf{m}}_b - \tilde{\mathbf{m}}_a)\bigr]
+	\bigr\|_2
+	\]
+	la distancia perpendicular al segmento. Entonces $c_k$ es intermedio si
+	$t_k^* \in (0,1)$ y $d_k^\perp < \varepsilon$ para un umbral $\varepsilon > 0$.
+\end{definition}
+
+\begin{theorem}[Cadena Semántica]
+	El conjunto de conceptos intermedios ordenados por $t_k^*$ forma la
+	\textbf{cadena semántica} de $c_a$ a $c_b$:
+	\[
+	c_a \;=\; c^{(0)} \;\to\; c^{(1)} \;\to\; \cdots \;\to\; c^{(r)} \;=\; c_b
+	\qquad t^{(0)} < t^{(1)} < \cdots < t^{(r)}
+	\]
+	Cada paso de la cadena corresponde a la adición o eliminación de al menos un
+	primitivo semántico.
+\end{theorem}
+
+\begin{example}
+	La cadena semántica entre \texttt{bicicleta} y \texttt{avion}:
+	\[
+	\texttt{bicicleta}
+	\;\xrightarrow{+\texttt{motor}}\;
+	\texttt{moto}
+	\;\xrightarrow{+\texttt{cuatro}}\;
+	\texttt{carro}
+	\;\xrightarrow{+\texttt{agua}}\;
+	\texttt{barco}
+	\;\xrightarrow{+\texttt{alas}}\;
+	\texttt{avion}
+	\]
+\end{example}
+
+% ─────────────────────────────────────────────────────────────────
+\subsection{Razonamiento hacia la Firma BAN}
+% ─────────────────────────────────────────────────────────────────
+
+\begin{razonbox}{Tipo 7 — Firma Hipotética}
+	\textbf{Pregunta:} ¿Cuál es la firma de un concepto definido al vuelo por
+	sus primitivos requeridos y excluidos, aunque no exista en el diccionario?
+\end{razonbox}
+
+\begin{definition}[Firma Hipotética]
+	Dados un conjunto requerido $Q \subset \mathcal{P}$ y un conjunto excluido
+	$E \subset \mathcal{P}$, la \textbf{firma hipotética} es:
+	\[
+	\bm{\psi}_{Q,E}
+	\;=\; \mathrm{sign}\!\left(
+	\sum_{p \in Q} \bm{\phi}(p)
+	\;-\;
+	\sum_{p \in E} \bm{\phi}(p)
+	\right)
+	\;\in\; \{-1,+1\}^m
+	\]
+	Los primitivos en $Q$ contribuyen positivamente; los de $E$ suprimen las
+	dimensiones correspondientes.
+\end{definition}
+
+\begin{theorem}[Clasificación sin Entrenamiento Previo]
+	La firma hipotética $\bm{\psi}_{Q,E}$ permite clasificar en una BAN entrenada
+	un concepto que no existe en el diccionario. El concepto recuperado satisface:
+	\[
+	c^* \;=\; \operatorname{arg\,max}_{c \in \mathcal{C}}
+	\cos\!\bigl(\bm{\psi}_{Q,E},\;\bm{\psi}(c)\bigr)
+	\]
+	Si existe $c_0 \in \mathcal{C}$ tal que $\mathcal{D}(c_0) = Q$ y
+	$\mathcal{D}(c_0) \cap E = \emptyset$, entonces $c^* = c_0$ con probabilidad
+	tendiente a 1 cuando $m \to \infty$.
+\end{theorem}
+
+\begin{example}
+	Consulta: algo que tiene \texttt{movil} y \texttt{agua} pero no \texttt{motor}:
+	\[
+	\bm{\psi}_{Q,E} \;=\;
+	\mathrm{sign}\!\bigl(\bm{\phi}(\texttt{movil})
+	+ \bm{\phi}(\texttt{agua})
+	- \bm{\phi}(\texttt{motor})\bigr)
+	\;\;\longrightarrow\;\; c^* = \texttt{velero} \quad\checkmark
+	\]
+\end{example}
+
+% ═════════════════════════════════════════════════════════════════
+\section{Composición de Razonamientos}
+% ═════════════════════════════════════════════════════════════════
+
+Los siete tipos de razonamiento pueden componerse en cadena.
+Sea $\mathcal{R}$ un operador de razonamiento; la composición
+$\mathcal{R}_2 \circ \mathcal{R}_1$ aplica $\mathcal{R}_1$ y usa
+su resultado como entrada de $\mathcal{R}_2$.
+
+\begin{example}[Razonamiento compuesto]
+	Cadena: generalizar $\to$ excluir $\to$ firma hipotética $\to$ BAN:
+	\begin{enumerate}[leftmargin=*]
+		\item Generalizar $\{\texttt{carro},\texttt{moto}\}$
+		$\;\Rightarrow\;$ $\Pi = \{\texttt{movil},\texttt{ruedas},\texttt{motor}\}$
+		\item Excluir $\{\texttt{motor}\}$ de los comunes
+		$\;\Rightarrow\;$ $Q' = \{\texttt{movil},\texttt{ruedas}\}$
+		\item Firma hipotética con $Q'$
+		$\;\Rightarrow\;$ $\bm{\psi}_{Q',\emptyset}$
+		\item Clasificar en BAN
+		$\;\Rightarrow\;$ $c^* = \texttt{bicicleta}$ \quad\checkmark
+	\end{enumerate}
+	La composición recupera el único vehículo de ruedas sin motor.
+\end{example}
+
+\begin{theorem}[Cierre bajo Composición]
+	El álgebra de operaciones sobre $M$ es cerrada: el resultado de cualquier
+	composición finita de operaciones de los Tipos 1–7 es un subconjunto de
+	$\mathcal{C}$ o una firma bipolar en $\{-1,+1\}^m$, ambos válidos como
+	entrada de cualquier operación posterior.
+\end{theorem}
+
+% ═════════════════════════════════════════════════════════════════
+\section{Propiedades Globales del Sistema de Razonamiento}
+% ═════════════════════════════════════════════════════════════════
+
+\begin{property}[Sin Reglas Explícitas]
+	Ninguno de los siete tipos de razonamiento requiere reglas de inferencia
+	escritas manualmente. Todo razonamiento emerge de operaciones matriciales
+	sobre $M$:
+	\[
+	\text{razonamiento} \;=\; f(M) \qquad f \in \{\text{AND, NOT, }\mathbf{v}-\mathbf{u},
+	\min, \text{SVD, sign}\}
+	\]
+\end{property}
+
+\begin{property}[Determinismo Total]
+	Con la Opción~A todos los resultados son deterministas:
+	\[
+	\forall\,\text{consulta}\; q:\quad
+	\mathcal{R}(q, M) \;\text{ es único y reproducible}
+	\]
+	No hay parámetros estocásticos, no hay temperatura, no hay muestreo.
+\end{property}
+
+\begin{property}[Complejidad de Cada Tipo]
+	\begin{center}
+		\begin{tabular}{llll}
+			\toprule
+			\textbf{Tipo} & \textbf{Operación central} & \textbf{Complejidad} \\
+			\midrule
+			1 — Condición    & AND columnas de $M$            & $O(C \cdot |Q|)$            \\
+			2 — Exclusión    & AND + NOT columnas de $M$      & $O(C \cdot (|Q|+|E|))$      \\
+			3 — Analogía     & resta + suma filas de $M$      & $O(C \cdot N)$              \\
+			4 — Generalización & MIN filas de $M$             & $O(|\Gamma| \cdot N)$       \\
+			5 — Especialización & diferencia de filas de $M$  & $O(|\Gamma| \cdot N)$       \\
+			6 — Transitivo   & proyección sobre $\tilde{M}$   & $O(C)$ tras SVD precalculado\\
+			7 — Firma hip.   & suma de $\bm{\phi}$ en $\{-1,+1\}^m$ & $O((|Q|+|E|)\cdot m)$ \\
+			\bottomrule
+		\end{tabular}
+	\end{center}
+	Con $m=352$ fijo, $C$ acotado y SVD precalculado, \textbf{todas las operaciones
+		son efectivamente $O(1)$} respecto al número total de instancias entrenadas.
+\end{property}
+
+\begin{theorem}[Equivalencia con Lógica de Primer Orden Monádica]
+	El sistema de razonamiento de la Opción~A es equivalente en expresividad a la
+	lógica de primer orden monádica (LPO-1) sobre el dominio de primitivos:
+	\begin{align*}
+		\text{Condición} &\;\equiv\; \forall p \in Q:\; p(c) \\
+		\text{Exclusión} &\;\equiv\; \forall p \in Q:\; p(c) \;\wedge\;
+		\forall p \in E:\; \neg p(c) \\
+		\text{Generalización} &\;\equiv\; \forall c \in \Gamma,\,\forall p \in \Pi:
+		\; p(c) \\
+		\text{Analogía} &\;\equiv\; \exists\,\delta:\;
+		p(c_b) \leftrightarrow \delta(p(c_a))
+	\end{align*}
+	El razonamiento por firma hipotética (Tipo~7) extiende la expresividad al
+	dominio continuo $\{-1,+1\}^m$.
+\end{theorem}
+
+% ═════════════════════════════════════════════════════════════════
+\section{Resumen del Sistema}
+% ═════════════════════════════════════════════════════════════════
 
 \begin{center}
-	\begin{tabular}{llll}
+	\begin{tabular}{p{3.2cm} p{4.5cm} p{4.5cm}}
 		\toprule
-		\textbf{Operación} & \textbf{Complejidad} & \textbf{Variables} \\
+		\textbf{Tipo} & \textbf{Pregunta} & \textbf{Operación en $M$} \\
 		\midrule
-		Agregar instancia al prototipo  & $O(m)$       & $m = \text{LABEL\_DIM} = 352$ \\
-		Clasificar por concepto         & $O(C \cdot m)$ & $C = $ número de conceptos \\
-		Desambiguar (Hadamard)          & $O(m)$       & constante en $N$ instancias \\
-		Sección por primitivo           & $O(C)$       & \\
-		Intersección de primitivos      & $O(C \cdot |Q|)$ & $|Q| = $ primitivos consultados \\
-		Distancia entre conceptos       & $O(N)$       & $N = |\mathcal{P}|$ \\
-		Proyección SVD (una vez)        & $O(C \cdot N^2)$ & se precalcula y persiste \\
-		Persistencia a disco            & $O(C \cdot N + C \cdot m)$ & un solo \texttt{pickle} \\
+		Condición necesaria
+		& ¿Qué tiene todos los primitivos $Q$?
+		& $\bigcap_{p \in Q} S(p)$ \\[6pt]
+		Exclusión
+		& ¿Qué tiene $Q$ y no tiene $E$?
+		& $S(Q) \setminus S(E)$ \\[6pt]
+		Analogía
+		& $a:b = c:?$
+		& $\arg\min_i \|\mathbf{m}_i - (\mathbf{m}_c + \bm{\delta}_{ab})\|$ \\[6pt]
+		Generalización
+		& ¿Qué comparten todos en $\Gamma$?
+		& $\bigcap_{c \in \Gamma} \mathcal{D}(c)$ \\[6pt]
+		Especialización
+		& ¿Qué hace único a $c_a$ vs $\Gamma$?
+		& $\mathcal{D}(c_a) \triangle \bigcup_{c \in \Gamma}\mathcal{D}(c)$ \\[6pt]
+		Transitivo 3D
+		& ¿Qué hay entre $c_a$ y $c_b$?
+		& proyección sobre $\overline{c_a c_b}$ en $\tilde{M}$ \\[6pt]
+		Firma hipotética
+		& ¿Cómo clasifico $Q$ sin entrenarlo?
+		& $\mathrm{sign}(\sum_{Q}\bm{\phi} - \sum_{E}\bm{\phi})$ \\
 		\bottomrule
 	\end{tabular}
 \end{center}
 
-\vspace{1em}
-En la práctica, con $m = 352$ fijo y $C$ pequeño respecto a $N$ instancias totales,
-todas las operaciones de clasificación e inferencia son efectivamente $O(1)$ en el
-número de instancias observadas.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
