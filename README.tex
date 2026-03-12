@@ -11,7 +11,6 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage[most]{tcolorbox}
-
 \newtcolorbox{mymath}[1][]{
 	colback=gray!5!white,    % Fondo gris muy tenue
 	colframe=gray!75!black,  % Borde gris oscuro
@@ -24,6 +23,22 @@
 	boxrule=0.5pt,           % Grosor del borde
 	#1                       % Permite pasar argumentos extra
 }
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[colorlinks=true, linkcolor=blue]{hyperref}
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%
 
 \title{\textbf{Concepts is all you need} }
 \author{Sparse Point Evolutionary Knowledge Tracking Architecture}
@@ -66,12 +81,12 @@ But in the student's example, it was only done once. From this action, we can co
 
 \section{Concepts, signs and definitions}
 
-A concept is a general idea that encompasses other concepts with common characteristics, allowing us to think about them, name them, and classify them. We usually use a symbol to identify them.
+A concept is a general idea that encompasses other concepts with common characteristics, allowing us to think about them, name them, and classify them. We usually use a symbol or sign to identify them.
 \[
 C = \{x \mid P(x)\}
 \]
 
-The concept $C$ is the set of all objects $x$ that satisfy property $P$.
+The concept $C$ is the set of all concepts $x$ that satisfy property $P$.
 
 \[
 \text{Car} = \{ x \in \text{Vehicles} \mid 
@@ -84,20 +99,42 @@ The concept $C$ is the set of all objects $x$ that satisfy property $P$.
 The set of all x in Vehicles that have a motor, wheels (at least four) and are used for transport.
 
 In the human brain there is nothing superior to the concept. The concept is a basic unit of thought. Defining a concept creates boundaries and those boundaries separate one concept from others. 
+
 \[
-\begin{aligned}
-	\text{Cat} &\quad \text{vs.} \quad \text{Dog} \\
-	\text{Car} &\quad \text{vs.} \quad \text{Motorcycle} \\
-	\text{Alive} &\quad \text{vs.} \quad \text{Dead}
-\end{aligned}
+\begin{array}{rcccl}
+	\text{Cat} & \quad & \text{vs.} & \quad & \text{Dog} \\
+	\text{Car} & \quad & \text{vs.} & \quad & \text{Motorcycle} \\
+	\text{Alive} & \quad & \text{vs.} & \quad & \text{Dead} \\
+	\text{Bank}_{\text{finance}} & \quad & \text{vs.} & \quad & \text{Bank}_{\text{geography}}
+\end{array}
 \]
 
-The sign "Car" is just a human convention to refer to the concept of a car. In Italian the sign is "Macchina" and in French "Voiture". In current LLM models tokenization devalues the symbols of words. They become abstract and fragmented data. This is incorrect because the human brain does not do this. The fundamental unit should be whole unfragmented symbols (complete words or signs), as each one represents a concept. Fragmentation ``kills'' concepts.
+The sign "Car" is just a human convention to refer to the concept of a car. In Italian the sign is "Macchina" and in French "Voiture".
+In current LLM models, tokenization or embedding distorts the original sign of words.
+They become abstract and fragmented data. This is incorrect because the human brain does not do this.
+The original words, letters, and symbols must be respected as they are the direct reference to the concept.
+Fragmentation “kills” the reference to concepts.
 The same applies to lines and paragraphs; these units must be respected in their original order during training.
 \[
 \text{Sign} \xrightarrow{} \text{Line} \xrightarrow{} \text{Paragraph} \xrightarrow{} \text{Document}
 \]
 As mentioned earlier, in the student example. The student can recall what they have studied in its original order. Word by word. Line by line. And if he has the ability to memorize more, he can also do it paragraph by paragraph throughout the whole document.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \section*{Potencia de la Última Capa en una Red BAN Encadenada}
@@ -307,12 +344,6 @@ La anatomía de la Matrix permite un manejo eficiente de la memoria volátil. Da
 \end{itemize}
 
 
-
-
-
-
-
-
 \section{Anatomy of the ConceptNode($CN$)}
 
 The ($CN$) is the fundamental processing unit in the architecture. Unlike neurons in a traditional dense network,
@@ -326,7 +357,7 @@ Each instance of the node is anchored to a fixed position in the \textit{Concept
     \item \textbf{Deterministic Seed ($s$):} Generated using the SHA-256 hash of the concept name e.g. \texttt{hash("car")}. This ensures that the microgrid initialization is reproducible and consistent across any system deployment.
 \end{itemize}
 
-\subsection{Micro-red Neuronal Local ($\Theta, \bm{b}$)}
+\subsection{Micro-red Neuronal Local }
 El núcleo de procesamiento del nodo consiste en una red \textit{feed-forward} de 1,000 unidades:
 \begin{itemize}
     \item \textbf{Pesos Sinápticos (\texttt{self.weights}):} Una matriz $\Theta \in \mathbb{R}^{1000 \times 1000}$. Representa el ``conocimiento acumulado'' sobre cómo el concepto debe reaccionar ante estímulos.
