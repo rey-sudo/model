@@ -153,3 +153,5 @@
    "a"          s = +0.09
    "a car is a" s = +0.55   ← ⚠️ compite más fuerte
    "a car is"   s = +0.71   ← sigue ganando pero con menos margen
+
+   
