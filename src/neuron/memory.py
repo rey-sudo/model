@@ -5,7 +5,7 @@ from PIL import Image, ImageOps, ImageFilter
 from pathlib import Path
 import scipy.sparse as sp
 
-GRID      = 28 * 7   # retina features
+GRID      = 28 * 6   # retina features
 LABEL_DIM = 16 * 22   #  * labels - dims por vector de etiqueta
 
 INPUT_DIR  = Path.cwd() / "input"

@@ -2,21 +2,22 @@ from pathlib import Path
 from src.neuron.memory import BAN
 from src.utils import word_to_image
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 ruta_actual = Path.cwd()
 
 INPUT_PATH = ruta_actual / "input"
 OUTPUT_PATH = ruta_actual / "output"
-GRID = 28 * 7
+GRID = 28 * 6
 RETINA = (GRID, GRID)
 
-REDES = {} 
-
-documento = [
+lineas = [
     "a cat with four wheels",
     "a car is used for transportation",
     "a car has four wheels",
 ]
+
+LINEAS = {}   # { idx: BAN }
 
 def preprocesar_texto(frase):
     palabras = frase.split()
@@ -34,190 +35,78 @@ def preprocesar_texto(frase):
 
     return resultado_tuplas
 
-def entrenar_frase(red: dict, frase: str):
-    phrase_chunks = preprocesar_texto(frase)
+def entrenar_lineas():
+    for i, linea in enumerate(lineas, 1):
+        resultado = preprocesar_texto(linea)   # genera imágenes + tuplas
 
-    for i in range(1, len(phrase_chunks) + 1):
-        red[i] = BAN()
-        print(f"\n--- Entrenando BAN{i} con toda la secuencia ---")
+        LINEAS[i] = BAN()
 
-        for img, label in phrase_chunks:
-            nodos_contexto = [red[j] for j in range(1, i) if j in red]
+        for img, label in resultado:
+            LINEAS[i].train_from_(img, label)
 
-            if nodos_contexto:
-                red[i].train_from_upstream_(img, label, upstream=nodos_contexto)
-            else:
-                red[i].train_from_(img, label)
+        print(f"  ✓ LINEA{i}  '{linea}'  |  labels={len(resultado)}")
+        #LINEAS[i].memory_usage()
 
+def clasificar_lineas(imagen: str, verbose: bool = True) -> tuple:
 
-def entrenar_documento():
-    for p_idx, parrafo in enumerate(documento, 1):
-        print(f"\n{'═'*55}")
-        print(f"  PÁRRAFO {p_idx}: '{parrafo}'")
-        print(f"{'═'*55}")
-        REDES[p_idx] = {}
-        entrenar_frase(REDES[p_idx], parrafo)
-
-
-
-def clasificar_documento(imagen: str, verbose: bool = True):
-    print(f"\n{'═'*55}")
-    print(f"  CONSULTA: {imagen}")
-    print(f"{'═'*55}")
-
-    for p_idx, red in REDES.items():
-        print(f"\n  PÁRRAFO {p_idx}")
-        print(f"  {'─'*40}")
-
-        n_bans = len(red)
-
-        for i in range(1, n_bans + 1):
-            upstream = [red[j] for j in range(1, i) if j in red]
-
-            if upstream:
-                label, scores, _ = red[i].classify_chained_(
-                    imagen, upstream=upstream, verbose=False
-                )
-            else:
-                label, scores = red[i].classify_(imagen, verbose=False)
-
-            # ── ordenar scores de mayor a menor ─────────────────
-            ranking = sorted(scores.items(), key=lambda x: -x[1])
-
-            winner       = ranking[0]
-            second       = ranking[1] if len(ranking) > 1 else None
-            third       = ranking[2] if len(ranking) > 1 else None
-            
-            bar = "█" * int(abs(winner[1]) * 20)
-
-            linea = f"  BAN{i}  {winner[1]:+.4f}  {bar:<20}  \"{winner[0]}\""
-
-            if second:
-                linea += f"   2°: \"{second[0]}\" {second[1]:+.4f}"
-                
-            if third:
-                linea += f"   3°: \"{third[0]}\" {third[1]:+.4f}"
-                
-            print(linea)
-
-    print(f"\n{'═'*55}")
-    
-    
-def clasificar_documento_tail(imagen: str):
-    print(f"\n{'═'*55}")
-    print(f"  CONSULTA: {imagen}")
-    print(f"{'═'*55}\n")
+    def consultar(i: int, ban: BAN) -> tuple:
+        winner, scores = ban.classify_(imagen, verbose=False)
+        return i, winner, scores[winner], scores
 
     resultados = {}
 
-    for p_idx, red in REDES.items():
+    with ThreadPoolExecutor(max_workers=len(LINEAS)) as executor:
+        futuros = {
+            executor.submit(consultar, i, ban): i
+            for i, ban in LINEAS.items()
+        }
+        for futuro in as_completed(futuros):
+            i, winner, score, scores = futuro.result()
+            resultados[i] = {
+                "linea"  : lineas[i - 1],
+                "winner" : winner,
+                "score"  : score,
+                "scores" : scores,
+            }
 
-        n     = len(red)
-        upstream = [red[j] for j in range(1, n) if j in red]
+    # ── ranking de líneas por score ──────────────────────────────
+    ranking = sorted(resultados.items(), key=lambda x: -x[1]["score"])
 
-        if upstream:
-            label, scores, _ = red[n].classify_chained_(
-                imagen, upstream=upstream, verbose=False
-            )
-        else:
-            label, scores = red[n].classify_(imagen, verbose=False)
+    if verbose:
+        print(f"\n{'═'*60}")
+        print(f"  CONSULTA: {imagen}")
+        print(f"{'═'*60}")
+        for pos, (i, res) in enumerate(ranking, 1):
+            bar    = "█" * int(abs(res["score"]) * 20)
+            winner = res["winner"]
+            score  = res["score"]
 
-        ranking = sorted(scores.items(), key=lambda x: -x[1])
-        winner  = ranking[0]
-        second  = ranking[1] if len(ranking) > 1 else None
-        third   = ranking[2] if len(ranking) > 2 else None
+            # segundo label dentro de esa BAN
+            second = sorted(res["scores"].items(), key=lambda x: -x[1])
+            second = second[1] if len(second) > 1 else None
 
-        bar   = "█" * int(abs(winner[1]) * 20)
-        linea = f"  P{p_idx}  BAN{n}  {winner[1]:+.4f}  {bar:<20}  \"{winner[0]}\""
+            linea  = f"  {pos}°  L{i}  {score:+.4f}  {bar:<20}  \"{winner}\""
+            if second:
+                linea += f"   2°: \"{second[0]}\" {second[1]:+.4f}"
+            print(linea)
 
-        if second:
-            linea += f"   2°: \"{second[0]}\" {second[1]:+.4f}"
-        if third:
-            linea += f"   3°: \"{third[0]}\" {third[1]:+.4f}"
+        mejor = ranking[0]
+        print(f"\n  ➤  Línea más cercana : L{mejor[0]}")
+        print(f"  ➤  '{mejor[1]['linea']}'")
+        print(f"  ➤  Label             : \"{mejor[1]['winner']}\"")
+        print(f"  ➤  Score             : {mejor[1]['score']:+.4f}")
+        print(f"{'═'*60}\n")
 
-        print(linea)
-        resultados[p_idx] = {"winner": winner, "second": second, "third": third}
-
-    # ── párrafo ganador ──────────────────────────────────────────
-    mejor = max(resultados.items(), key=lambda x: x[1]["winner"][1])
-
-    print(f"\n{'─'*55}")
-    print(f"  ➤  Párrafo más cercano : P{mejor[0]}")
-    print(f"  ➤  Label               : \"{mejor[1]['winner'][0]}\"")
-    print(f"  ➤  Score               : {mejor[1]['winner'][1]:+.4f}")
-    print(f"{'═'*55}\n")
-
-    return resultados    
-
-
-def clasificar_consenso(imagen: str, red: dict) -> str:
-    votos = {}
-
-    for i in range(1, len(red) + 1):
-        upstream = [red[j] for j in range(1, i) if j in red]
-
-        if upstream:
-            label, scores, _ = red[i].classify_chained_(
-                imagen, upstream=upstream, verbose=False
-            )
-        else:
-            label, scores = red[i].classify_(imagen, verbose=False)
-
-        votos[label] = votos.get(label, 0) + scores[label]
-
-    ganador = max(votos, key=votos.get)
-    return ganador
-    
-    
-def memoria_documento():
-    print(f"\n{'═'*55}")
-    print(f"  MEMORIA TOTAL DEL DOCUMENTO")
-    print(f"{'═'*55}")
-
-    total_doc_mb = 0.0
-
-    for p_idx, red in REDES.items():
-        print(f"\n  PÁRRAFO {p_idx}")
-        print(f"  {'─'*50}")
-        print(f"  {'BAN':<8} {'W_fwd':>10} {'A_rows':>10} {'B_rows':>10} {'TOTAL':>10}")
-        print(f"  {'─'*50}")
-
-        total_parrafo_mb = 0.0
-
-        for i, ban in red.items():
-            report = ban.memory_usage()
-
-            # extraer valores numéricos del reporte
-            w     = float(report["W_fwd"].replace(" MB", ""))
-            a     = float(report["_A_rows"].replace(" MB", ""))
-            b     = float(report["_B_rows"].replace(" MB", ""))
-            total = float(report["TOTAL"].replace(" MB", ""))
-
-            total_parrafo_mb += total
-
-            print(f"  BAN{i:<5} {w:>9.3f}MB {a:>9.3f}MB {b:>9.3f}MB {total:>9.3f}MB")
-
-        print(f"  {'─'*50}")
-        print(f"  {'SUBTOTAL':<8} {'':>10} {'':>10} {'':>10} {total_parrafo_mb:>9.3f}MB")
-
-        total_doc_mb += total_parrafo_mb
-
-    print(f"\n{'═'*55}")
-    print(f"  PÁRRAFOS   : {len(REDES)}")
-    print(f"  BANS TOTAL : {sum(len(r) for r in REDES.values())}")
-    print(f"  {'─'*40}")
-    print(f"  TOTAL DOC  : {total_doc_mb:.3f} MB")
-    print(f"{'═'*55}\n")
-
-    return total_doc_mb
-
-entrenar_documento()
-print(REDES)
-clasificar_documento("2.png")
+    mejor_idx = ranking[0][0]
+    return mejor_idx, ranking[0][1]["winner"], resultados
 
 
 
 
-#memoria_documento()
 
-    
+entrenar_lineas()
+clasificar_lineas("2.png")
+
+
+
+
