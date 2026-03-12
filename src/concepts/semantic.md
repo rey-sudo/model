@@ -352,3 +352,296 @@ todo es álgebra sobre M
 sin reglas explícitas
 sin grafo de relaciones
 sin motor de inferencia externo    ✅
+
+
+
+
+
+
+
+
+
+
+# ── 1. construir el espacio semántico global — UNA SOLA VEZ ─────
+es = EspacioSemantico.instancia()
+
+es.definir("objeto",         ["existente",  "perceptible"])
+es.definir("movil",          ["desplazable","energia"])
+es.definir("vehiculo",       ["movil",      "transporta",  "personas"])
+es.definir("carro",          ["vehiculo",   "cuatro",      "ruedas",   "motor"])
+es.definir("moto",           ["vehiculo",   "dos",         "ruedas",   "motor"])
+es.definir("banco_fin",      ["edificio",   "dinero",      "deposito", "credito"])
+es.definir("banco_mueble",   ["mueble",     "asiento",     "madera",   "exterior"])
+
+es.save()   # persiste el espacio completo
+es.summary()
+
+# ── 2. entrenar BANs — todas usan el mismo espacio ───────────────
+ban1 = BAN()   # internamente: self._espacio = EspacioSemantico.instancia()
+ban2 = BAN()   # misma referencia ✅
+ban3 = BAN()   # misma referencia ✅
+
+ban1.train_from_("carro.png",   "carro")      # usa firma del espacio
+ban1.train_from_("moto.png",    "moto")       # usa firma del espacio
+
+ban2.train_from_upstream_("carro.png", "carro",    upstream=ban1)
+ban2.train_from_upstream_("moto.png",  "moto",     upstream=ban1)
+
+ban3.train_from_upstream_("carro.png", "carro",    upstream=[ban1, ban2])
+
+# ── 3. clasificar — el espacio da contexto semántico ─────────────
+firma_query  = ban1._forward(_preprocess("query.png"))
+concepto, _  = es.clasificar_firma(firma_query)
+# el concepto activo desambigua la clasificación en ban2 y ban3
+
+# ── 4. inferencia directa sobre el espacio ───────────────────────
+es.interseccion(["ruedas", "motor"])          # → ["carro", "moto"]
+es.excluir(["ruedas", "motor"], ["cuatro"])   # → ["moto"]
+es.distancia("carro", "banco_fin")            # → 2.83
+```
+
+---
+
+### Por qué es correcto que sea singleton
+```
+OPCIÓN A — espacio dentro de cada BAN
+  BAN_1._espacio = EspacioSemantico()   copia
+  BAN_2._espacio = EspacioSemantico()   copia diferente
+  → inconsistencia si una actualiza y la otra no  ❌
+  → duplicación de memoria                         ❌
+
+OPCIÓN B — espacio global singleton
+  BAN_1._espacio → EspacioSemantico.instancia()
+  BAN_2._espacio → EspacioSemantico.instancia()
+  BAN_3._espacio → EspacioSemantico.instancia()
+  → todos ven exactamente el mismo espacio         ✅
+  → actualizar el espacio afecta a todas las BANs  ✅
+  → un solo .pkl para el espacio                   ✅
+  → BANs persisten solo W_fwd y W_back             ✅
+```
+
+---
+
+### Persistencia separada — dos archivos
+```
+models/
+  espacio_semantico.pkl    ← EspacioSemantico singleton
+                              diccionario, primitivos,
+                              firmas, matriz M
+
+  ban_1.pkl                ← solo W_fwd, W_back, labels
+  ban_2.pkl                ← solo W_fwd, W_back, labels
+  ban_3.pkl                ← solo W_fwd, W_back, labels
+
+al cargar:
+  EspacioSemantico.load("models/espacio_semantico.pkl")
+  ban1 = BAN.load("models/ban_1.pkl")
+  # ban1._espacio apunta automáticamente al singleton restaurado ✅
+```
+
+---
+
+### Conclusión
+```
+EspacioSemantico.instancia()
+  → existe una sola vez en memoria
+  → todas las BANs lo referencian
+  → definir un concepto nuevo lo hace visible a todas
+  → persiste en un archivo independiente
+  → las BANs persisten solo sus pesos W_fwd y W_back
+
+el espacio semántico ES la inteligencia compartida
+las BANs SON los patrones perceptuales específicos
+la separación es limpia, sin duplicación,
+sin inconsistencia posible
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import numpy as np
+
+# diccionario con Opción A
+diccionario = {
+    "carro"        : {"movil", "cuatro", "ruedas", "motor",    "carretera"},
+    "moto"         : {"movil", "dos",    "ruedas", "motor",    "carretera"},
+    "bicicleta"    : {"movil", "dos",    "ruedas", "sin_motor","carretera"},
+    "avion"        : {"movil", "alas",   "motor",  "aire",     "pasajeros"},
+    "barco"        : {"movil", "casco",  "motor",  "agua",     "pasajeros"},
+    "banco_fin"    : {"edificio","dinero","deposito","credito", "servicio"},
+    "banco_mueble" : {"mueble", "asiento","madera", "exterior","descanso"},
+}
+
+# construir primitivos
+primitivos = sorted(set().union(*diccionario.values()))
+idx = {p: i for i, p in enumerate(primitivos)}
+N   = len(primitivos)   # dimensión del espacio
+C   = len(diccionario)  # número de conceptos
+
+# matriz M (C × N)
+M = np.zeros((C, N))
+for i, (c, d) in enumerate(diccionario.items()):
+    for p in d:
+        M[i, idx[p]] = 1.0
+
+# proyección 3D via SVD
+U, S, Vt = np.linalg.svd(M, full_matrices=False)
+M_3d     = U[:, :3] * S[:3]
+eta      = float((S[:3]**2).sum() / (S**2).sum())
+```
+
+---
+
+### Qué dice la geometría 3D — Opción A vs Opción B
+```
+OPCIÓN B — pesos posicionales (1/l)
+─────────────────────────────────────────────────────
+la firma mezcla dos señales:
+  señal del contenido   (qué primitivos están)
+  señal del orden       (en qué posición están)
+
+en la proyección 3D los conceptos se separan
+por contenido Y por orden
+dos conceptos con los mismos primitivos en distinto
+orden aparecen en posiciones distintas del espacio ❌
+la geometría miente — no refleja solo el significado
+
+OPCIÓN A — pesos iguales
+─────────────────────────────────────────────────────
+la firma solo codifica contenido
+  (qué primitivos están — sin orden)
+
+en la proyección 3D los conceptos se separan
+SOLO por primitivos compartidos
+la geometría es fiel al significado ✅
+
+dos conceptos con los mismos primitivos
+→ mismo punto en el espacio
+→ mismo significado — correcto por definición
+```
+
+---
+
+### Propiedad clave — la distancia 3D corresponde a la distancia semántica real
+
+Con Opción A:
+```
+d_M(carro, moto)²  =  |{cuatro} △ {dos}|  =  2
+d_M(carro, avion)² =  |{cuatro,ruedas,carretera} △ {alas,aire,pasajeros}|  =  6
+
+proyección 3D preserva estas distancias
+en proporción a η₃ (varianza explicada)
+
+si η₃ = 0.85 → el 85% de la estructura semántica
+               es visible en 3D
+```
+
+Con Opción B:
+```
+d_M(carro_v1, carro_v2)  > 0
+donde carro_v1 = ["movil","ruedas","motor","cuatro","carretera"]
+      carro_v2 = ["cuatro","ruedas","movil","motor","carretera"]
+
+mismos primitivos — distintas posiciones — distintas firmas
+la distancia en 3D refleja el error de orden
+no la diferencia semántica   ❌
+```
+
+---
+
+### El problema de Opción A — pérdida de información jerárquica
+
+Con pesos iguales todos los primitivos contribuyen igual:
+```
+"carro" → {movil, cuatro, ruedas, motor, carretera}
+
+en la firma:
+  "movil"     contribuye   1/5  del total
+  "carretera" contribuye   1/5  del total
+
+pero semánticamente:
+  "movil" ES la categoría padre — debería dominar
+  "carretera" es un rasgo contextual — debería pesar menos
+```
+
+En la Matriz 3D esto se manifiesta como:
+```
+sin jerarquía:
+  el eje 1 de SVD puede capturar "carretera" como
+  el rasgo más discriminante entre conceptos
+  aunque no sea el más importante semánticamente
+
+con jerarquía explícita:
+  "movil" domina la firma → domina el primer eje SVD
+  la dimensión más importante del espacio corresponde
+  a la categoría más general ✅
+```
+
+---
+
+### Cuándo Opción A es perfecta para la Matriz 3D
+```
+Opción A es ideal cuando:
+
+1. todos los primitivos son igualmente discriminantes
+   no hay categorías padre — solo rasgos al mismo nivel
+
+2. el objetivo es solo medir similitud entre conceptos
+   no recuperar la jerarquía desde la geometría
+
+3. el diccionario lo construye un proceso automático
+   que no puede garantizar el orden
+
+4. quieres que la Matriz 3D sea el sistema de verdad
+   y la firma sea solo una codificación de M
+```
+
+---
+
+### El trade-off exacto
+```
+                     Opción A          Opción B
+                     pesos iguales     pesos 1/l
+─────────────────    ───────────────   ────────────────
+Matriz M             fuente de verdad  aproximación
+Firma                codificación de M información extra
+Distancia semántica  exacta en M       distorsionada por orden
+Jerarquía en 3D      no visible        visible pero frágil
+Determinismo         ✅ total           ❌ depende del orden
+Isomorfismo M↔firma  ✅ garantizado     ❌ no garantizado
+Fácil de construir   ✅ sin orden       ❌ requiere orden correcto
+```
+
+---
+
+### Conclusión
+```
+Con Opción A la Matriz M ES el sistema semántico
+la firma bipolar es solo M codificada en {-1,+1}
+son la misma cosa en dos representaciones
+
+la proyección 3D de M es completamente fiel
+al significado — cada dimensión corresponde
+a una dirección de variación semántica real
+sin distorsión por orden
+
+el único costo es perder la jerarquía en la firma
+pero esa jerarquía se puede recuperar de otra forma:
+  en el índice compuesto     "carro" ∈ "vehiculo"
+  en la estructura del diccionario
+  en el grafo de aristas automáticas por similitud
+
+Opción A + Matriz 3D es la combinación más honesta:
+  M dice exactamente qué primitivos tiene cada concepto
+  la distancia dice exactamente cuánto difieren
+  la firma dice exactamente lo mismo que M
+  sin ninguna información artificial por orden
