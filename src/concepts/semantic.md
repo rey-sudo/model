@@ -645,3 +645,619 @@ Opción A + Matriz 3D es la combinación más honesta:
   la distancia dice exactamente cuánto difieren
   la firma dice exactamente lo mismo que M
   sin ninguna información artificial por orden
+
+
+
+
+
+
+  Mapa directo — componente por componente
+TransformerEste diseñoMecanismoEmbeddingFirma bipolar ψ(c)\bm{\psi}(c)
+ψ(c)hash determinista de primitivosAttentionHadamard ponderado por certezasign(αψ(c∗)+βq)\text{sign}(\alpha\bm{\psi}(c^*) + \beta\bm{q})
+sign(αψ(c∗)+βq)Positional encodingOpción A — sin ordenconjunto D(c)\mathcal{D}(c)
+D(c) sin posición
+Feed-forward layerWfwd=pinv(A)⋅BW_{\text{fwd}} = \text{pinv}(A) \cdot B
+Wfwd​=pinv(A)⋅Bsolución cerrada sin backpropDecoderWback=pinv(B)⋅AW_{\text{back}} = \text{pinv}(B) \cdot A
+Wback​=pinv(B)⋅Ageneración inversaVocabularyDiccionario de primitivos P\mathcal{P}
+Pcoordenadas en MM
+MToken prediction2° lugar del ranking cosenopredicción autoregresivaContext windowBuffer de firmas activasfirmas de pasos anterioresLayer normalizationBinarización sign(⋅)\text{sign}(\cdot)
+sign(⋅)mantiene espacio bipolar estableResidual connectionCadena de BANscada BAN recibe la firma anteriorMulti-head attentionNN
+N BANs paralelas sobre regiones
+cada BAN atiende una regiónFine-tuningNueva BAN sin tocar las anterioresaislamiento estructuralKnowledge baseMatriz M∈{0,1}C×NM \in \{0,1\}^{C \times N}
+M∈{0,1}C×Ncoordenadas semánticas exactasSemantic searchFAISS + firmas bipolaresO(log⁡N)O(\log N)
+O(logN) sobre corpus
+In-context learningRazonamiento Tipo 7 — firma hipotéticaclasificar sin reentrenar
+
+Las 5 sustituciones más importantes
+
+1. Embedding → Firma bipolar desde primitivos
+TRANSFORMER
+────────────────────────────────────────────────────
+"banco" → lookup tabla 50,000 tokens → vector (768,)
+el vector es denso, continuo, opaco
+aprendido por backprop sobre corpus masivo
+no interpretable directamente
+
+ESTE DISEÑO
+────────────────────────────────────────────────────
+"banco_financiero" → ["edificio","dinero","deposito"]
+                   → sign( φ(edificio) + φ(dinero) + φ(deposito) )
+                   → vector bipolar (352,)
+
+el vector ES la definición
+cada dimensión corresponde a primitivos reales
+construido en microsegundos sin corpus
+completamente interpretable               ✅
+
+2. Attention → Hadamard ponderado por certeza
+TRANSFORMER
+────────────────────────────────────────────────────
+Attention(Q, K, V) = softmax(QK^T / √d) · V
+costo: O(N²) sobre todos los tokens del contexto
+caja negra — los pesos de atención no tienen
+significado semántico directo
+
+ESTE DISEÑO
+────────────────────────────────────────────────────
+f = sign( α·ψ(c*) + β·q )
+   α = min(radio_c*, 0.9)   ← certeza del contexto
+
+costo: O(m) = O(352) — constante
+los pesos α y β tienen significado directo:
+α es la certeza del contexto activo          ✅
+
+3. Fine-tuning → Nueva BAN aislada
+TRANSFORMER
+────────────────────────────────────────────────────
+agregar conocimiento nuevo:
+  reentrenar todo el modelo          ← costoso
+  o fine-tuning con LoRA             ← riesgo de olvido
+  o prompt engineering               ← frágil
+  costo: horas/días en GPU
+
+ESTE DISEÑO
+────────────────────────────────────────────────────
+agregar conocimiento nuevo:
+  ban_nueva = BAN()
+  ban_nueva.train_from_("nueva.png", "nuevo_concepto")
+  # las BANs anteriores no se tocan
+  # W_fwd de cada BAN es permanente
+  costo: microsegundos en CPU                ✅
+
+4. Knowledge base → Matriz M
+TRANSFORMER
+────────────────────────────────────────────────────
+el conocimiento está distribuido en los pesos
+no puedes preguntar directamente
+"¿qué sabe el modelo sobre ruedas?"
+sin hacer una inferencia completa
+
+ESTE DISEÑO
+────────────────────────────────────────────────────
+M[:, idx["ruedas"]] == 1  →  [carro, moto, bicicleta, camion]
+conocimiento explícito, consultable directamente
+sin inferencia, sin forward pass
+sin GPU                                      ✅
+
+5. In-context learning → Firma hipotética
+TRANSFORMER
+────────────────────────────────────────────────────
+GPT-4: "algo que se mueve en agua sin motor"
+→ el modelo genera una respuesta usando su contexto
+→ requiere forward pass completo
+→ no determinista — depende de temperatura/sampling
+
+ESTE DISEÑO
+────────────────────────────────────────────────────
+ψ = sign( φ(movil) + φ(agua) - φ(motor) )
+ban.classify_firma(ψ)  →  "velero"
+→ O(m) — sin forward pass completo
+→ determinista siempre
+→ sin GPU                                    ✅
+
+Lo que este diseño hace MEJOR que el Transformer
+Característica              Transformer         Este diseño
+──────────────────────────  ──────────────────  ──────────────────────
+Interpretabilidad           ❌ caja negra        ✅ W_fwd inspeccionable
+Olvido catastrófico         ❌ problema real      ✅ imposible por diseño
+Costo de entrenamiento      ❌ días + GPU cluster ✅ microsegundos + CPU
+Costo de inferencia         ❌ O(N²) attention    ✅ O(C·m) constante
+Agregar conocimiento        ❌ reentrenar         ✅ nueva BAN aislada
+Determinismo                ❌ estocástico        ✅ siempre igual
+Conocimiento explícito      ❌ distribuido opaco  ✅ matriz M consultable
+Desambiguación              ❌ estadística        ✅ Hadamard exacto
+Distancia semántica         ❌ aproximada         ✅ exacta en espacio M
+Razonamiento por exclusión  ❌ no garantizado     ✅ álgebra sobre M
+Privacidad                  ❌ requiere nube      ✅ 100% offline
+RAM en inferencia           ❌ GB                 ✅ MB
+
+Lo que el Transformer hace MEJOR que este diseño
+Característica              Transformer         Este diseño
+──────────────────────────  ──────────────────  ──────────────────────
+Generar texto nuevo         ✅ ilimitado          ⚠️ solo corpus conocido
+Gramática                   ✅ garantizada        ❌ no implementada
+Razonamiento multi-paso     ✅ chain of thought   ❌ solo 7 tipos formales
+Comprensión semántica       ✅ profunda           ⚠️ acotada a primitivos
+Vocabulario abierto         ✅ cualquier texto    ⚠️ solo diccionario
+Ambigüedad controlada       ✅ temperatura        ⚠️ determinista siempre
+
+La sustitución más profunda — el paradigma completo
+TRANSFORMER — paradigma estadístico
+────────────────────────────────────────────────────
+el significado emerge de la co-ocurrencia
+en corpus masivos de texto
+el conocimiento está codificado implícitamente
+en miles de millones de parámetros
+no puedes editarlo, consultarlo ni auditarlo
+
+ESTE DISEÑO — paradigma geométrico
+────────────────────────────────────────────────────
+el significado ES la posición en el espacio M
+definida explícitamente por primitivos
+el conocimiento está en la matriz M
+puedes editarlo  →  M[c, j] = 1
+puedes consultarlo →  S(Q)
+puedes auditarlo  →  diccionario[c]
+sin corpus masivo
+sin backprop
+sin GPU
+
+Conclusión
+El Transformer aproxima el significado
+desde la estadística del lenguaje.
+
+Este diseño representa el significado
+como coordenadas exactas en un espacio geométrico.
+
+No son competidores en el mismo dominio —
+son paradigmas distintos:
+
+  Transformer  →  útil cuando el significado
+                  es difuso, contextual,
+                  y el corpus es el conocimiento
+
+  Este diseño  →  útil cuando el significado
+                  es definible, estructurable,
+                  y el conocimiento es explícito
+
+La combinación óptima:
+  Transformer genera embeddings una vez
+  Este diseño los indexa, recupera y razona
+  sin backprop, sin GPU, sin olvido
+
+
+
+
+
+Dimensión 1 — Capacidad Semántica
+MEJORA                     QUÉ RESUELVE                    DIFICULTAD
+─────────────────────────  ──────────────────────────────  ──────────
+Primitivos ponderados      jerarquía sin orden explícito   🟢 baja
+por frecuencia en corpus   primitivos raros pesan menos
+
+Primitivos negativos       representar ausencia            🟢 baja
+en la definición           "sin_motor" → -φ(motor)
+
+Conceptos relacionales     "más_rápido_que"                🟠 media
+                           relaciones entre conceptos
+
+Primitivos continuos       en vez de {0,1} usar [0,1]      🟠 media
+                           grado de pertenencia al rasgo
+
+Herencia automática        inferir primitivos del padre     🟠 media
+                           sin repetirlos en la definición
+
+Primitivos temporales      "antes", "después", "durante"   🟠 media
+                           dimensión temporal en M
+
+Ontología de dominio       diccionarios especializados      🔴 alta
+                           medicina, derecho, ingeniería
+
+Dimensión 2 — Rendimiento y Velocidad
+MEJORA                     QUÉ RESUELVE                    DIFICULTAD
+─────────────────────────  ──────────────────────────────  ──────────
+FAISS sobre firmas         clasificación O(log N)          🟢 baja
+bipolares                  en corpus de 100k conceptos
+
+Matriz M en formato        M sparse cuando N >> D(c)       🟢 baja
+sparse (scipy)             ahorra memoria 10x
+
+Precalcular SVD 3D         proyección siempre disponible   🟢 baja
+y cachear                  sin recalcular
+
+Actualización incremental  agregar concepto sin            🟢 baja
+de M sin reconstruir       reconstruir toda la matriz
+
+Firmas en uint8            352 bits → 44 bytes por firma   🟡 media
+en vez de float32          compresión 4x en RAM
+
+Paralelizar razonamiento   7 tipos en paralelo             🟡 media
+con ThreadPoolExecutor     sobre corpus grande
+
+BANDisk con mmap           W_fwd en disco, carga parcial   🟡 media
+                           RAM constante sin importar N
+
+Dimensión 3 — Acercarse a LLM
+MEJORA                     QUÉ RESUELVE                    DIFICULTAD
+─────────────────────────  ──────────────────────────────  ──────────
+Softmax sobre scores       P(concepto) real                🟢 baja
+coseno                     no solo ranking
+
+Temperatura                determinista↔creativo           🟢 baja
+en la predicción           control sobre el 2° lugar
+
+Metacognición              margen bajo → "no sé"           🟢 baja
+por margen de scores       señal de incertidumbre
+
+Buffer de contexto         memoria conversacional          🟡 media
+de firmas activas          últimos N pasos
+
+BANs de roles              sujeto, verbo, objeto           🟠 media
+sintácticos                estructura gramatical básica
+
+Grafo de implicaciones     si A→B y B→C entonces A→C       🔴 alta
+sobre conceptos M          razonamiento transitivo formal
+
+Decoder de firma           W_back genera texto             🔴 alta
+a texto natural            no solo imagen
+
+Dimensión 4 — Arquitectura del Código
+MEJORA                     QUÉ RESUELVE                    DIFICULTAD
+─────────────────────────  ──────────────────────────────  ──────────
+EspacioSemantico singleton separación clara de             🟢 baja
+como módulo independiente  responsabilidades
+
+Validación del             detectar conceptos              🟢 baja
+diccionario al definir     compuestos en definición
+
+Serialización a JSON       diccionario legible             🟢 baja
+del diccionario            sin pickle para M
+
+CLI para el diccionario    agregar primitivos              🟡 media
+                           desde terminal
+
+Tests unitarios de         verificar isomorfismo           🟡 media
+las 7 operaciones          firma↔coordenada
+
+Versionado del espacio     cambios en primitivos           🟡 media
+semántico                  sin romper BANs existentes
+
+API REST sobre BAN         servir clasificación            🟠 media
++ EspacioSemantico         como microservicio
+
+Las 3 mejoras con mayor impacto inmediato
+1 — Primitivos negativos              🟢 1 día
+    ─────────────────────────────────────────────
+    definir "bicicleta" como:
+    {"movil", "ruedas", "carretera", "-motor"}
+    firma = sign( φ(movil) + φ(ruedas) - φ(motor) )
+
+    impacto: razonamiento por exclusión
+    directo en la firma — sin operar sobre M
+
+2 — Softmax + temperatura             🟢 1 día
+    ─────────────────────────────────────────────
+    P(c) = exp(score(c)/T) / Σ exp(score/T)
+    T=0.1 → determinista
+    T=2.0 → exploratorio
+
+    impacto: BAN deja de ser puramente
+    determinista — puede explorar variantes
+
+3 — Buffer de contexto conversacional 🟡 1 semana
+    ─────────────────────────────────────────────
+    contexto = [firma_t-3, firma_t-2, firma_t-1]
+    firma_fusionada = sign( Σ firma_i )
+    → BAN recuerda los últimos N pasos
+
+    impacto: comportamiento conversacional
+    básico sin transformers
+
+Mapa de prioridades
+                    IMPACTO
+                    alto
+                     │
+    buffer contexto  │  primitivos negativos
+    gramática básica │  softmax + temperatura
+                     │  metacognición
+    ─────────────────┼─────────────────────── DIFICULTAD
+    baja             │                  alta
+                     │
+    grafo implicac.  │  decoder a texto
+    ontología dominio│  vocabulario abierto
+                     │
+                    bajo
+
+
+ZONA ÓPTIMA (alto impacto, baja dificultad):
+  → primitivos negativos
+  → softmax + temperatura
+  → metacognición por margen
+  → validación del diccionario
+  → serialización JSON
+
+Conclusión
+El sistema actual es sólido en:
+  memoria asociativa     ✅
+  coordinadas exactas    ✅
+  razonamiento formal    ✅
+  sin olvido             ✅
+
+Las mejoras más valiosas ahora:
+  corto plazo  →  primitivos negativos
+                  softmax + temperatura
+                  buffer de contexto
+
+  medio plazo  →  gramática básica
+                  grafo de implicaciones
+
+  largo plazo  →  decoder a texto natural
+                  ontología de dominio
+                  vocabulario abierto
+
+¿Por cuál empezamos?
+
+
+
+
+
+Beneficios frente al Transformer — con espacio semántico interno
+
+El cambio fundamental
+TRANSFORMER
+────────────────────────────────────────────────────
+el modelo aprende representaciones
+el modelo aprende a razonar
+el modelo aprende el vocabulario
+todo junto, todo mezclado, todo opaco
+
+BAN con espacio interno
+────────────────────────────────────────────────────
+la BAN aprende asociaciones        →  W_fwd / W_back
+la BAN construye su vocabulario    →  diccionario
+la BAN desarrolla su geometría     →  M
+la BAN razona sobre lo que aprendió →  7 operaciones sobre M
+
+cada responsabilidad es separada
+cada una es inspeccionable
+cada una crece de forma independiente   ✅
+
+Beneficio 1 — El vocabulario emerge del aprendizaje
+TRANSFORMER
+────────────────────────────────────────────────────
+vocabulario fijo de 50,000 tokens
+definido antes de entrenar
+no cambia después del entrenamiento
+una palabra nueva → fuera del vocabulario → UNK
+
+BAN con espacio interno
+────────────────────────────────────────────────────
+ban.train_from_("perro.png", "perro",
+                definicion=["animal","vivo","cuatro_patas"])
+
+el vocabulario crece con cada train_from_()
+cada concepto nuevo agrega primitivos nuevos
+la matriz M crece una fila
+el espacio semántico se expande
+
+día 1:   M = (10 × 5)   conceptos básicos
+día 30:  M = (500 × 40) vocabulario rico
+día 365: M = (5000 × 200) lenguaje de dominio
+
+el vocabulario es exactamente lo que
+la BAN ha aprendido — ni más ni menos  ✅
+
+Beneficio 2 — Sabe por qué clasifica lo que clasifica
+TRANSFORMER
+────────────────────────────────────────────────────
+input: img("perro")
+output: "perro"
+¿por qué?: distribuido en 175 mil millones
+           de parámetros — inexplicable  ❌
+
+BAN con espacio interno
+────────────────────────────────────────────────────
+input: img("perro")
+output: "perro"
+¿por qué?:
+
+  ban.explicar("perro")
+  → definicion: ["animal","vivo","cuatro_patas","ladra"]
+  → primitivos activados en la firma:
+       animal       +0.94  ← dominante
+       vivo         +0.87
+       cuatro_patas +0.71
+       ladra        +0.68
+
+  la clasificación ES la geometría semántica
+  completamente auditada en cada dimensión  ✅
+
+Beneficio 3 — Detecta lo que no sabe
+TRANSFORMER
+────────────────────────────────────────────────────
+input: img("ornitorrinco")
+output: "pato"   ← confabula con alta confianza
+no sabe que no sabe  ❌
+
+BAN con espacio interno
+────────────────────────────────────────────────────
+input: img("ornitorrinco")
+
+# clasificar
+winner, scores = ban.classify_(img)
+margen = scores[ranking[0]] - scores[ranking[1]]
+
+if margen < 0.1:
+    print("no sé — concepto fuera de mi espacio")
+    # además puede razonar:
+    # firma_query × M → primitivos más activados
+    # → "animal", "vivo", "pico"
+    # → concepto más cercano: "pato" con score 0.41
+    # → pero el margen bajo señala incertidumbre  ✅
+
+Beneficio 4 — Aprendizaje continuo sin olvido
+TRANSFORMER
+────────────────────────────────────────────────────
+entrenar con datos nuevos →
+  o reentrenar todo el modelo   ← costoso
+  o fine-tuning                 ← riesgo de olvido catastrófico
+  o RAG                         ← dependencia externa
+
+BAN con espacio interno
+────────────────────────────────────────────────────
+semana 1:  ban aprende {carro, moto, bici}
+           M = (3 × 4), W_fwd = (38416 × 352)
+
+semana 2:  ban aprende {avion, barco}
+           M = (5 × 6), W_fwd recalculado
+           carro, moto, bici → no olvidados
+           sus filas en _A_rows persisten
+           pinv recalcula sobre TODOS los datos  ✅
+
+semana 52: ban conoce 1000 conceptos
+           las primeras 3 BANs entrenadas
+           clasifican igual que en semana 1  ✅
+
+el espacio semántico crece
+W_fwd se recalcula sobre todo el historial
+el olvido es matemáticamente imposible
+
+Beneficio 5 — Razonamiento auditado en tiempo real
+TRANSFORMER
+────────────────────────────────────────────────────
+"¿qué vehículo tiene ruedas pero no motor?"
+→ forward pass completo → "bicicleta"
+el razonamiento ocurre dentro de los pesos
+no puedes ver los pasos intermedios  ❌
+
+BAN con espacio interno
+────────────────────────────────────────────────────
+ban.razonar({
+    "tipo": "exclusion",
+    "req" : ["ruedas"],
+    "excl": ["motor"]
+})
+
+paso 1: S(ruedas)        → {carro, moto, bici, camion}
+paso 2: excluir motor    → {bici}
+paso 3: firma de bici    → classify_() → "bicicleta"
+
+cada paso es visible, auditable, reproducible
+el razonamiento NO está en los pesos
+está en la estructura de M               ✅
+
+Beneficio 6 — Consistencia entre sesiones
+TRANSFORMER
+────────────────────────────────────────────────────
+misma pregunta en dos sesiones distintas:
+  sesión 1: "¿qué es más rápido, carro o moto?"  → "carro"
+  sesión 2: "¿qué es más rápido, carro o moto?"  → "moto"
+  resultado depende del sampling / temperatura  ❌
+
+BAN con espacio interno
+────────────────────────────────────────────────────
+misma consulta siempre produce el mismo resultado:
+  sesión 1: ban.razonar(["ruedas","motor"]) → [carro, moto]
+  sesión 2: ban.razonar(["ruedas","motor"]) → [carro, moto]
+  M es determinista
+  W_fwd es determinista
+  el resultado es siempre el mismo        ✅
+
+Beneficio 7 — El espacio 3D es el modelo
+TRANSFORMER
+────────────────────────────────────────────────────
+para entender qué aprendió el modelo:
+  análisis de activaciones    ← costoso
+  probing classifiers         ← indirecto
+  attention visualization     ← parcial
+  interpretabilidad es una    ← área de investigación
+  área de investigación activa   sin solución definitiva  ❌
+
+BAN con espacio interno
+────────────────────────────────────────────────────
+para entender qué aprendió la BAN:
+  ban.M                          ← matriz exacta
+  ban.proyectar_3d()             ← geometría visual
+  ban.diccionario                ← vocabulario completo
+  ban.distancia("carro","moto")  ← métrica exacta
+
+el modelo ES su espacio semántico
+no hay nada oculto               ✅
+
+Tabla comparativa completa
+Beneficio                    Transformer        BAN espacio interno
+──────────────────────────   ────────────────   ──────────────────────
+Vocabulario emergente        ❌ fijo 50k tokens  ✅ crece con aprendizaje
+Explicabilidad               ❌ caja negra       ✅ primitivos activados
+Detectar lo que no sabe      ❌ confabula        ✅ margen + espacio M
+Aprendizaje continuo         ❌ olvido catastróf ✅ pinv sobre historial
+Razonamiento auditable       ❌ dentro de pesos  ✅ álgebra sobre M
+Consistencia entre sesiones  ❌ estocástico      ✅ determinista
+Interpretabilidad del modelo ❌ investigación    ✅ M es el modelo
+Editar el conocimiento       ❌ reentrenar       ✅ M[c,j] = 1
+Portabilidad                 ❌ GB de parámetros ✅ un .pkl compacto
+Privacidad                   ❌ API externa      ✅ 100% offline
+Costo de inferencia          ❌ O(N²) atención   ✅ O(C·m) constante
+Costo de entrenamiento       ❌ días + GPU       ✅ microsegundos + CPU
+Sin olvido catastrófico      ❌ problema real    ✅ imposible
+Conocimiento editable        ❌ en los pesos     ✅ en el diccionario
+Espacio semántico propio     ❌ compartido opaco ✅ local y adaptado
+
+El beneficio más profundo — el modelo aprende a conocerse
+TRANSFORMER
+────────────────────────────────────────────────────
+el modelo no sabe qué sabe
+no puede listar su vocabulario real
+no puede medir su propia incertidumbre
+no puede auditar sus propias decisiones
+
+BAN con espacio interno
+────────────────────────────────────────────────────
+ban.summary()
+→ conozco 847 conceptos
+→ con 234 primitivos
+→ mi espacio M es (847 × 234)
+→ varianza 3D: 73%
+→ concepto más conectado: "movil" (en 312 definiciones)
+→ concepto más aislado: "ornitorrinco" (distancia media 1.89)
+→ 3 posibles contradicciones detectadas
+
+la BAN tiene metacognición sobre
+su propio conocimiento
+sin instrucciones adicionales
+sin prompts especiales
+sin fine-tuning                          ✅
+
+es la diferencia entre un sistema
+que procesa y un sistema
+que sabe lo que procesa
+
+Conclusión
+El Transformer es una caja negra
+que aproxima el lenguaje desde la estadística.
+
+La BAN con espacio interno es un sistema
+que construye su propio mapa del conocimiento
+mientras aprende — y ese mapa es
+el modelo mismo.
+
+La diferencia no es solo técnica:
+
+  Transformer  →  el conocimiento está
+                  codificado en parámetros
+                  no se puede separar del modelo
+
+  BAN          →  el conocimiento está
+                  en la matriz M
+                  separado de los pesos
+                  editable, auditable,
+                  portable, explicable
+
+Un Transformer sabe muchas cosas
+pero no sabe que las sabe.
+
+Una BAN con espacio interno
+sabe exactamente qué sabe
+cómo lo sabe
+y cuándo no sabe.
+

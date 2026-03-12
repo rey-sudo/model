@@ -11,7 +11,7 @@ def generar_nodo_svg(elemento_unicode, nombre_archivo):
     barcode = treepoem.generate_barcode(
         barcode_type='datamatrix',
         data=hash_bytes,
-        options={"parse": True} # Permite manejar datos binarios correctamente
+        options={"parse": True, "square": True } # Permite manejar datos binarios correctamente
     )
     
     # 3. Guardar como SVG
@@ -25,4 +25,3 @@ def generar_nodo_svg(elemento_unicode, nombre_archivo):
     print(f"Nodo {elemento_unicode} procesado como {hash_bytes.hex()}")
 
 # Ejemplo de uso
-generar_nodo_svg("Ω", "nodo_omega")
