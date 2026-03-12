@@ -17,11 +17,8 @@ def generar_nodo_svg(elemento_unicode, nombre_archivo):
     # 3. Guardar como SVG
     # Treepoem devuelve un objeto Image de Pillow, pero podemos forzar el guardado vectorial
     # si usamos la opción de exportación directa de BWIPP o convertimos el postscript.
-    with open(f"{nombre_archivo}.svg", "w") as f:
+    with open(f"{nombre_archivo}.png", "w") as f:
         # Nota: treepoem genera por defecto un objeto de imagen. 
         # Para SVG puro, lo ideal es usar la salida de PostScript (EPS) y renombrar o convertir.
         barcode.save(f"{nombre_archivo}.png") # Salida estándar en raster
 
-    print(f"Nodo {elemento_unicode} procesado como {hash_bytes.hex()}")
-
-# Ejemplo de uso
