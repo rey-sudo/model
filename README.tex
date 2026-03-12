@@ -23,7 +23,6 @@
 	boxrule=0.5pt,           % Grosor del borde
 	#1                       % Permite pasar argumentos extra
 }
-\usepackage[T1]{fontenc}
 \usepackage{amsmath, amssymb, amsthm}
 \usepackage{mathtools}
 \usepackage{bm}
@@ -31,17 +30,23 @@
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage[colorlinks=true, linkcolor=blue]{hyperref}
+ 
+\geometry{margin=2.5cm}
 
-
-
-
+\newtheorem{theorem}{Teorema}
+\newtheorem{proposition}{Proposición}
+\newtheorem{corollary}{Corolario}
+\newtheorem{definition}{Definición}
+\newtheorem{property}{Propiedad}
 
 
 
 %%%%%%%%%%%%%%%
 
-\title{\textbf{Concepts is all you need} }
-\author{Sparse Point Evolutionary Knowledge Tracking Architecture}
+
+
+\title{\textbf{Concepts is all you need} \\[0.5em] \large Sparse Point Evolutionary Knowledge Tracking Architecture}
+\author{Juan José Caballero Rey \thanks{ Contacto: sudo.delete.evil@gmail.com} \\ \small{Software Dev}}
 \date{Marzo 2026}
 
 \begin{document}
@@ -120,8 +125,400 @@ The same applies to lines and paragraphs; these units must be respected in their
 \]
 As mentioned earlier, in the student example. The student can recall what they have studied in its original order. Word by word. Line by line. And if he has the ability to memorize more, he can also do it paragraph by paragraph throughout the whole document.
 
+The definition of a concept is a set of concepts making it a recursive system.
+
+\[
+\text{Concepts} = \begin{cases} 
+	R : C \mapsto \{C_1, C_2, \dots, C_n\} & \text{(Recursion)} \\
+	S : C \mapsto (x, y, z, \dots) & \text{(spatiality)} 
+\end{cases}
+\]\\
+
+ It is also a spatial system, since one concept can precede another above or below it, to the left or to the right.
+ 
+$$\begin{array}{|c|c|c|}
+	\hline
+	& \text{Plant} \downarrow & \\ \hline
+	\text{Seed} \longrightarrow & \mathbf{\text{Tree}} & \text{Wood} \longrightarrow \\ \hline
+	& \text{Oak} \downarrow & \\ \hline
+\end{array}$$
+
+$$\begin{array}{|c|c|c|} 
+	\hline 
+	& \text{Galaxy} \downarrow & \\ \hline 
+	\text{Nebula} \longrightarrow  & \mathbf{\text{Planet}} & \text{Life } \longrightarrow \\ \hline 
+	& \text{Core} \downarrow & \\ \hline
+\end{array}$$
 
 
+
+
+
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Espacio Semántico Basado en Primitivos}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Definiciones Fundamentales}
+
+\begin{definition}[Primitivo Semántico]
+	Un \textbf{primitivo semántico} es un elemento atómico de significado que no puede
+	descomponerse en unidades más simples dentro del sistema. El conjunto de todos los
+	primitivos se denota:
+	\[
+	\mathcal{P} = \{p_1, p_2, \ldots, p_N\}, \qquad p_i \in \mathcal{P}
+	\]
+	donde $N = |\mathcal{P}|$ es la dimensión del espacio semántico.
+\end{definition}
+
+\begin{definition}[Concepto]
+	Un \textbf{concepto} $c$ es un par ordenado:
+	\[
+	c = \bigl(\text{idx}(c),\; \delta(c)\bigr)
+	\]
+	donde:
+	\begin{itemize}
+		\item $\text{idx}(c) \in \Sigma^*$ es el índice léxico (puede ser compuesto:
+		\texttt{banco\_financiero}, \texttt{banco\_mueble})
+		\item $\delta(c) \subset \mathcal{P}$ es la definición — subconjunto ordenado
+		de primitivos, con $\delta(c) \cap \mathcal{C} = \emptyset$
+		(ningún elemento de la definición es un concepto compuesto)
+	\end{itemize}
+\end{definition}
+
+\begin{definition}[Diccionario Semántico]
+	El \textbf{diccionario semántico} es la función:
+	\[
+	\mathcal{D} : \mathcal{C} \longrightarrow \mathcal{P}^*
+	\]
+	que asigna a cada concepto $c \in \mathcal{C}$ una secuencia ordenada de primitivos
+	$\mathcal{D}(c) = (p_{i_1}, p_{i_2}, \ldots, p_{i_k})$ con $p_{i_j} \in \mathcal{P}$
+	para todo $j$.
+\end{definition}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Matriz de Coordenadas Semánticas}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{definition}[Matriz Semántica]
+	Sea $|\mathcal{C}| = C$ el número de conceptos y $|\mathcal{P}| = N$ el número de
+	primitivos. La \textbf{matriz semántica} es:
+	\[
+	M \in \{0, 1\}^{C \times N}
+	\]
+	con entradas:
+	\[
+	M_{ij} =
+	\begin{cases}
+		1 & \text{si } p_j \in \mathcal{D}(c_i) \\
+		0 & \text{en otro caso}
+	\end{cases}
+	\]
+	La fila $i$-ésima $\mathbf{m}_i \in \{0,1\}^N$ es la \textbf{coordenada semántica}
+	del concepto $c_i$ en el espacio de primitivos.
+\end{definition}
+
+\begin{property}[Unicidad de Coordenadas]
+	Dos conceptos $c_a$ y $c_b$ tienen el mismo significado si y solo si sus coordenadas
+	coinciden:
+	\[
+	\mathcal{D}(c_a) = \mathcal{D}(c_b) \iff \mathbf{m}_a = \mathbf{m}_b
+	\]
+	En caso contrario, $\mathbf{m}_a \neq \mathbf{m}_b$ garantiza distinción semántica.
+\end{property}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Métricas Semánticas}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{definition}[Distancia Semántica]
+	La \textbf{distancia semántica} entre dos conceptos $c_a$ y $c_b$ es la distancia
+	euclidiana entre sus coordenadas:
+	\[
+	d(c_a, c_b) = \|\mathbf{m}_a - \mathbf{m}_b\|_2
+	= \sqrt{\sum_{j=1}^{N} (M_{aj} - M_{bj})^2}
+	\]
+\end{definition}
+
+\begin{proposition}[Cota de la Distancia]
+	Para cualquier par de conceptos $c_a, c_b \in \mathcal{C}$:
+	\[
+	0 \;\leq\; d(c_a, c_b) \;\leq\; \sqrt{N}
+	\]
+	donde:
+	\begin{itemize}
+		\item $d(c_a, c_b) = 0 \iff \mathcal{D}(c_a) = \mathcal{D}(c_b)$
+		\hfill (conceptos idénticos)
+		\item $d(c_a, c_b) = \sqrt{N} \iff \mathcal{D}(c_a) \cap \mathcal{D}(c_b) = \emptyset$
+		\hfill (conceptos opuestos)
+	\end{itemize}
+\end{proposition}
+
+\begin{proof}
+	Dado que $M_{ij} \in \{0,1\}$, cada término $(M_{aj} - M_{bj})^2 \in \{0, 1\}$,
+	por lo tanto $d(c_a, c_b)^2 \leq N$, de donde $d(c_a, c_b) \leq \sqrt{N}$.
+	La cota inferior es inmediata por propiedades de la norma euclidiana.
+\end{proof}
+
+\begin{definition}[Similitud Semántica]
+	La \textbf{similitud semántica} entre dos conceptos se define mediante el
+	coeficiente de Jaccard sobre sus conjuntos de primitivos:
+	\[
+	\text{sim}(c_a, c_b)
+	= \frac{|\mathcal{D}(c_a) \cap \mathcal{D}(c_b)|}
+	{|\mathcal{D}(c_a) \cup \mathcal{D}(c_b)|}
+	= \frac{\mathbf{m}_a \cdot \mathbf{m}_b}
+	{\|\mathbf{m}_a\|_1 + \|\mathbf{m}_b\|_1
+		- \mathbf{m}_a \cdot \mathbf{m}_b}
+	\]
+	con $\text{sim}(c_a, c_b) \in [0, 1]$.
+\end{definition}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Operaciones sobre el Espacio}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{definition}[Sección por Primitivo]
+	La \textbf{sección} del espacio inducida por el primitivo $p_j$ es el conjunto de
+	todos los conceptos que lo contienen:
+	\[
+	S(p_j) = \bigl\{\, c_i \in \mathcal{C} \;\mid\; M_{ij} = 1 \,\bigr\}
+	\]
+	Geométricamente, $S(p_j)$ es el hiperplano de corte $x_j = 1$ en $\{0,1\}^N$.
+\end{definition}
+
+\begin{definition}[Intersección Semántica]
+	Dado un conjunto de primitivos $Q = \{p_{j_1}, \ldots, p_{j_k}\} \subset \mathcal{P}$,
+	la \textbf{intersección semántica} es:
+	\[
+	S(Q) = \bigcap_{p \in Q} S(p)
+	= \bigl\{\, c_i \in \mathcal{C} \;\mid\; M_{ij} = 1 \;\forall\, p_j \in Q \,\bigr\}
+	\]
+	Esta operación implementa razonamiento por condiciones necesarias: $S(Q)$ contiene
+	exactamente los conceptos que satisfacen \textit{todos} los rasgos en $Q$.
+\end{definition}
+
+\begin{definition}[Composición de Conceptos]
+	Dados dos conceptos $c_a, c_b \in \mathcal{C}$, su \textbf{composición semántica}
+	produce un nuevo vector de coordenadas:
+	\[
+	\mathbf{m}_{a \oplus b} = \text{sign}\!\left(\mathbf{m}_a + \mathbf{m}_b\right)
+	\in \{0,1\}^N
+	\]
+	donde $\text{sign}(x) = 1$ si $x > 0$ y $0$ en otro caso. La composición
+	corresponde a la unión de primitivos: $\mathcal{D}(c_a) \cup \mathcal{D}(c_b)$.
+\end{definition}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Firma BAN y Espacio Semántico}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{definition}[Firma de Primitivo]
+	A cada primitivo $p_j \in \mathcal{P}$ se le asigna una \textbf{firma bipolar}
+	determinista:
+	\[
+	\bm{\phi}(p_j) \in \{-1, +1\}^m, \qquad m = \text{LABEL\_DIM}
+	\]
+	generada mediante una función hash determinista:
+	\[
+	\bm{\phi}(p_j) = \text{sign}\!\left(\text{RNG}\bigl(\text{hash}(p_j)\bigr)\right)
+	\]
+	donde $\text{RNG}(\cdot)$ es un generador pseudoaleatorio con semilla fija.
+\end{definition}
+
+\begin{definition}[Firma de Concepto]
+	La \textbf{firma semántica} del concepto $c_i$ con definición
+	$\mathcal{D}(c_i) = (p_{i_1}, \ldots, p_{i_k})$ es:
+	\[
+	\bm{\psi}(c_i) = \text{sign}\!\left(
+	\sum_{l=1}^{k} w_l \cdot \bm{\phi}(p_{i_l})
+	\right) \in \{-1, +1\}^m
+	\]
+	donde el peso posicional decrece con el orden:
+	\[
+	w_l = \frac{1}{l}, \qquad l = 1, 2, \ldots, k
+	\]
+	El primer primitivo (categoría padre) tiene el mayor peso; los rasgos
+	distintivos pesan proporcionalmente menos.
+\end{definition}
+
+\begin{property}[Preservación de Similitud]
+	La similitud coseno entre firmas preserva la similitud semántica entre conceptos.
+	Para $c_a, c_b \in \mathcal{C}$:
+	\[
+	\cos\!\left(\bm{\psi}(c_a),\, \bm{\psi}(c_b)\right)
+	= \frac{\bm{\psi}(c_a) \cdot \bm{\psi}(c_b)}
+	{\|\bm{\psi}(c_a)\| \cdot \|\bm{\psi}(c_b)\|}
+	\;\approx\; \text{sim}(c_a, c_b)
+	\]
+	con la aproximación mejorando conforme $m \to \infty$ por el
+	Teorema del Límite Central aplicado a los bits de la firma.
+\end{property}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Desambiguación por Fusión de Hadamard}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{definition}[Producto de Hadamard Ponderado]
+	Dada una firma de consulta $\bm{q} \in \{-1,+1\}^m$ y el prototipo del concepto
+	activo $\bm{\psi}(c^*) \in \{-1,+1\}^m$ con radio $r^* \in (0,1]$, la
+	\textbf{fusión semántica} es:
+	\[
+	\bm{f} = \text{sign}\!\left(\alpha\, \bm{\psi}(c^*) + \beta\, \bm{q}\right)
+	\]
+	donde los pesos satisfacen $\alpha + \beta = 1$, $\alpha, \beta > 0$, y:
+	\[
+	\alpha = \min(r^*, 0.9), \qquad \beta = 1 - \alpha
+	\]
+	El radio $r^*$ pondera automáticamente la certeza del contexto activo.
+\end{definition}
+
+\begin{theorem}[Supresión de Ambigüedad]
+	Sea $c_x$ un concepto ambiguo con dos interpretaciones $c_a$, $c_b$ tales que
+	$\bm{\psi}(c_a) \cdot \bm{\psi}(c_b) < 0$ (interpretaciones opuestas). Si el
+	concepto activo es $c^* = c_a$, entonces la fusión $\bm{f}$ satisface:
+	\[
+	\cos(\bm{f},\, \bm{\psi}(c_a)) \;\gg\; \cos(\bm{f},\, \bm{\psi}(c_b))
+	\]
+	La interpretación $c_b$ queda suprimida en la firma fusionada.
+\end{theorem}
+
+\begin{proof}[Demostración (esquema)]
+	Las dimensiones donde $\bm{\psi}(c^*)$ y $\bm{q}$ tienen el mismo signo se
+	refuerzan; las dimensiones donde difieren se atenúan en proporción $\alpha/\beta$.
+	Dado que $c^* = c_a$ comparte más dimensiones con $\bm{\psi}(c_a)$ que con
+	$\bm{\psi}(c_b)$, el score coseno de $c_a$ domina tras la fusión.
+\end{proof}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Proyección al Espacio Tridimensional}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{definition}[Proyección SVD]
+	La \textbf{proyección tridimensional} del espacio semántico se obtiene mediante
+	Descomposición en Valores Singulares (SVD) de la matriz $M$:
+	\[
+	M = U \Sigma V^\top, \qquad
+	M \in \mathbb{R}^{C \times N},\quad
+	U \in \mathbb{R}^{C \times C},\quad
+	\Sigma \in \mathbb{R}^{C \times N},\quad
+	V \in \mathbb{R}^{N \times N}
+	\]
+	La proyección 3D de los conceptos es:
+	\[
+	\tilde{M} = U_{:,1:3}\, \text{diag}(\sigma_1, \sigma_2, \sigma_3)
+	\in \mathbb{R}^{C \times 3}
+	\]
+	donde $\sigma_1 \geq \sigma_2 \geq \sigma_3$ son los tres valores singulares
+	más grandes y $U_{:,1:3}$ son sus vectores singulares izquierdos correspondientes.
+\end{definition}
+
+\begin{property}[Preservación de Varianza]
+	La proyección $\tilde{M}$ maximiza la varianza explicada entre todas las
+	proyecciones ortogonales de rango 3. La fracción de varianza preservada es:
+	\[
+	\eta_3 = \frac{\sigma_1^2 + \sigma_2^2 + \sigma_3^2}
+	{\sum_{k=1}^{\min(C,N)} \sigma_k^2}
+	\]
+	Cuanto mayor sea $\eta_3$, más fiel es la representación tridimensional
+	a la estructura semántica completa.
+\end{property}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Propiedades del Sistema}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{property}[Sin Degradación Jerárquica]
+	Dado que toda definición usa exclusivamente primitivos
+	($\mathcal{D}(c) \subset \mathcal{P}$, sin referencias a otros conceptos),
+	la firma $\bm{\psi}(c)$ se calcula en un solo nivel:
+	\[
+	\bm{\psi}(c) = \text{sign}\!\left(
+	\sum_{l=1}^{k} \frac{1}{l}\, \bm{\phi}(p_{i_l})
+	\right)
+	\]
+	No existe acumulación de error por composición de centroides.
+	La señal semántica es siempre directa: $\text{primitivo} \to \text{firma}$.
+\end{property}
+
+\begin{property}[Actualización Incremental O(m)]
+	El prototipo $\bm{\psi}(c)$ se actualiza de forma incremental sin recalcular
+	desde cero. Dado que se mantiene la suma acumulada
+	$\mathbf{s}_c = \sum_{t=1}^{n} \bm{\phi}^{(t)}$, al agregar la instancia
+	$\bm{\phi}^{(n+1)}$:
+	\[
+	\mathbf{s}_c \leftarrow \mathbf{s}_c + \bm{\phi}^{(n+1)}, \qquad
+	\bm{\psi}(c) \leftarrow \text{sign}(\mathbf{s}_c)
+	\]
+	Costo por actualización: $O(m)$. Costo de clasificación: $O(C \cdot m)$,
+	independiente del número total de instancias $n$.
+\end{property}
+
+\begin{property}[Inferencia por Álgebra de Conjuntos]
+	Las siguientes consultas son ejecutables en tiempo $O(C)$ mediante
+	operaciones sobre las filas de $M$:
+	
+	\begin{align}
+		\text{Sección}(p_j) &= \{\,c_i \mid M_{ij} = 1\,\} \\[4pt]
+		\text{Intersección}(Q) &= \{\,c_i \mid M_{ij} = 1 \;\forall\, p_j \in Q\,\} \\[4pt]
+		\text{Exclusión}(Q, E) &= \text{Intersección}(Q) \setminus \{\,c_i \mid M_{ij} = 1 \;\exists\, p_j \in E\,\}
+	\end{align}
+	
+	Estas operaciones implementan razonamiento lógico elemental sin grafo
+	y sin reglas de inferencia explícitas.
+\end{property}
+
+\begin{theorem}[Frontera Semántica]
+	Dos conceptos $c_a$ y $c_b$ están separados en el espacio semántico si y solo
+	si sus definiciones difieren en al menos un primitivo:
+	\[
+	d(c_a, c_b) > 0 \iff \mathcal{D}(c_a) \neq \mathcal{D}(c_b)
+	\]
+	El conjunto de primitivos que define la frontera entre ellos es:
+	\[
+	\partial(c_a, c_b)
+	= \bigl(\mathcal{D}(c_a) \setminus \mathcal{D}(c_b)\bigr)
+	\cup
+	\bigl(\mathcal{D}(c_b) \setminus \mathcal{D}(c_a)\bigr)
+	\]
+	y la distancia satisface $d(c_a, c_b) = \sqrt{|\partial(c_a, c_b)|}$.
+\end{theorem}
+
+\begin{proof}
+	Cada primitivo en $\partial(c_a, c_b)$ contribuye exactamente $1$ a la suma
+	$\sum_j (M_{aj} - M_{bj})^2$, mientras que los primitivos compartidos y los
+	ausentes en ambos contribuyen $0$. Por tanto:
+	\[
+	d(c_a, c_b)^2 = \sum_{j=1}^{N} (M_{aj} - M_{bj})^2 = |\partial(c_a, c_b)|
+	\]
+\end{proof}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Resumen de Complejidades}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\begin{center}
+	\begin{tabular}{llll}
+		\toprule
+		\textbf{Operación} & \textbf{Complejidad} & \textbf{Variables} \\
+		\midrule
+		Agregar instancia al prototipo  & $O(m)$       & $m = \text{LABEL\_DIM} = 352$ \\
+		Clasificar por concepto         & $O(C \cdot m)$ & $C = $ número de conceptos \\
+		Desambiguar (Hadamard)          & $O(m)$       & constante en $N$ instancias \\
+		Sección por primitivo           & $O(C)$       & \\
+		Intersección de primitivos      & $O(C \cdot |Q|)$ & $|Q| = $ primitivos consultados \\
+		Distancia entre conceptos       & $O(N)$       & $N = |\mathcal{P}|$ \\
+		Proyección SVD (una vez)        & $O(C \cdot N^2)$ & se precalcula y persiste \\
+		Persistencia a disco            & $O(C \cdot N + C \cdot m)$ & un solo \texttt{pickle} \\
+		\bottomrule
+	\end{tabular}
+\end{center}
+
+\vspace{1em}
+En la práctica, con $m = 352$ fijo y $C$ pequeño respecto a $N$ instancias totales,
+todas las operaciones de clasificación e inferencia son efectivamente $O(1)$ en el
+número de instancias observadas.
 
 
 
