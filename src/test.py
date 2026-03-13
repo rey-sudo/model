@@ -29,13 +29,15 @@ def imprimir_indices_acumulados(diccionario):
         chunk = indices[:i]
         acc.append(chunk)
         
-        print(i)
-        
         cascade = block_to_canvas(acc=acc, sign_size=9, block_length=len(block))
-        cascade.save(f"cascada_{i}.png")        
+        cascade.save(f"cascada_{i - 1}.png")        
         
-        cascade_ = cargar_con_pillow(f"cascada_{i}.png")
-        bam.learn_incremental(cascade_, f"index_{i}")
+        cascade_ = cargar_con_pillow(f"cascada_{i - 1}.png")
+        
+        resultado = [block[i] for i in chunk]
+        label_ = "_".join(resultado)
+        print(f"label_{i - 1} {label_}")
+        bam.learn_incremental(cascade_, label_)
       
  
       
@@ -45,7 +47,7 @@ def imprimir_indices_acumulados(diccionario):
 imprimir_indices_acumulados(block) 
 
 
-input_mage = cargar_con_pillow(f"cascada_3.png")
+input_mage = cargar_con_pillow(f"cascada_0.png")
 
 rec_label = bam.recall_ranking(input_mage)
 print(f"   Label recuperado  : '{rec_label}'")
