@@ -1,25 +1,71 @@
-import treepoem
-import blake3
+import io
+from pathlib import Path
+from PIL import Image
+import subprocess
+import cairosvg
+import numpy as np
+import zxingcpp
+import os
 
-def generar_nodo_svg(unicode_id:int, nombre_archivo):
-    # 1. Normalización y Hash (10 bytes para una matriz compacta)
-    # Usamos BLAKE3 por su velocidad y seguridad
-    #hash_bytes = blake3.blake3(elemento_unicode.encode('utf-8')).digest(length=10)
-    #4 bytes: El valor máximo es $2^{32} - 1 = \mathbf{4.294.967.295}$. 
-    datos_bytes = unicode_id.to_bytes(4, byteorder='big') 
-    # 2. Generar el código de barras
-    # Usamos treepoem para obtener la representación vectorial
-    barcode = treepoem.generate_barcode(
-        barcode_type='datamatrix',
-        data=datos_bytes,
-        options={"parse": True, "square": True } # Permite manejar datos binarios correctamente
-    )
+def word_to_aztec(path: Path, unicode_id: int, nombre_archivo):
+    """
+    Genera un Aztec Code usando Zint en modo binario puro.
+    Optimizado para IDs de hasta 4.294.967.295 (4 bytes).
+    """
+    # 1. Preparar los datos binarios (4 bytes cubren hasta 4 mil millones)
+    datos_bytes = unicode_id.to_bytes(4, byteorder='big')
     
-    # 3. Guardar como SVG
-    # Treepoem devuelve un objeto Image de Pillow, pero podemos forzar el guardado vectorial
-    # si usamos la opción de exportación directa de BWIPP o convertimos el postscript.
-    with open(f"{nombre_archivo}.png", "w") as f:
-        # Nota: treepoem genera por defecto un objeto de imagen. 
-        # Para SVG puro, lo ideal es usar la salida de PostScript (EPS) y renombrar o convertir.
-        barcode.save(f"{nombre_archivo}.png") # Salida estándar en raster
+    temp_bin = f"temp_aztec_{unicode_id}.bin"
+    runa_svg = path / f"{nombre_archivo}.svg"
+    runa_png = path / f"{nombre_archivo}.png"
+    
+    try:
+        with open(temp_bin, "wb") as f:
+            f.write(datos_bytes)
 
+        # 2. Ejecutar Zint
+        # --barcode=92: Aztec Code
+        # --binary: Fuerza modo binario (Base256)
+        # --scale=4: Tamaño del módulo (ajusta según la resolución de tu BAM)
+        # --secure=0: Nivel de corrección de errores (0 es auto, puedes subirlo a 4+)
+        subprocess.run([
+            "zint",
+            "--barcode=92", 
+            "--binary",
+            f"--input={temp_bin}",
+            f"--output={runa_svg}",
+            "--scale=4",
+            "--notext"
+        ], check=True, capture_output=True)
+        
+        svg_data = cairosvg.svg2png(url=str(runa_svg), output_width=120, output_height=120)
+        
+        img = Image.open(io.BytesIO(svg_data))
+        img_resized = img.convert("L").resize((20, 20), Image.NEAREST)
+        img_resized.save(runa_png)
+            
+    except subprocess.CalledProcessError as e:
+        print(f"Error al ejecutar Zint: {e.stderr.decode()}")
+    finally:
+        if os.path.exists(temp_bin):
+            os.remove(temp_bin)
+
+    return runa_svg
+
+def decodificar_aztec(ruta_o_array):
+    if isinstance(ruta_o_array, (str, Path)):
+        img = Image.open(ruta_o_array)
+    else:
+        img = Image.fromarray(ruta_o_array.astype(np.uint8))
+    
+    resultados = zxingcpp.read_barcodes(img, formats=zxingcpp.BarcodeFormat.Aztec)
+    if not resultados:
+        return None
+    
+    try:
+        return int.from_bytes(resultados[0].bytes, byteorder='big')
+    except:
+        return None
+    
+    
+    

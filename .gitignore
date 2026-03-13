@@ -3,3 +3,5 @@ model.egg-info
 *.png
 *.pkl
 *.svg
+*.bin
+*.log

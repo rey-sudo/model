@@ -26,7 +26,7 @@ current_path = Path.cwd()
 # ══════════════════════════════════════════════════════════════════════════════
 #  Constantes
 # ══════════════════════════════════════════════════════════════════════════════
-IMG_SIZE   = 63           # píxeles de cada lado  (63 × 63)
+IMG_SIZE   = 20           # píxeles de cada lado  (63 × 63)
 N_PIXELS   = IMG_SIZE ** 2              # 3 969 neuronas en la capa de imagen
 CHAR_BITS  = 8                          # bits por carácter (ASCII extendido)
 MAX_CHARS  = 20                         # longitud máxima del label
@@ -524,7 +524,7 @@ def main():
 
     # 2. Inicializar BAM y aprender
     bam = BAM()
-    label = "carro"
+    label = "manzana"
     bam.learn(car_image, label)
 
     # 3. Prueba: label → imagen
