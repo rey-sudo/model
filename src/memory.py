@@ -26,7 +26,7 @@ current_path = Path.cwd()
 # ══════════════════════════════════════════════════════════════════════════════
 #  Constantes
 # ══════════════════════════════════════════════════════════════════════════════
-IMG_SIZE   = 9           # píxeles de cada lado  (63 × 63)
+IMG_SIZE   = 90           # píxeles de cada lado  (63 × 63)
 N_PIXELS   = IMG_SIZE ** 2              # 3 969 neuronas en la capa de imagen
 CHAR_BITS  = 8                          # bits por carácter (ASCII extendido)
 MAX_CHARS  = 20                         # longitud máxima del label

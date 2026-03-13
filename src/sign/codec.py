@@ -93,3 +93,33 @@ def sign_to_index(img):
     original_index = n_preparado ^ seed
     
     return original_index
+
+
+def crear_atlas_cascada(n_max=10):
+    """
+    Creates a 90x90 canvas and arranges signs (9x9) in a 
+    triangular pattern from index 0 to n_max.
+    """
+    # 1. Create a blank 90x90 grayscale canvas (Start with black/0)
+    atlas = Image.new('L', (90, 90), 0)
+    
+    # 2. Iterate through rows (0 to 9)
+    for row in range(n_max):
+        # 3. Iterate through columns up to the current row index
+        for col in range(row + 1):
+            # Calculate the current index to encode (e.g., node 0, 1, 2...)
+            # Note: According to your logic, in row 2 you want signs 0, 1, and 2.
+            index_to_encode = col 
+            
+            # Generate the 9x9 sign
+            sign_img = index_to_sign(index_to_encode)
+            
+            # 4. Calculate coordinates on the 90x90 canvas
+            # Each cell is 9 pixels wide/high
+            x_offset = col * 9
+            y_offset = row * 9
+            
+            # Paste the 9x9 sign into the atlas
+            atlas.paste(sign_img, (x_offset, y_offset))
+            
+    return atlas
