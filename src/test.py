@@ -29,15 +29,18 @@ def imprimir_indices_acumulados(diccionario):
         chunk = indices[:i]
         acc.append(chunk)
         
+        block_index = i - 1
+        
         cascade = block_to_canvas(acc=acc, sign_size=9, block_length=len(block))
-        cascade.save(f"cascada_{i - 1}.png")        
+        cascade.save(f"cascada_{block_index}.png")        
         
-        cascade_ = cargar_con_pillow(f"cascada_{i - 1}.png")
+        cascade_ = cargar_con_pillow(f"cascada_{block_index}.png")
         
-        resultado = [block[i] for i in chunk]
-        label_ = "_".join(resultado)
-        print(f"label_{i - 1} {label_}")
-        bam.learn_incremental(cascade_, label_)
+        resultado = [str(i) for i in chunk]
+        label = "_".join(resultado)
+        
+        print(f"label_{block_index} {label}")
+        bam.learn_incremental(cascade_, label)
       
  
       
