@@ -2,7 +2,7 @@
 Memoria Asociativa Bidireccional (BAM - Bidirectional Associative Memory)
 =========================================================================
 Implementación completa de una BAM que asocia:
-  - Imagen de entrada: 63×63 píxeles
+  - Imagen de entrada: n×n píxeles
   - Label de salida:   string de una sola palabra (ej. "carro")
 
 La BAM puede:
@@ -26,8 +26,8 @@ current_path = Path.cwd()
 # ══════════════════════════════════════════════════════════════════════════════
 #  Constantes
 # ══════════════════════════════════════════════════════════════════════════════
-IMG_SIZE   = 90           # píxeles de cada lado  (63 × 63)
-N_PIXELS   = IMG_SIZE ** 2              # 3 969 neuronas en la capa de imagen
+IMG_SIZE   = 90           # píxeles de cada lado  (n × n)
+N_PIXELS   = IMG_SIZE ** 2              #  neuronas en la capa de imagen
 CHAR_BITS  = 8                          # bits por carácter (ASCII extendido)
 MAX_CHARS  = 20                         # longitud máxima del label
 N_LABEL    = CHAR_BITS * MAX_CHARS      # 160 neuronas en la capa de label
@@ -40,7 +40,7 @@ MAX_ITER   = 50                         # iteraciones máximas de convergencia
 
 def image_to_bipolar(img_array: np.ndarray) -> np.ndarray:
     """
-    Convierte una imagen (63×63) en un vector bipolar de longitud 3969.
+    Convierte una imagen (n×n) en un vector bipolar de longitud n.
     Pasos:
       1. Escala de grises
       2. Umbral en 128  → binario {0, 1}
@@ -62,7 +62,7 @@ def image_to_bipolar(img_array: np.ndarray) -> np.ndarray:
 
 def bipolar_to_image(vec: np.ndarray) -> np.ndarray:
     """
-    Reconstruye la imagen (63×63) desde un vector bipolar.
+    Reconstruye la imagen (nxn) desde un vector bipolar.
     """
     binary = ((vec + 1) / 2).reshape(IMG_SIZE, IMG_SIZE)
     return (binary * 255).astype(np.uint8)
@@ -131,11 +131,11 @@ class BAM:
     def learn(self, image: np.ndarray, label: str) -> None:
         """
         Almacena un par (imagen, label) en la memoria.
-        image  : array NumPy 63×63 (uint8 o float)
+        image  : array NumPy n×n (uint8 o float)
         label  : string de una sola palabra
         """
-        x = image_to_bipolar(image)       # (3969,)
-        y = label_to_bipolar(label)       # (160,)
+        x = image_to_bipolar(image)       
+        y = label_to_bipolar(label)       
 
         # Regla de Hebb:  W += x ⊗ y
         self.W += np.outer(x, y)
@@ -170,7 +170,7 @@ class BAM:
     def recall_image(self, label: str) -> tuple[np.ndarray, np.ndarray]:
         """
         Dado el label → reconstruye la imagen.
-        Retorna (imagen_uint8 63×63, vector_bipolar).
+        Retorna (imagen_uint8 nxn, vector_bipolar).
         """
         y = label_to_bipolar(label)
         y, x = self._iterate_from_y(y)
