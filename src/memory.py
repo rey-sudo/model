@@ -57,7 +57,7 @@ def image_to_bipolar(img_array: np.ndarray) -> np.ndarray:
 
     binary = (gray >= 128).astype(float)           # umbral
     bipolar = 2 * binary - 1                       # {0,1} → {-1,+1}
-    return bipolar.flatten()                        # (3969,)
+    return bipolar.flatten()                        
 
 
 def bipolar_to_image(vec: np.ndarray) -> np.ndarray:

@@ -15,6 +15,6 @@ nodo_va.save(f"test.png")
 result = sign_to_index(nodo_va)
 print(f"output: {result}")
 
-cascada = crear_atlas_cascada(100)
+cascada = crear_atlas_cascada(10)
 cascada.show()
 cascada.save(f"test.png")
