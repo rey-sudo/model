@@ -93,28 +93,29 @@ def sign_to_index(img):
     
     return original_index
 
-def block_to_canvas(chunk:list[int], sign_size:int=0, block_size:int = 0):
+def block_to_canvas(acc, sign_size:int=0, block_length:int = 0):
     """
     Creates a (n x n) canvas and arranges signs (n x n) in a 
     triangular pattern from index 0 to n_max.
     """
     
-    canva_size = sign_size * block_size
-    # 1. Create a blank (n x n) grayscale canvas (Start with black/0)
+    canva_size = sign_size * block_length
+    # 1. Create a blank grayscale canvas
     atlas = Image.new('L', (canva_size, canva_size), 0)
     
-    # 2. Iterate through rows (0 to 9)
-    for row in range(block_size):
-        # 3. Iterate through columns up to the current row index
-        for col in range(row + 1):
-            sign_img = index_to_sign(col)
+    # 2. Iterate through rows con enumerate para tener la posición Y
+    for y_idx, row in enumerate(acc):
+
+        for col_val in row:
+            # col_val es el ID o índice (0, 1, 2...)
+            sign_img = index_to_sign(col_val)
             
-            # 4. Calculate coordinates on the 90x90 canvas
-            # Each cell is 9 pixels wide/high
-            x_offset = col * sign_size
-            y_offset = row * sign_size
-            
-            # Paste the 9x9 sign into the atlas
+            # La X depende del valor del elemento (col_val)
+            # La Y depende de en qué nivel de la cascada estamos (y_idx)
+            x_offset = col_val * sign_size
+            y_offset = y_idx * sign_size
+
             atlas.paste(sign_img, (x_offset, y_offset))
-            
+
     return atlas
+
