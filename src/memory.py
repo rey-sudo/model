@@ -9,6 +9,12 @@ La BAM puede:
   1. APRENDER  : almacenar el par (imagen, label)
   2. RECORDAR  : dado el label → reconstruir la imagen
   3. RECONOCER : dada la imagen (o versión ruidosa) → recuperar el label
+
+Optimización de memoria (v2):
+  - Capa de imagen usa codificación BINARIA {0, 1} en lugar de bipolar {-1, +1}
+  - Negro = 0 → su fila en W jamás se actualiza → W es naturalmente dispersa
+  - W se almacena como scipy.sparse.csr_matrix (~10x menos RAM para imágenes
+    con ~90% de fondo negro)
 """
 
 from pathlib import Path
@@ -16,6 +22,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from PIL import Image, ImageDraw, ImageFont
+from scipy.sparse import lil_matrix, csr_matrix
 import os
 import sys
 import time
@@ -23,48 +30,53 @@ import tracemalloc
 import psutil
 
 current_path = Path.cwd()
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  Constantes
 # ══════════════════════════════════════════════════════════════════════════════
-IMG_SIZE   = 90           # píxeles de cada lado  (n × n)
-N_PIXELS   = IMG_SIZE ** 2              #  neuronas en la capa de imagen
-CHAR_BITS  = 8                          # bits por carácter (ASCII extendido)
-MAX_CHARS  = 20                         # longitud máxima del label
-N_LABEL    = CHAR_BITS * MAX_CHARS      # 160 neuronas en la capa de label
-MAX_ITER   = 50                         # iteraciones máximas de convergencia
+IMG_SIZE   = 90               # píxeles de cada lado  (n × n)
+N_PIXELS   = IMG_SIZE ** 2    # neuronas en la capa de imagen  (8100)
+CHAR_BITS  = 8                # bits por carácter (ASCII extendido)
+MAX_CHARS  = 20               # longitud máxima del label
+N_LABEL    = CHAR_BITS * MAX_CHARS  # 160 neuronas en la capa de label
+MAX_ITER   = 50               # iteraciones máximas de convergencia
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Funciones de codificación / decodificación
 # ══════════════════════════════════════════════════════════════════════════════
 
-def image_to_bipolar(img_array: np.ndarray) -> np.ndarray:
+def image_to_binary(img_array: np.ndarray) -> np.ndarray:
     """
-    Convierte una imagen (n×n) en un vector bipolar de longitud n.
+    Convierte una imagen (n×n) en un vector BINARIO de longitud N_PIXELS.
+
     Pasos:
       1. Escala de grises
-      2. Umbral en 128  → binario {0, 1}
-      3. Mapeo bipolar  → {-1, +1}
+      2. Umbral en 128  → {0, 1}
+
+    Negro → 0  (no contribuye a W, permite dispersión)
+    Blanco → 1
+
+    Retorna float32 para compatibilidad con operaciones dispersas.
     """
-    if img_array.ndim == 3:                        # RGB → escala de grises
+    if img_array.ndim == 3:                     # RGB → escala de grises
         gray = np.mean(img_array, axis=2)
     else:
         gray = img_array.astype(float)
 
-    # Normalizar a [0, 255] si es necesario
-    if gray.max() <= 1.0:
+    if gray.max() <= 1.0:                       # normalizar a [0, 255]
         gray = gray * 255.0
 
-    binary = (gray >= 128).astype(float)           # umbral
-    bipolar = 2 * binary - 1                       # {0,1} → {-1,+1}
-    return bipolar.flatten()                        
+    binary = (gray >= 128).astype(np.float32)   # umbral → {0.0, 1.0}
+    return binary.flatten()                      # (8100,)
 
 
-def bipolar_to_image(vec: np.ndarray) -> np.ndarray:
+def binary_to_image(vec: np.ndarray) -> np.ndarray:
     """
-    Reconstruye la imagen (nxn) desde un vector bipolar.
+    Reconstruye la imagen (IMG_SIZE × IMG_SIZE) desde un vector binario {0, 1}.
+    Los valores negativos o cero → negro; positivos → blanco.
     """
-    binary = ((vec + 1) / 2).reshape(IMG_SIZE, IMG_SIZE)
+    binary = (vec > 0).reshape(IMG_SIZE, IMG_SIZE).astype(np.float32)
     return (binary * 255).astype(np.uint8)
 
 
@@ -73,6 +85,9 @@ def label_to_bipolar(label: str) -> np.ndarray:
     Codifica un string en un vector bipolar de longitud N_LABEL (160).
     Cada carácter → 8 bits en complemento a 2 → {-1, +1}.
     El string se rellena con '\\0' hasta MAX_CHARS.
+
+    El label mantiene codificación bipolar {-1, +1} para preservar
+    la dinámica de convergencia de la red en la capa B.
     """
     padded = label.ljust(MAX_CHARS, '\x00')[:MAX_CHARS]
     bits = []
@@ -80,7 +95,7 @@ def label_to_bipolar(label: str) -> np.ndarray:
         val = ord(ch)
         for b in range(CHAR_BITS - 1, -1, -1):    # MSB primero
             bits.append(1 if (val >> b) & 1 else -1)
-    return np.array(bits, dtype=float)             # (160,)
+    return np.array(bits, dtype=np.float32)        # (160,)
 
 
 def bipolar_to_label(vec: np.ndarray) -> str:
@@ -104,26 +119,56 @@ def bipolar_to_label(vec: np.ndarray) -> str:
 
 class BAM:
     """
-    Memoria Asociativa Bidireccional.
+    Memoria Asociativa Bidireccional con matriz de pesos DISPERSA.
 
     Arquitectura:
         Capa A  ←──────────────────────────→  Capa B
        (imagen)   W  (n×m)  /  W.T (m×n)    (label)
-        n = 3969                              m = 160
+        n = 8100                              m = 160
 
-    Aprendizaje (regla de Hebb):
-        W  +=  x ⊗ y      (producto externo)
+    Codificación:
+        Capa A: binaria {0, 1}   ← NEGRO = 0, no actualiza W
+        Capa B: bipolar {-1, +1} ← mantiene dinámica clásica de BAM
+
+    Aprendizaje (Hebb sobre píxeles blancos):
+        Para cada píxel i donde x[i] = 1:
+            W[i, :] += y             (equivale a outer(x, y) sin las filas cero)
+
+    Almacenamiento:
+        W se construye como lil_matrix (eficiente para escritura incremental)
+        y se congela como csr_matrix antes del primer recall (eficiente para
+        multiplicación matriz-vector).
 
     Recuperación:
-        y_new = sign(W.T @ x)      imagen → label
-        x_new = sign(W   @ y)      label  → imagen
+        y_new = sign(W.T @ x)      imagen → label   (CSR @ dense)
+        x_new = sign(W   @ y)      label  → imagen  (CSR.T @ dense)
     """
 
     def __init__(self):
-        self.W = np.zeros((N_PIXELS, N_LABEL), dtype=float)
-        self.patterns: list[dict] = []             # memoria episódica
-        print("✅ BAM inicializada  |  Capa A: {N_PIXELS} neuronas  |  Capa B: {N_LABEL} neuronas"
-              .format(N_PIXELS=N_PIXELS, N_LABEL=N_LABEL))
+        # lil_matrix: inserción O(1) por fila, ideal para aprendizaje incremental
+        self._W_lil: lil_matrix = lil_matrix((N_PIXELS, N_LABEL), dtype=np.float32)
+        # csr_matrix: multiplicación rápida, se genera al primer recall
+        self._W_csr: csr_matrix | None = None
+        self._dirty: bool = True              # True = _W_lil tiene cambios sin congelar
+
+        self.patterns: list[dict] = []        # memoria episódica
+
+        print(
+            f"✅ BAM inicializada  |  "
+            f"Capa A: {N_PIXELS} neuronas (binaria, dispersa)  |  "
+            f"Capa B: {N_LABEL} neuronas (bipolar)"
+        )
+
+    # ------------------------------------------------------------------
+    #  Propiedad W (acceso unificado a la matriz congelada)
+    # ------------------------------------------------------------------
+    @property
+    def W(self) -> csr_matrix:
+        """Devuelve W en formato CSR, reconvirtiéndola solo si hubo aprendizaje nuevo."""
+        if self._dirty:
+            self._W_csr = self._W_lil.tocsr()
+            self._dirty = False
+        return self._W_csr
 
     # ------------------------------------------------------------------
     #  Aprendizaje
@@ -131,19 +176,40 @@ class BAM:
     def learn(self, image: np.ndarray, label: str) -> None:
         """
         Almacena un par (imagen, label) en la memoria.
+
         image  : array NumPy n×n (uint8 o float)
         label  : string de una sola palabra
+
+        Solo las filas correspondientes a píxeles BLANCOS (x[i] = 1)
+        se actualizan en W, manteniendo su dispersión natural.
         """
-        x = image_to_bipolar(image)       
-        y = label_to_bipolar(label)       
+        x = image_to_binary(image)        # {0, 1} — float32
+        y = label_to_bipolar(label)       # {-1, +1} — float32
 
-        # Regla de Hebb:  W += x ⊗ y
-        self.W += np.outer(x, y)
+        # Índices de píxeles blancos (x[i] = 1)
+        white_pixels = np.nonzero(x)[0]   # shape: (n_blancos,)
 
-        self.patterns.append({'x': x, 'y': y,
-                              'image': image.copy(),
-                              'label': label})
-        print(f"📚 Patrón aprendido: '{label}'  |  Patrones totales: {len(self.patterns)}")
+        # Actualizar solo las filas de píxeles blancos
+        # Equivale a outer(x, y) pero omite las filas donde x[i]=0
+        self._W_lil[white_pixels, :] += y[np.newaxis, :]   # broadcasting (n_blancos, 160)
+
+        self._dirty = True   # invalidar caché CSR
+
+        self.patterns.append({
+            'x': x,
+            'y': y,
+            'image': image.copy(),
+            'label': label,
+            'n_white': len(white_pixels),
+            'sparsity': 1.0 - len(white_pixels) / N_PIXELS,
+        })
+
+        print(
+            f"📚 Patrón aprendido: '{label}'  |  "
+            f"Píxeles blancos: {len(white_pixels)}/{N_PIXELS} "
+            f"({100*len(white_pixels)/N_PIXELS:.1f}%)  |  "
+            f"Patrones totales: {len(self.patterns)}"
+        )
 
     # ------------------------------------------------------------------
     #  Recuperación: imagen → label
@@ -151,16 +217,17 @@ class BAM:
     def recall_label(self, image: np.ndarray, noisy: bool = False,
                      noise_level: float = 0.0) -> tuple[str, np.ndarray]:
         """
-        Dado (posiblemente ruidosa) imagen → recupera el label.
+        Dado una imagen (posiblemente ruidosa) → recupera el label.
         Retorna (label_str, label_vector_bipolar).
         """
-        x = image_to_bipolar(image)
+        x = image_to_binary(image)
+
         if noisy and noise_level > 0:
             x = self._add_noise(x, noise_level)
 
         x = self._iterate_from_x(x)
-        y = np.sign(self.W.T @ x)
-        y[y == 0] = 1                              # desempate
+        y = np.sign(self.W.T @ x)   # csr_matrix.T @ dense → eficiente
+        y[y == 0] = 1               # desempate
         label = bipolar_to_label(y)
         return label, y
 
@@ -170,31 +237,34 @@ class BAM:
     def recall_image(self, label: str) -> tuple[np.ndarray, np.ndarray]:
         """
         Dado el label → reconstruye la imagen.
-        Retorna (imagen_uint8 nxn, vector_bipolar).
+        Retorna (imagen_uint8 IMG_SIZE×IMG_SIZE, vector_binario).
         """
         y = label_to_bipolar(label)
         y, x = self._iterate_from_y(y)
-        img_array = bipolar_to_image(x)
+        img_array = binary_to_image(x)
         return img_array, x
 
     # ------------------------------------------------------------------
     #  Dinámica de convergencia (iteraciones)
     # ------------------------------------------------------------------
     def _iterate_from_x(self, x: np.ndarray) -> np.ndarray:
-        """Propaga x→y→x→… hasta convergencia."""
+        """Propaga x→y→x→… hasta convergencia. x es binario {0,1}."""
+        W = self.W   # una sola llamada a la propiedad (evita re-freeze en bucle)
         for _ in range(MAX_ITER):
-            y = np.sign(self.W.T @ x);  y[y == 0] = 1
-            x_new = np.sign(self.W @ y); x_new[x_new == 0] = 1
+            y = np.sign(W.T @ x);  y[y == 0] = 1
+            x_new = np.sign(W @ y); x_new[x_new == 0] = 0   # negro=0, blanco=1
+            x_new = (x_new > 0).astype(np.float32)
             if np.array_equal(x_new, x):
                 break
             x = x_new
         return x
 
     def _iterate_from_y(self, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        """Propaga y→x→y→… hasta convergencia."""
+        """Propaga y→x→y→… hasta convergencia. y es bipolar {-1,+1}."""
+        W = self.W
         for _ in range(MAX_ITER):
-            x = np.sign(self.W @ y);    x[x == 0] = 1
-            y_new = np.sign(self.W.T @ x); y_new[y_new == 0] = 1
+            x = (np.sign(W @ y) > 0).astype(np.float32)   # binario {0,1}
+            y_new = np.sign(W.T @ x); y_new[y_new == 0] = 1
             if np.array_equal(y_new, y):
                 break
             y = y_new
@@ -205,31 +275,64 @@ class BAM:
     # ------------------------------------------------------------------
     @staticmethod
     def _add_noise(vec: np.ndarray, level: float) -> np.ndarray:
-        """Invierte aleatoriamente `level` fracción de bits."""
+        """
+        Invierte aleatoriamente `level` fracción de bits binarios.
+        0 → 1  y  1 → 0  con probabilidad `level`.
+        """
         noisy = vec.copy()
         n_flip = int(len(vec) * level)
         idx = np.random.choice(len(vec), n_flip, replace=False)
-        noisy[idx] *= -1
+        noisy[idx] = 1.0 - noisy[idx]   # flip binario (0↔1)
         return noisy
 
     def similarity(self, x1: np.ndarray, x2: np.ndarray) -> float:
-        """Similitud coseno entre dos vectores bipolares."""
-        return float(np.dot(x1, x2) / (np.linalg.norm(x1) * np.linalg.norm(x2) + 1e-9))
+        """Similitud coseno entre dos vectores."""
+        norm = np.linalg.norm(x1) * np.linalg.norm(x2)
+        return float(np.dot(x1, x2) / (norm + 1e-9))
 
     def accuracy(self, image: np.ndarray, label: str) -> dict:
         """Evalúa qué tan bien se recuerda el par (imagen, label)."""
         recalled_label, y_rec = self.recall_label(image)
         recalled_img, x_rec   = self.recall_image(label)
 
-        x_orig = image_to_bipolar(image)
+        x_orig = image_to_binary(image)
         y_orig = label_to_bipolar(label)
 
         return {
-            'label_correcto': recalled_label == label,
+            'label_correcto':   recalled_label == label,
             'label_recuperado': recalled_label,
             'similitud_imagen': self.similarity(x_orig, x_rec),
-            'similitud_label' : self.similarity(y_orig, y_rec),
+            'similitud_label':  self.similarity(y_orig, y_rec),
         }
+
+    def memory_report(self) -> dict:
+        """
+        Devuelve un resumen del uso de memoria de W.
+
+        Compara el tamaño real (CSR) contra el hipotético denso (float32).
+        """
+        W = self.W
+        nnz       = W.nnz
+        total     = N_PIXELS * N_LABEL
+        dense_mb  = total * 4 / 1024**2          # float32 = 4 bytes
+        sparse_mb = (
+            W.data.nbytes + W.indices.nbytes + W.indptr.nbytes
+        ) / 1024**2
+
+        report = {
+            'elementos_no_cero':  nnz,
+            'elementos_totales':  total,
+            'densidad_%':         round(100 * nnz / total, 2),
+            'ram_densa_MB':       round(dense_mb, 2),
+            'ram_sparse_MB':      round(sparse_mb, 2),
+            'ahorro_MB':          round(dense_mb - sparse_mb, 2),
+            'factor_compresion':  round(dense_mb / (sparse_mb + 1e-9), 1),
+        }
+
+        print("\n📊 Reporte de memoria de W:")
+        for k, v in report.items():
+            print(f"   {k:<25} {v}")
+        return report
 
     # ------------------------------------------------------------------
     #  Monitor de recursos
@@ -373,10 +476,10 @@ def visualize_results(bam: BAM, image: np.ndarray, label: str,
                       noise_levels: list = None) -> None:
     """
     Panel de visualización con:
-      · Imagen original y su representación bipolar
+      · Imagen original y su representación binaria
       · Imagen reconstruida desde el label
       · Recuperación con ruido progresivo
-      · Matriz de pesos (muestra)
+      · Matriz de pesos (muestra, densificada para visualización)
       · Métricas de precisión
     """
     if noise_levels is None:
@@ -395,16 +498,17 @@ def visualize_results(bam: BAM, image: np.ndarray, label: str,
     title_kw = dict(color='#a0cfff', fontsize=9, pad=6, fontweight='bold')
     label_kw = dict(color='#888', fontsize=7)
 
-    # ── Fila 0: imagen original y representación bipolar ───────────────
+    # ── Fila 0: imagen original y representación binaria ───────────────
     ax0 = fig.add_subplot(gs[0, 0:2], **ax_style)
     ax0.imshow(image, cmap='gray', vmin=0, vmax=255)
     ax0.set_title(f'Imagen Original\n"{label}"', **title_kw)
     ax0.axis('off')
 
-    x_bip = image_to_bipolar(image).reshape(IMG_SIZE, IMG_SIZE)
+    # Codificación binaria {0, 1} en lugar de bipolar {-1, +1}
+    x_bin = image_to_binary(image).reshape(IMG_SIZE, IMG_SIZE)
     ax1 = fig.add_subplot(gs[0, 2:4], **ax_style)
-    ax1.imshow(x_bip, cmap='RdYlGn', vmin=-1, vmax=1)
-    ax1.set_title('Codificación Bipolar\nImagen  {-1, +1}', **title_kw)
+    ax1.imshow(x_bin, cmap='gray', vmin=0, vmax=1)
+    ax1.set_title('Codificación Binaria\nImagen  {0, 1}', **title_kw)
     ax1.axis('off')
 
     y_bip = label_to_bipolar(label)
@@ -433,12 +537,12 @@ def visualize_results(bam: BAM, image: np.ndarray, label: str,
     plt.colorbar(im4, ax=ax4, fraction=0.046,
                  pad=0.04).ax.tick_params(colors='#888', labelsize=7)
 
-    # Matriz de pesos (muestra 100×100)
+    # Matriz de pesos — densificar solo la muestra 100×100 para imshow
     ax5 = fig.add_subplot(gs[1, 4:6], **ax_style)
-    w_sample = bam.W[:100, :100]
+    w_sample = bam.W[:100, :100].toarray()          # CSR → dense solo en la muestra
+    w_abs_max = np.abs(bam.W.data).max() if bam.W.nnz > 0 else 1.0  # evita toarray() global
     im5 = ax5.imshow(w_sample, cmap='coolwarm',
-                     vmin=-np.abs(bam.W).max(),
-                      vmax=np.abs(bam.W).max())
+                     vmin=-w_abs_max, vmax=w_abs_max)
     ax5.set_title('Matriz de Pesos W\n(muestra 100×100)', **title_kw)
     ax5.tick_params(colors='#666', labelsize=7)
     plt.colorbar(im5, ax=ax5, fraction=0.046,
@@ -446,7 +550,7 @@ def visualize_results(bam: BAM, image: np.ndarray, label: str,
 
     # ── Fila 2: recuperación con ruido creciente ───────────────────────
     sims, labels_rec = [], []
-    x_orig = image_to_bipolar(image)
+    x_orig = image_to_binary(image)                 # binario {0, 1}
 
     for i, nl in enumerate(noise_levels):
         ax = fig.add_subplot(gs[2, i], **ax_style)
@@ -454,8 +558,8 @@ def visualize_results(bam: BAM, image: np.ndarray, label: str,
             noisy_img = image
             x_in = x_orig.copy()
         else:
-            x_in = bam._add_noise(x_orig, nl)
-            noisy_img = bipolar_to_image(x_in)
+            x_in = bam._add_noise(x_orig, nl)      # flip binario 0↔1
+            noisy_img = binary_to_image(x_in)       # {0,1} → uint8
 
         ax.imshow(noisy_img, cmap='gray', vmin=0, vmax=255)
 
@@ -479,6 +583,12 @@ def visualize_results(bam: BAM, image: np.ndarray, label: str,
 
     # ── Métricas resumen (texto) ───────────────────────────────────────
     metrics = bam.accuracy(image, label)
+
+    # Reporte de dispersión de W
+    nnz      = bam.W.nnz
+    total    = N_PIXELS * N_LABEL
+    densidad = 100 * nnz / total
+
     txt = (
         f"Métricas de precisión\n"
         f"──────────────────────────────\n"
@@ -490,7 +600,8 @@ def visualize_results(bam: BAM, image: np.ndarray, label: str,
         f"Patrones en memoria : {len(bam.patterns)}\n"
         f"Neuronas imagen     : {N_PIXELS}\n"
         f"Neuronas label      : {N_LABEL}\n"
-        f"Dim. matriz W       : {bam.W.shape}"
+        f"Dim. matriz W       : {bam.W.shape}\n"
+        f"Densidad W          : {nnz}/{total}  ({densidad:.1f}%)"
     )
     fig.text(0.5, 0.01, txt, ha='center', va='bottom',
              color='#c8d8f0', fontsize=8,
@@ -552,7 +663,7 @@ def main():
         print(f"   {k:25s}: {v}")
 
     # 7. Monitor de recursos
-    stats = bam.resource_usage(verbose=True)
+    stats = bam.memory_report()
 
     # 8. Visualizar
     print(f"\n🎨 Generando visualización...")
