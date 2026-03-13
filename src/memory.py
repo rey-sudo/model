@@ -34,7 +34,7 @@ current_path = Path.cwd()
 # ══════════════════════════════════════════════════════════════════════════════
 #  Constantes
 # ══════════════════════════════════════════════════════════════════════════════
-IMG_SIZE   = 90               # píxeles de cada lado  (n × n)
+IMG_SIZE   = 900               # píxeles de cada lado  (n × n)
 N_PIXELS   = IMG_SIZE ** 2    # neuronas en la capa de imagen  (8100)
 CHAR_BITS  = 8                # bits por carácter (ASCII extendido)
 MAX_CHARS  = 20               # longitud máxima del label
@@ -209,6 +209,44 @@ class BAM:
             f"Píxeles blancos: {len(white_pixels)}/{N_PIXELS} "
             f"({100*len(white_pixels)/N_PIXELS:.1f}%)  |  "
             f"Patrones totales: {len(self.patterns)}"
+        )
+        
+    def learn_incremental(self, image: np.ndarray, label: str) -> None:
+        x_new = image_to_binary(image)
+
+        # Calcular máscara de píxeles YA vistos en patrones anteriores
+        if len(self.patterns) > 0:
+            x_acum = np.zeros(N_PIXELS, dtype=np.float32)
+            for p in self.patterns:
+                x_acum = np.maximum(x_acum, p['x'])   # unión de todos los patrones
+
+            x_diff = x_new * (1 - x_acum)             # solo píxeles NUEVOS
+        else:
+            x_diff = x_new
+
+        if x_diff.sum() == 0:
+            print(f"⚠️  '{label}' no aporta píxeles nuevos — patrón ignorado")
+            return
+
+        # Aprender solo con los píxeles diferenciales
+        y = label_to_bipolar(label)
+        white_pixels = np.nonzero(x_diff)[0]
+        self._W_lil[white_pixels, :] += y[np.newaxis, :]
+        self._dirty = True
+
+        self.patterns.append({
+            'x': x_new,        # imagen completa para recall
+            'x_diff': x_diff,  # solo píxeles exclusivos de este patrón
+            'y': y,
+            'image': image.copy(),
+            'label': label,
+            'n_white_new': int(x_diff.sum()),
+        })
+
+        print(
+            f"📚 '{label}'  |  "
+            f"Píxeles nuevos: {int(x_diff.sum())}  |  "
+            f"Acumulados: {int(x_new.sum())}"
         )
 
     # ------------------------------------------------------------------

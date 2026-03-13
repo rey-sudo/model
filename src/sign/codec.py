@@ -62,7 +62,6 @@ def index_to_sign(n):
     # Return the result as a PIL Image object in 8-bit grayscale mode ('L')
     return Image.fromarray(canvas, mode='L')
 
-
 def sign_to_index(img):
     """
     Decodes a 9x9 pixel Image (PIL) back into the original integer index.
@@ -94,30 +93,26 @@ def sign_to_index(img):
     
     return original_index
 
-
-def crear_atlas_cascada(n_max=10):
+def block_to_canvas(chunk:list[int], sign_size:int=0, block_size:int = 0):
     """
-    Creates a 90x90 canvas and arranges signs (9x9) in a 
+    Creates a (n x n) canvas and arranges signs (n x n) in a 
     triangular pattern from index 0 to n_max.
     """
-    # 1. Create a blank 90x90 grayscale canvas (Start with black/0)
-    atlas = Image.new('L', (90, 90), 0)
+    
+    canva_size = sign_size * block_size
+    # 1. Create a blank (n x n) grayscale canvas (Start with black/0)
+    atlas = Image.new('L', (canva_size, canva_size), 0)
     
     # 2. Iterate through rows (0 to 9)
-    for row in range(n_max):
+    for row in range(block_size):
         # 3. Iterate through columns up to the current row index
         for col in range(row + 1):
-            # Calculate the current index to encode (e.g., node 0, 1, 2...)
-            # Note: According to your logic, in row 2 you want signs 0, 1, and 2.
-            index_to_encode = col 
-            
-            # Generate the 9x9 sign
-            sign_img = index_to_sign(index_to_encode)
+            sign_img = index_to_sign(col)
             
             # 4. Calculate coordinates on the 90x90 canvas
             # Each cell is 9 pixels wide/high
-            x_offset = col * 9
-            y_offset = row * 9
+            x_offset = col * sign_size
+            y_offset = row * sign_size
             
             # Paste the 9x9 sign into the atlas
             atlas.paste(sign_img, (x_offset, y_offset))
