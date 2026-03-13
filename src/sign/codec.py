@@ -63,3 +63,33 @@ def index_to_sign(n):
     return Image.fromarray(canvas, mode='L')
 
 
+def sign_to_index(img):
+    """
+    Decodes a 9x9 pixel Image (PIL) back into the original integer index.
+    Reverses the spatial centering, bit reversal, and XOR masking.
+    """
+    # 1. Convert PIL Image back to a NumPy array
+    canvas = np.array(img, dtype=np.uint8)
+    
+    # 2. Extract the 5x5 Data Core
+    # We slice the same coordinates [2:7, 2:7] used during encoding
+    data_matrix = canvas[2:7, 2:7]
+    
+    # 3. Flatten the matrix and convert pixel intensities to bits
+    # 255 (White) becomes '1', everything else (Black) becomes '0'
+    flat_data = data_matrix.flatten()
+    binary_list = ['1' if p == 255 else '0' for p in flat_data]
+    
+    # 4. Reverse the Bit Reversal
+    # Join the list into a string and flip it back to its original order
+    binary_str = "".join(binary_list)[::-1]
+    
+    # 5. Convert Binary String to Integer
+    n_preparado = int(binary_str, 2)
+    
+    # 6. Reverse the XOR Mask
+    # Applying XOR with the same seed restores the original value
+    seed = 0x1555555
+    original_index = n_preparado ^ seed
+    
+    return original_index
