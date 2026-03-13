@@ -11,12 +11,18 @@ La BAM puede:
   3. RECONOCER : dada la imagen (o versión ruidosa) → recuperar el label
 """
 
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from PIL import Image, ImageDraw, ImageFont
 import os
+import sys
+import time
+import tracemalloc
+import psutil
 
+current_path = Path.cwd()
 # ══════════════════════════════════════════════════════════════════════════════
 #  Constantes
 # ══════════════════════════════════════════════════════════════════════════════
@@ -225,57 +231,139 @@ class BAM:
             'similitud_label' : self.similarity(y_orig, y_rec),
         }
 
+    # ------------------------------------------------------------------
+    #  Monitor de recursos
+    # ------------------------------------------------------------------
+    def resource_usage(self, verbose: bool = True) -> dict:
+        """
+        Reporta el uso de recursos del proceso y de la BAM en sí misma.
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  Generador de imagen de prueba  (carro simple en píxeles)
-# ══════════════════════════════════════════════════════════════════════════════
+        Métricas reportadas:
+          · RAM del proceso (RSS) en MB
+          · RAM del proceso (VMS) en MB
+          · Uso de CPU (%) del proceso
+          · Memoria ocupada por la matriz W (MB y bytes exactos)
+          · Memoria de los patrones almacenados (MB)
+          · Tamaño total del objeto BAM en bytes (sys.getsizeof)
+          · Pico de RAM medido con tracemalloc durante una operación típica
 
-def create_car_image(size: int = IMG_SIZE) -> np.ndarray:
-    """
-    Dibuja un carro esquemático en blanco y negro (63×63).
-    Retorna array NumPy uint8.
-    """
-    img = Image.new('L', (size, size), color=255)   # fondo blanco
-    draw = ImageDraw.Draw(img)
+        Parámetros
+        ----------
+        verbose : bool
+            Si True imprime un reporte formateado en consola.
 
-    s = size / 63.0   # factor de escala
+        Retorna
+        -------
+        dict con todas las métricas en sus unidades base.
+        """
+        proc = psutil.Process(os.getpid())
 
-    # --- Carrocería inferior (rectángulo) ---
-    draw.rectangle(
-        [int(5*s), int(35*s), int(58*s), int(52*s)],
-        fill=0, outline=0
-    )
-    # --- Cabina (trapecio simplificado) ---
-    draw.polygon(
-        [(int(15*s), int(35*s)),
-         (int(48*s), int(35*s)),
-         (int(44*s), int(20*s)),
-         (int(19*s), int(20*s))],
-        fill=0, outline=0
-    )
-    # --- Rueda delantera ---
-    draw.ellipse(
-        [int(12*s), int(48*s), int(26*s), int(62*s)],
-        fill=0, outline=0
-    )
-    # --- Rueda trasera ---
-    draw.ellipse(
-        [int(37*s), int(48*s), int(51*s), int(62*s)],
-        fill=0, outline=0
-    )
-    # --- Ventana ---
-    draw.rectangle(
-        [int(21*s), int(22*s), int(42*s), int(33*s)],
-        fill=255, outline=128
-    )
-    # --- Faro delantero ---
-    draw.ellipse(
-        [int(54*s), int(37*s), int(60*s), int(44*s)],
-        fill=255, outline=0
-    )
+        # ── RAM y CPU del proceso ──────────────────────────────────────
+        mem_info  = proc.memory_info()
+        ram_rss   = mem_info.rss  / (1024 ** 2)   # MB
+        ram_vms   = mem_info.vms  / (1024 ** 2)   # MB
+        cpu_pct   = proc.cpu_percent(interval=0.1) # %
 
-    return np.array(img)
+        # ── Tamaño de la matriz de pesos W ────────────────────────────
+        w_bytes      = self.W.nbytes
+        w_mb         = w_bytes / (1024 ** 2)
+        w_shape      = self.W.shape
+        w_dtype      = str(self.W.dtype)
 
+        # ── Tamaño de los patrones almacenados ────────────────────────
+        patterns_bytes = sum(
+            p['x'].nbytes + p['y'].nbytes +
+            (p['image'].nbytes if isinstance(p['image'], np.ndarray) else 0)
+            for p in self.patterns
+        )
+        patterns_mb = patterns_bytes / (1024 ** 2)
+
+        # ── Objeto BAM completo (Python overhead) ─────────────────────
+        bam_sizeof = sys.getsizeof(self)
+
+        # ── Pico de memoria durante recall (tracemalloc) ──────────────
+        tracemalloc.start()
+        _snapshot_before = tracemalloc.take_snapshot()
+
+        # Operación representativa: un ciclo completo
+        if self.patterns:
+            _x = self.patterns[0]['x'].copy()
+            _y_out = np.sign(self.W.T @ _x); _y_out[_y_out == 0] = 1
+            _x_out = np.sign(self.W @ _y_out); _x_out[_x_out == 0] = 1
+
+        _current, _peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        peak_recall_kb = _peak / 1024
+
+        # ── Capacidad teórica de la BAM (Hopfield bound) ──────────────
+        # n_max ≈ 0.15 × min(N_A, N_B) para recuperación sin errores
+        theoretical_capacity = int(0.15 * min(N_PIXELS, N_LABEL))
+
+        stats = {
+            # Proceso
+            'ram_proceso_rss_mb'   : round(ram_rss, 3),
+            'ram_proceso_vms_mb'   : round(ram_vms, 3),
+            'cpu_proceso_pct'      : round(cpu_pct, 2),
+            # Matriz W
+            'matriz_W_shape'       : w_shape,
+            'matriz_W_dtype'       : w_dtype,
+            'matriz_W_bytes'       : w_bytes,
+            'matriz_W_mb'          : round(w_mb, 4),
+            # Patrones
+            'n_patrones'           : len(self.patterns),
+            'patrones_bytes'       : patterns_bytes,
+            'patrones_mb'          : round(patterns_mb, 4),
+            # Objeto Python
+            'bam_sizeof_bytes'     : bam_sizeof,
+            # Pico durante recall
+            'pico_recall_kb'       : round(peak_recall_kb, 3),
+            # Capacidad teórica
+            'capacidad_teorica'    : theoretical_capacity,
+            'carga_pct'            : round(len(self.patterns) / max(theoretical_capacity, 1) * 100, 1),
+        }
+
+        if verbose:
+            sep  = '─' * 48
+            sep2 = '═' * 48
+            print(f"\n{sep2}")
+            print(f"  📊  RECURSOS  —  Memoria Asociativa Bidireccional")
+            print(f"{sep2}")
+
+            print(f"\n  🖥️   Proceso  (PID {os.getpid()})")
+            print(f"  {sep}")
+            print(f"  RAM  RSS (física)   : {ram_rss:>10.3f} MB")
+            print(f"  RAM  VMS (virtual)  : {ram_vms:>10.3f} MB")
+            print(f"  CPU  uso actual     : {cpu_pct:>10.2f} %")
+
+            print(f"\n  🧠  Matriz de pesos  W  {w_shape}")
+            print(f"  {sep}")
+            print(f"  Dtype               : {w_dtype}")
+            print(f"  Bytes exactos       : {w_bytes:>10,}")
+            print(f"  Megabytes           : {w_mb:>10.4f} MB")
+            print(f"  Elementos (n×m)     : {w_shape[0] * w_shape[1]:>10,}")
+
+            print(f"\n  💾  Patrones almacenados")
+            print(f"  {sep}")
+            print(f"  Cantidad            : {len(self.patterns):>10}")
+            print(f"  Bytes totales       : {patterns_bytes:>10,}")
+            print(f"  Megabytes           : {patterns_mb:>10.4f} MB")
+
+            print(f"\n  ⚡  Operación de recall  (pico tracemalloc)")
+            print(f"  {sep}")
+            print(f"  Pico asignado       : {peak_recall_kb:>10.3f} KB")
+
+            print(f"\n  📐  Capacidad teórica  (cota de Hopfield)")
+            print(f"  {sep}")
+            print(f"  Máx. patrones       : {theoretical_capacity:>10}")
+            print(f"  Carga actual        : {stats['carga_pct']:>9.1f} %")
+            bar_len  = 30
+            filled   = int(bar_len * stats['carga_pct'] / 100)
+            bar      = '█' * filled + '░' * (bar_len - filled)
+            print(f"  [{bar}] {stats['carga_pct']:.1f}%")
+
+            print(f"\n{sep2}\n")
+
+        return stats
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Visualización completa
@@ -410,7 +498,7 @@ def visualize_results(bam: BAM, image: np.ndarray, label: str,
              bbox=dict(boxstyle='round,pad=0.5',
                        facecolor='#1a1d27', edgecolor='#3a4060'))
 
-    plt.savefig('/mnt/user-data/outputs/bam_results.png',
+    plt.savefig(current_path / 'output/bam_results.png',
                 dpi=150, bbox_inches='tight', facecolor=fig.get_facecolor())
     plt.close()
     print("🖼️  Visualización guardada → bam_results.png")
@@ -419,6 +507,9 @@ def visualize_results(bam: BAM, image: np.ndarray, label: str,
 # ══════════════════════════════════════════════════════════════════════════════
 #  Demo principal
 # ══════════════════════════════════════════════════════════════════════════════
+def cargar_con_pillow(ruta):
+    img = Image.open(ruta).convert('L')
+    return np.array(img)
 
 def main():
     print("=" * 60)
@@ -426,7 +517,8 @@ def main():
     print("=" * 60)
 
     # 1. Crear imagen de prueba
-    car_image = create_car_image(IMG_SIZE)
+    image_path = current_path / "test.png"
+    car_image = cargar_con_pillow(image_path)
     print(f"\n📷 Imagen creada: {car_image.shape}  dtype={car_image.dtype}")
     print(f"   Rango de valores: [{car_image.min()}, {car_image.max()}]")
 
@@ -459,7 +551,10 @@ def main():
     for k, v in m.items():
         print(f"   {k:25s}: {v}")
 
-    # 7. Visualizar
+    # 7. Monitor de recursos
+    stats = bam.resource_usage(verbose=True)
+
+    # 8. Visualizar
     print(f"\n🎨 Generando visualización...")
     visualize_results(bam, car_image, label)
 
