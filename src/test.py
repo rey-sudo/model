@@ -1,25 +1,32 @@
 from pathlib import Path
+from src.dicts.signs import SIGN_COLLECTION_RAW, SignManager
 from src.memory import BAM, cargar_con_pillow
 from src.sign.codec import block_to_individual_rows
 
-ruta_actual= Path.cwd()
+current_path = Path.cwd()
+
+sign_manager = SignManager(SIGN_COLLECTION_RAW)
+sign_manager.build()    
 
 bam = BAM()
 
-block = { 
-        0: "el",
-        1: "carro",
-        2: "es",
-        3: "un",
-        4: "vehiculo",
-        5: "con",
-        6: "cuatro",
-        7: "ruedas",
-        8: "y",
-        9: "transporta"
-        }
 
+def create_block_from_raw(block_raw, sign_manager):
+    """
+    Convierte una lista de palabras en un diccionario mapeado
+    a sus índices correspondientes mediante el sign_manager.
+    """
+    # Usamos enumerate para obtener (0, "el"), (1, "carro"), etc.
+    block = {
+        i: sign_manager.get_index_from_sign(word) 
+        for i, word in enumerate(block_raw)
+    }
+    
+    return block
 
+block_raw = ["the", "car", "is", "a", "vehicle", "with", "four", "wheels", "and", "transports"]
+
+block = create_block_from_raw(block_raw, sign_manager)
 
 def translate_string(id_string, block_dict):
     """
@@ -38,7 +45,7 @@ def translate_string(id_string, block_dict):
 
 
 
-def imprimir_indices_acumulados(diccionario):
+def train(diccionario):
     # Obtenemos solo las llaves (los números 0, 1, 2...)
     indices = list(diccionario.keys())
     acc = []
@@ -58,53 +65,18 @@ def imprimir_indices_acumulados(diccionario):
         resultado = [str(i) for i in chunk]
         label = "_".join(resultado)
         
-        print(f"traduce-> {translate_string(label, block)}")
+        print(f"traduce-> {label}")
         bam.learn_incremental(cascade_, label)
       
  
-def imprimir_resultados_traducidos(data_list, diccionario):
-    # 1. Preparar los datos traducidos
-    rows = []
-    for item in data_list:
-        indices = [int(i) for i in item['label'].split('_') if i.isdigit()]
-        frase = " ".join([diccionario.get(i, "???") for i in indices])
-        rows.append({
-            'rank': 0, # Se calculará después
-            'traduccion': frase,
-            'score': f"{item['score']:.4f}",
-            'votos': item['votos']
-        })
 
-    # 2. Definir anchos de columna dinámicos
-    # Buscamos la frase más larga para que la tabla no se rompa
-    ancho_frase = max(len(r['traduccion']) for r in rows) + 2
-    
-    # 3. Encabezado
-    header = f"{'Rank':<6} {'Traducción':<{ancho_frase}} {'Score':<10} {'Votos':<8}"
-    print(header)
-    print("─" * len(header))
-
-    # 4. Imprimir cada fila
-    for i, row in enumerate(rows, 1):
-        rank = i
-        frase = row['traduccion']
-        score = row['score']
-        votos = row['votos']
-        
-        # Marcador para el primer lugar
-        marcador = " ◄" if rank == 1 else ""
-        
-        print(f"{rank:<6} {frase:<{ancho_frase}} {score:<10} {votos:<8}{marcador}")
-      
-      
-imprimir_indices_acumulados(block) 
+train(block) 
 
 print("=" * 50)
 
 input_mage = cargar_con_pillow(f"cascada_0.png")
 input_label = bam.recall_ranking(input_mage)
 print(input_label)
-imprimir_resultados_traducidos(input_label, block)
 
 bam.memory_report()
 
