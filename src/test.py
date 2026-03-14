@@ -92,7 +92,7 @@ def imprimir_tabla_traducida(lista_datos, diccionario):
 imprimir_indices_acumulados(block) 
 
 
-input_mage = cargar_con_pillow(f"cascada_8.png")
+input_mage = cargar_con_pillow(f"cascada_0.png")
 
 input_label = bam.recall_ranking(input_mage)
 

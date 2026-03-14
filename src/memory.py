@@ -262,7 +262,6 @@ class BAM:
         if noisy and noise_level > 0:
             x = self._add_noise(x, noise_level)
 
-        x = self._iterate_from_x(x)
         y = np.sign(self.W.T @ x)   # csr_matrix.T @ dense → eficiente
         y[y == 0] = 1               # desempate
         label = bipolar_to_label(y)
@@ -279,7 +278,7 @@ class BAM:
         if noisy and noise_level > 0:
             x = self._add_noise(x, noise_level)
 
-        x = self._iterate_from_x(x)
+        #x = self._iterate_from_x(x)
         y = np.sign(self.W.T @ x)
         y[y == 0] = 1
 
