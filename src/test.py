@@ -1,6 +1,6 @@
 from pathlib import Path
 from src.memory import BAM, cargar_con_pillow
-from src.sign.codec import block_to_canvas, index_to_sign, sign_to_index
+from src.sign.codec import block_to_individual_rows
 
 ruta_actual= Path.cwd()
 
@@ -31,7 +31,7 @@ def imprimir_indices_acumulados(diccionario):
         
         block_index = i - 1
         
-        cascade = block_to_canvas(acc=acc, sign_size=9, block_length=len(block))
+        cascade = block_to_individual_rows(acc=acc, index=block_index, sign_size=9, block_length=len(block))
         cascade.save(f"cascada_{block_index}.png")        
         
         cascade_ = cargar_con_pillow(f"cascada_{block_index}.png")
@@ -39,12 +39,35 @@ def imprimir_indices_acumulados(diccionario):
         resultado = [str(i) for i in chunk]
         label = "_".join(resultado)
         
-        print(f"label_{block_index} {label}")
+        print(f"label_{block_index}->{label}")
         bam.learn_incremental(cascade_, label)
       
  
-      
-      
+def imprimir_tabla_traducida(lista_datos, diccionario):
+    # Encabezado de la tabla
+    header = f"{'Rank':<6} {'Traducción':<50} {'Score':<10} {'Votos':<8}"
+    print(header)
+    print("─" * len(header))
+
+    for item in lista_datos:
+        # 1. Traducir el label a palabras
+        indices = item['label'].split("_")
+        palabras = [diccionario[int(i)] for i in indices if i.isdigit()]
+        frase = " ".join(palabras)
+        
+        # 2. Formatear valores
+        rank = item['rank']
+        score = f"{item['score']:.4f}"
+        votos = item['votos']
+        
+        # Marcador especial para el primer lugar (opcional, como el ◄ de tu ejemplo)
+        marcador = " ◄" if rank == 1 else ""
+        
+        # 3. Imprimir fila con anchos fijos: 
+        # <6 (6 espacios izquierda), <50 (50 espacios para la frase), etc.
+        print(f"{rank:<6} {frase:<50} {score:<10} {votos:<8}{marcador}")
+
+
       
       
 imprimir_indices_acumulados(block) 
@@ -52,8 +75,9 @@ imprimir_indices_acumulados(block)
 
 input_mage = cargar_con_pillow(f"cascada_0.png")
 
-rec_label = bam.recall_ranking(input_mage)
-print(f"   Label recuperado  : '{rec_label}'")
+input_label = bam.recall_ranking(input_mage)
+
+print(imprimir_tabla_traducida(input_label, block))
 
 
 
