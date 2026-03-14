@@ -101,7 +101,7 @@ imprimir_indices_acumulados(block)
 
 print("=" * 50)
 
-input_mage = cargar_con_pillow(f"cascada_7.png")
+input_mage = cargar_con_pillow(f"cascada_0.png")
 input_label = bam.recall_ranking(input_mage)
 print(input_label)
 imprimir_resultados_traducidos(input_label, block)
