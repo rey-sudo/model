@@ -267,42 +267,26 @@ class BAM:
         label = bipolar_to_label(y)
         return label, y
     
-    def recall_ranking(self, image: np.ndarray, noisy: bool = False,
-                    noise_level: float = 0.0) -> list[dict]:
-        """
-        Dado una imagen → devuelve TODOS los patrones ordenados por similitud.
-        Retorna lista de dicts ordenada de mayor a menor score.
-        """
+    def recall_ranking(self, image: np.ndarray) -> list[dict]:
         x = image_to_binary(image)
 
-        if noisy and noise_level > 0:
-            x = self._add_noise(x, noise_level)
-
-        #x = self._iterate_from_x(x)
-        y = np.sign(self.W.T @ x)
-        y[y == 0] = 1
-
         ranking = []
-        for i, p in enumerate(self.patterns):
-            score = self.similarity(y, p['y'])
+        for p in self.patterns:
+            # Similitud coseno entre input y imagen completa almacenada
+            score = self.similarity(x, p['x'])
             ranking.append({
-                'rank':   None,           # se asigna abajo
-                'label':  p['label'],
-                'score':  round(score, 4),
-                'votos':  int(np.dot(y, p['y'])),   # suma cruda de coincidencias de bits
+                'label': p['label'],
+                'score': round(score, 4),
+                'votos': int(np.dot(x, p['x'])),
             })
 
         ranking.sort(key=lambda d: d['score'], reverse=True)
 
-        for i, d in enumerate(ranking):
-            d['rank'] = i + 1
-
-        # Imprimir tabla
         print(f"\n{'Rank':<6} {'Label':<25} {'Score':>8} {'Votos':>8}")
         print('─' * 52)
-        for d in ranking:
-            marker = ' ◄' if d['rank'] == 1 else ''
-            print(f"{d['rank']:<6} {d['label']:<25} {d['score']:>8.4f} {d['votos']:>8}{marker}")
+        for i, d in enumerate(ranking, 1):
+            marker = ' ◄' if i == 1 else ''
+            print(f"{i:<6} {d['label']:<25} {d['score']:>8.4f} {d['votos']:>8}{marker}")
 
         return ranking
 

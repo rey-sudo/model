@@ -135,7 +135,8 @@ def block_to_individual_rows(acc, index: int, sign_size: int = 0, block_length: 
     
     # 3. Crear el lienzo negro
     atlas = Image.new('L', (canva_width, canva_height), 0)
-    
+    print("=" * 50)
+    print(current_row)
     # 4. Iteramos sobre los elementos de esa fila específica
     for x_idx, col_val in enumerate(current_row):
         sign_img = index_to_sign(col_val)

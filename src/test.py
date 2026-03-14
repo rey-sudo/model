@@ -58,45 +58,53 @@ def imprimir_indices_acumulados(diccionario):
         resultado = [str(i) for i in chunk]
         label = "_".join(resultado)
         
-        print(f"label_{block_index}-> {translate_string(label, block)}")
+        print(f"traduce-> {translate_string(label, block)}")
         bam.learn_incremental(cascade_, label)
       
  
-def imprimir_tabla_traducida(lista_datos, diccionario):
-    # Encabezado de la tabla
-    header = f"{'Rank':<6} {'Traducción':<50} {'Score':<10} {'Votos':<8}"
+def imprimir_resultados_traducidos(data_list, diccionario):
+    # 1. Preparar los datos traducidos
+    rows = []
+    for item in data_list:
+        indices = [int(i) for i in item['label'].split('_') if i.isdigit()]
+        frase = " ".join([diccionario.get(i, "???") for i in indices])
+        rows.append({
+            'rank': 0, # Se calculará después
+            'traduccion': frase,
+            'score': f"{item['score']:.4f}",
+            'votos': item['votos']
+        })
+
+    # 2. Definir anchos de columna dinámicos
+    # Buscamos la frase más larga para que la tabla no se rompa
+    ancho_frase = max(len(r['traduccion']) for r in rows) + 2
+    
+    # 3. Encabezado
+    header = f"{'Rank':<6} {'Traducción':<{ancho_frase}} {'Score':<10} {'Votos':<8}"
     print(header)
     print("─" * len(header))
 
-    for item in lista_datos:
-        # 1. Traducir el label a palabras
-        indices = item['label'].split("_")
-        palabras = [diccionario[int(i)] for i in indices if i.isdigit()]
-        frase = " ".join(palabras)
+    # 4. Imprimir cada fila
+    for i, row in enumerate(rows, 1):
+        rank = i
+        frase = row['traduccion']
+        score = row['score']
+        votos = row['votos']
         
-        # 2. Formatear valores
-        rank = item['rank']
-        score = f"{item['score']:.4f}"
-        votos = item['votos']
-        
-        # Marcador especial para el primer lugar (opcional, como el ◄ de tu ejemplo)
+        # Marcador para el primer lugar
         marcador = " ◄" if rank == 1 else ""
         
-        # 3. Imprimir fila con anchos fijos: 
-        # <6 (6 espacios izquierda), <50 (50 espacios para la frase), etc.
-        print(f"{rank:<6} {frase:<50} {score:<10} {votos:<8}{marcador}")
-
-
+        print(f"{rank:<6} {frase:<{ancho_frase}} {score:<10} {votos:<8}{marcador}")
       
       
 imprimir_indices_acumulados(block) 
 
+print("=" * 50)
 
-input_mage = cargar_con_pillow(f"cascada_0.png")
-
+input_mage = cargar_con_pillow(f"cascada_9.png")
 input_label = bam.recall_ranking(input_mage)
-
-imprimir_tabla_traducida(input_label, block)
+print(input_label)
+imprimir_resultados_traducidos(input_label, block)
 
 bam.memory_report()
 
