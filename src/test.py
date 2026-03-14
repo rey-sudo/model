@@ -8,10 +8,7 @@ current_path = Path.cwd()
 sign_manager = SignManager(SIGN_COLLECTION_RAW)
 sign_manager.build()    
 
-bam = BAM()
-
-
-def create_block_from_raw(block_raw, sign_manager):
+def create_bam_dict_from_block(block_raw, sign_manager):
     """
     Convierte una lista de palabras en un diccionario mapeado
     a sus índices correspondientes mediante el sign_manager.
@@ -24,23 +21,51 @@ def create_block_from_raw(block_raw, sign_manager):
     
     return block
 
-block_raw = ["the", "car", "is", "a", "vehicle", "with", "four", "wheels", "and", "transports"]
+def apply_get_index(array):
+    return [sign_manager.get_index_from_sign(word) for word in array]
 
-block = create_block_from_raw(block_raw, sign_manager)
-
-def train(diccionario):
-    # Obtenemos solo las llaves (los números 0, 1, 2...)
-    indices = list(diccionario.keys())
+def create_bam_dict(array):
     acc = []
     
-    for i in range(1, len(indices) + 1):
-        # Tomamos la porción de índices hasta i
-        chunk = indices[:i]
+    for i in range(1, len(array) + 1):
+        chunk = array[:i]
         acc.append(chunk)
         
+    return {i: v for i, v in enumerate(acc)}   
+
+def train(array):
+    acc = []
+    
+    for i in range(1, len(array) + 1):
+        chunk = array[:i]
+        acc.append(chunk)
+        
+    print(acc)
+
+
+    
+    
+block_raw = ["the", "car", "is", "a", "vehicle", "with", "four", "wheels", "and", "transports"]    
+block = apply_get_index(block_raw)
+bam_dict=create_bam_dict(block)   
+
+
+print(block_raw)
+print(block)
+print(bam_dict)
+
+bam = BAM(bam_dict)    
+    
+    
+    
+    
+    
+    
+    
+"""         
         block_index = i - 1
         
-        cascade = block_to_individual_rows(acc=acc, index=block_index, sign_size=9, block_length=len(block))
+        cascade = block_to_individual_rows(acc=acc, index=block_index, sign_size=9, block_length=len(bam_dict))
         cascade.save(f"cascada_{block_index}.png")        
         
         cascade_ = cargar_con_pillow(f"cascada_{block_index}.png")
@@ -50,11 +75,18 @@ def train(diccionario):
         
         print(f"traduce-> {label}")
         bam.learn_incremental(cascade_, label)
+        
+    """
     
-    print(acc)
- 
+    
+    
+#train(block) 
 
-train(block) 
+
+
+
+
+""" 
 
 print("=" * 50)
 
@@ -64,4 +96,4 @@ print(input_label)
 
 bam.memory_report()
 
-
+"""
