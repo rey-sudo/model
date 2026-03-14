@@ -28,23 +28,6 @@ block_raw = ["the", "car", "is", "a", "vehicle", "with", "four", "wheels", "and"
 
 block = create_block_from_raw(block_raw, sign_manager)
 
-def translate_string(id_string, block_dict):
-    """
-    Convierte un string de IDs separados por guiones bajos
-    en una frase legible.
-    """
-    # 1. Separamos el string por '_' para obtener una lista ['0', '1', ...]
-    parts = id_string.split('_')
-    
-    # 2. Buscamos cada número en el diccionario
-    # Usamos int(p) porque las llaves del dict son enteros
-    words = [block_dict[int(p)] for p in parts if p.isdigit()]
-    
-    # 3. Unimos las palabras con un espacio
-    return " ".join(words)
-
-
-
 def train(diccionario):
     # Obtenemos solo las llaves (los números 0, 1, 2...)
     indices = list(diccionario.keys())
@@ -67,7 +50,8 @@ def train(diccionario):
         
         print(f"traduce-> {label}")
         bam.learn_incremental(cascade_, label)
-      
+    
+    print(acc)
  
 
 train(block) 
