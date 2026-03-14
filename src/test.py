@@ -96,7 +96,7 @@ input_mage = cargar_con_pillow(f"cascada_8.png")
 
 input_label = bam.recall_ranking(input_mage)
 
-print(imprimir_tabla_traducida(input_label, block))
+imprimir_tabla_traducida(input_label, block)
 
 bam.memory_report()
 
