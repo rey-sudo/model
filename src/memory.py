@@ -244,7 +244,6 @@ class BAM:
         })
 
         print(
-            f"📚 '{label}'  |  "
             f"Píxeles nuevos: {int(x_diff.sum())}  |  "
             f"Acumulados: {int(x_new.sum())}"
         )

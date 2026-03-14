@@ -19,6 +19,25 @@ block = {
         9: "transporta"
         }
 
+
+
+def translate_string(id_string, block_dict):
+    """
+    Convierte un string de IDs separados por guiones bajos
+    en una frase legible.
+    """
+    # 1. Separamos el string por '_' para obtener una lista ['0', '1', ...]
+    parts = id_string.split('_')
+    
+    # 2. Buscamos cada número en el diccionario
+    # Usamos int(p) porque las llaves del dict son enteros
+    words = [block_dict[int(p)] for p in parts if p.isdigit()]
+    
+    # 3. Unimos las palabras con un espacio
+    return " ".join(words)
+
+
+
 def imprimir_indices_acumulados(diccionario):
     # Obtenemos solo las llaves (los números 0, 1, 2...)
     indices = list(diccionario.keys())
@@ -39,7 +58,7 @@ def imprimir_indices_acumulados(diccionario):
         resultado = [str(i) for i in chunk]
         label = "_".join(resultado)
         
-        print(f"label_{block_index}->{label}")
+        print(f"label_{block_index}-> {translate_string(label, block)}")
         bam.learn_incremental(cascade_, label)
       
  
@@ -73,11 +92,12 @@ def imprimir_tabla_traducida(lista_datos, diccionario):
 imprimir_indices_acumulados(block) 
 
 
-input_mage = cargar_con_pillow(f"cascada_0.png")
+input_mage = cargar_con_pillow(f"cascada_8.png")
 
 input_label = bam.recall_ranking(input_mage)
 
 print(imprimir_tabla_traducida(input_label, block))
 
+bam.memory_report()
 
 
