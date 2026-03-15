@@ -10,7 +10,7 @@ current_path = Path.cwd()
 INPUT_PATH = Path("input")
 SIGN_SIZE_PX = 9
 
-collection_paths = [Path("dicts/english/alpha/alpha.txt")]
+collection_paths = [Path("dicts/english/words/alpha.txt"), Path(Path("dicts/english/words/custom.txt"))]
 
 sign_manager = SignManager(collection_paths=collection_paths)
 sign_manager.build()    
