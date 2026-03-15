@@ -119,14 +119,14 @@ def block_to_canvas(acc, sign_size:int=0, block_length:int = 0):
 
     return atlas
 
-def create_canvas_row(value, total_items:int, sign_size=int):
-        canvas_width = sign_size * total_items
-        canvas_height = sign_size
+def create_canvas_row(value, sign_size_px:int, total_signs:int):
+        canvas_width = sign_size_px * total_signs
+        canvas_height = sign_size_px
         
         canvas = Image.new('L', (canvas_width, canvas_height), 0)
 
         for j, v in enumerate(value):
             sign_img = index_to_sign(v) 
-            canvas.paste(sign_img, (j * sign_size, 0))  # x = j*9, y = 0
+            canvas.paste(sign_img, (j * sign_size_px, 0))  # x = j*9, y = 0
 
         return np.array(canvas)

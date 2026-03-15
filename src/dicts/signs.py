@@ -1,4 +1,7 @@
 from pathlib import Path
+import re
+
+from src.dicts.codec import create_canvas_row
 
 class SignManager:
     def __init__(self, collection_paths: list[Path]):
@@ -59,11 +62,19 @@ class SignManager:
             
         return sign
     
-    def apply_index_to_block(self, array: list[str]):
-        return [self.get_index_from_sign(word.lower()) for word in array]
+
     
-    def block_to_bam_dict(self, array: list[int]):
-        return {i: array[:i+1] for i in range(len(array))}
+    def clean_paragraph(self, line: str):
+        return re.findall(r'\b\d{4}\b|[a-zA-Z]{2,}', line)
+    
+    def paragraph_to_indices(self, array: list[str]):
+        return [self.get_index_from_sign(word.lower()) for word in array]
+                
+    def paragraph_to_bam_dict(self, paragraph: str):
+        cleaned = self.clean_paragraph(paragraph)
+
+        block = self.paragraph_to_indices(cleaned)
+        return {i: block[:i+1] for i in range(len(block))}
     
     def decode_labels(self, label_str):
         # 1. Hacemos el split para obtener ['10', '11', '12']
@@ -83,4 +94,13 @@ class SignManager:
         except FileNotFoundError:
             return f"Error: El archivo en '{path}' no fue encontrado."
         except Exception as e:
-            return f"Ocurrió un error inesperado: {e}"    
+            return f"Ocurrió un error inesperado: {e}"  
+        
+    def paragraph_to_canvas(self, paragraph: str, sign_size_px: int, total_signs: int):
+        cleaned = self.clean_paragraph(paragraph)
+        block = self.paragraph_to_indices(cleaned)
+        
+        canvas = create_canvas_row(value=block, sign_size_px=sign_size_px, total_signs=total_signs)
+        
+        return canvas
+        

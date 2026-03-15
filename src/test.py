@@ -21,7 +21,7 @@ def train(bam, bam_dict):
     for i, value in bam_dict.items():
         total_items = len(bam_dict)
         
-        cascade = create_canvas_row(value=value, total_items=total_items, sign_size=SIGN_SIZE_PX)
+        cascade = create_canvas_row(value=value, sign_size_px=SIGN_SIZE_PX, total_signs=total_items)
 
         label = ",".join(map(str, value))
         bam.learn_incremental(cascade, label)  
@@ -34,16 +34,17 @@ def train(bam, bam_dict):
          
          
 paragraph = sign_manager.load_block_file(path=INPUT_PATH / "block.md")
-paragraph_ = re.findall(r'\b\d{4}\b|[a-zA-Z]{2,}', paragraph)
-
-block = sign_manager.apply_index_to_block(paragraph_)
-bam_dict = sign_manager.block_to_bam_dict(block)   
+bam_dict = sign_manager.paragraph_to_bam_dict(paragraph)   
 
 bam = BAM(total_signs=len(bam_dict), sign_size_px=SIGN_SIZE_PX)  
 
 train(bam, bam_dict)   
  
 print(json.dumps(memory_report(bam), indent=4, ensure_ascii=False))
+
+
+
+
 
 def imprimir_ranking(datos):
     # Definir los encabezados y el ancho de las columnas
@@ -62,8 +63,8 @@ def imprimir_ranking(datos):
         print(f"{id_val:<4} | {label} | {score:<10.4f} | {votos:<6}")
 
 
+sign_input = sign_manager.paragraph_to_canvas("cat", sign_size_px=bam.sign_size_px, total_signs=bam.total_signs)
 
-#input_mage = cargar_con_pillow(f"cascada_2.png")
-#ranking = bam.recall_ranking(input_mage)
-#imprimir_ranking(ranking)
+ranking = bam.recall_ranking(sign_input)
+imprimir_ranking(ranking)
 

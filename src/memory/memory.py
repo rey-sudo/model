@@ -93,7 +93,7 @@ class BAM:
         self.N_PIXELS   = self.IMG_WIDTH * self.IMG_HEIGHT
         
         self.total_signs = total_signs
-        
+        self.sign_size_px = sign_size_px
         
         # lil_matrix: inserción O(1) por fila, ideal para aprendizaje incremental
         self._W_lil: lil_matrix = lil_matrix((self.N_PIXELS, N_LABEL), dtype=np.float32)
