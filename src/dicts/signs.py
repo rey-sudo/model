@@ -82,7 +82,7 @@ class SignManager:
         resultado = [self.get_sign_from_index(int(idx)) for idx in signs]
         return " ".join(resultado)
     
-    def load_block_file(self, path: Path):
+    def load_paragraph_file(self, path: Path):
         try:
             with open(path, 'r', encoding='utf-8') as f:
                 contenido = f.read()

@@ -14,7 +14,7 @@ collection_paths = [Path("dicts/english/words/alpha.txt"), Path(Path("dicts/engl
 sign_manager = SignManager(collection_paths=collection_paths)
 sign_manager.build()    
 
-paragraph = sign_manager.load_block_file(path=INPUT_PATH / "block.md")
+paragraph = sign_manager.load_paragraph_file(path=INPUT_PATH / "block.md")
 bam_dict = sign_manager.paragraph_to_bam_dict(paragraph)   
 bam = BAM(total_signs=len(bam_dict), sign_size_px=SIGN_SIZE_PX)  
 
