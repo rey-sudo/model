@@ -36,11 +36,8 @@ current_path = Path.cwd()
 # ══════════════════════════════════════════════════════════════════════════════
 IMG_SIZE   = 90               # píxeles de cada lado  (n × n)
 N_PIXELS   = IMG_SIZE ** 2    # neuronas en la capa de imagen  (8100)
-CHAR_BITS  = 8                # bits por carácter (ASCII extendido)
-MAX_CHARS  = 20               # longitud máxima del label
-N_LABEL    = CHAR_BITS * MAX_CHARS  # 160 neuronas en la capa de label
+N_LABEL    = 64               # bits para codificar el ID entero
 MAX_ITER   = 50               # iteraciones máximas de convergencia
-
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Funciones de codificación / decodificación
@@ -80,37 +77,22 @@ def binary_to_image(vec: np.ndarray) -> np.ndarray:
     return (binary * 255).astype(np.uint8)
 
 
-def label_to_bipolar(label: str) -> np.ndarray:
+def id_to_bipolar(label_id: int) -> np.ndarray:
     """
-    Codifica un string en un vector bipolar de longitud N_LABEL (160).
-    Cada carácter → 8 bits en complemento a 2 → {-1, +1}.
-    El string se rellena con '\\0' hasta MAX_CHARS.
-
-    El label mantiene codificación bipolar {-1, +1} para preservar
-    la dinámica de convergencia de la red en la capa B.
+    Codifica un entero (ID del patrón) en vector bipolar de N_LABEL bits.
     """
-    padded = label.ljust(MAX_CHARS, '\x00')[:MAX_CHARS]
     bits = []
-    for ch in padded:
-        val = ord(ch)
-        for b in range(CHAR_BITS - 1, -1, -1):    # MSB primero
-            bits.append(1 if (val >> b) & 1 else -1)
-    return np.array(bits, dtype=np.float32)        # (160,)
+    for b in range(N_LABEL - 1, -1, -1):        # MSB primero
+        bits.append(1 if (label_id >> b) & 1 else -1)
+    return np.array(bits, dtype=np.float32)       # (64,)
 
 
-def bipolar_to_label(vec: np.ndarray) -> str:
+def bipolar_to_id(vec: np.ndarray) -> int:
     """
-    Decodifica un vector bipolar (160,) de vuelta a string.
+    Decodifica un vector bipolar de N_LABEL bits → entero ID.
     """
     binary = ((np.sign(vec) + 1) / 2).astype(int)  # {-1,+1} → {0,1}
-    chars = []
-    for i in range(MAX_CHARS):
-        byte = binary[i * CHAR_BITS:(i + 1) * CHAR_BITS]
-        val = int(''.join(byte.astype(str)), 2)
-        if val == 0:
-            break
-        chars.append(chr(val))
-    return ''.join(chars)
+    return int(''.join(binary.astype(str)), 2)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -152,7 +134,9 @@ class BAM:
         self._dirty: bool = True              # True = _W_lil tiene cambios sin congelar
 
         self.patterns: list[dict] = []        # memoria episódica
-
+        
+        self.label_map: dict[int, str] = {}
+        
         print(
             f"✅ BAM inicializada  |  "
             f"Capa A: {N_PIXELS} neuronas (binaria, dispersa)  |  "
@@ -211,39 +195,42 @@ class BAM:
             f"Patrones totales: {len(self.patterns)}"
         )
         
-    def learn_incremental(self, image: np.ndarray, label: str) -> None:
+    def learn_incremental(self, image: np.ndarray, label_str: str) -> None:
+        label_id = len(self.patterns)              # ID = índice correlativo
+        
+        self.label_map[label_id] = label_str       # guardar string en diccionario
+
         x_new = image_to_binary(image)
 
-        # Calcular máscara de píxeles YA vistos en patrones anteriores
         if len(self.patterns) > 0:
             x_acum = np.zeros(N_PIXELS, dtype=np.float32)
             for p in self.patterns:
-                x_acum = np.maximum(x_acum, p['x'])   # unión de todos los patrones
-
-            x_diff = x_new * (1 - x_acum)             # solo píxeles NUEVOS
+                x_acum = np.maximum(x_acum, p['x'])
+            x_diff = x_new * (1 - x_acum)
         else:
             x_diff = x_new
 
         if x_diff.sum() == 0:
-            print(f"⚠️  '{label}' no aporta píxeles nuevos — patrón ignorado")
+            print(f"⚠️  '{label_str}' no aporta píxeles nuevos — patrón ignorado")
             return
 
-        # Aprender solo con los píxeles diferenciales
-        y = label_to_bipolar(label)
+        y = id_to_bipolar(label_id)                # ← ID entero, no string
         white_pixels = np.nonzero(x_diff)[0]
         self._W_lil[white_pixels, :] += y[np.newaxis, :]
         self._dirty = True
 
         self.patterns.append({
-            'x': x_new,        # imagen completa para recall
-            'x_diff': x_diff,  # solo píxeles exclusivos de este patrón
-            'y': y,
-            'image': image.copy(),
-            'label': label,
+            'x':      x_new,
+            'x_diff': x_diff,
+            'y':      y,
+            'id':     label_id,
+            'label':  label_str,
+            'image':  image.copy(),
             'n_white_new': int(x_diff.sum()),
         })
 
         print(
+            f"[{label_id}]  '{label_str}'  |  "
             f"Píxeles nuevos: {int(x_diff.sum())}  |  "
             f"Acumulados: {int(x_new.sum())}"
         )
@@ -252,29 +239,27 @@ class BAM:
     #  Recuperación: imagen → label
     # ------------------------------------------------------------------
     def recall_label(self, image: np.ndarray, noisy: bool = False,
-                     noise_level: float = 0.0) -> tuple[str, np.ndarray]:
-        """
-        Dado una imagen (posiblemente ruidosa) → recupera el label.
-        Retorna (label_str, label_vector_bipolar).
-        """
+                    noise_level: float = 0.0) -> tuple[str, int, np.ndarray]:
         x = image_to_binary(image)
 
         if noisy and noise_level > 0:
             x = self._add_noise(x, noise_level)
 
-        y = np.sign(self.W.T @ x)   # csr_matrix.T @ dense → eficiente
-        y[y == 0] = 1               # desempate
-        label = bipolar_to_label(y)
-        return label, y
+        y = np.sign(self.W.T @ x)
+        y[y == 0] = 1
+
+        label_id  = bipolar_to_id(y)                                    # entero
+        label_str = self.label_map.get(label_id, f"<ID {label_id} desconocido>")
+        return label_str, label_id, y
     
     def recall_ranking(self, image: np.ndarray) -> list[dict]:
         x = image_to_binary(image)
 
         ranking = []
         for p in self.patterns:
-            # Similitud coseno entre input y imagen completa almacenada
             score = self.similarity(x, p['x'])
             ranking.append({
+                'id':    p['id'],
                 'label': p['label'],
                 'score': round(score, 4),
                 'votos': int(np.dot(x, p['x'])),
@@ -282,11 +267,11 @@ class BAM:
 
         ranking.sort(key=lambda d: d['score'], reverse=True)
 
-        print(f"\n{'Rank':<6} {'Label':<25} {'Score':>8} {'Votos':>8}")
-        print('─' * 52)
+        print(f"\n{'Rank':<6} {'ID':<5} {'Label':<45} {'Score':>8} {'Votos':>8}")
+        print('─' * 74)
         for i, d in enumerate(ranking, 1):
             marker = ' ◄' if i == 1 else ''
-            print(f"{i:<6} {d['label']:<25} {d['score']:>8.4f} {d['votos']:>8}{marker}")
+            print(f"{i:<6} {d['id']:<5} {d['label']:<45} {d['score']:>8.4f} {d['votos']:>8}{marker}")
 
         return ranking
 

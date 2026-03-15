@@ -1,6 +1,6 @@
 import time
 import numpy as np
-from src.sign.codec import index_to_sign
+from src.dicts.codec import index_to_sign
 
 def test_collisions(limit=1_200_000):
     print(f"🕵️ Checking for collisions up to {limit:,}...")
