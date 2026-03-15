@@ -25,22 +25,21 @@ def train(bam, bam_dict):
         bam.learn_incremental(cascade, label)  
             
         Image.fromarray(cascade).save(f"cascada_{i}.png")
-         
+        
+    bam.memory_report()    
          
          
 paragraph = sign_manager.load_block_file(path=INPUT_PATH / "block.md")
-clean_paragraph = re.findall(r'\w+', paragraph)
+paragraph_ = re.findall(r'\w+', paragraph)
 
-block = sign_manager.apply_index_to_block(clean_paragraph)
-bam_dict=sign_manager.block_to_bam_dict(block)   
-
+block = sign_manager.apply_index_to_block(paragraph_)
+bam_dict = sign_manager.block_to_bam_dict(block)   
 
 bam = BAM(total_signs=len(bam_dict), sign_size_px=SIGN_SIZE_PX)  
 
 train(bam, bam_dict)    
-bam.memory_report()    
     
-
+    
 def imprimir_ranking(datos):
     # Definir los encabezados y el ancho de las columnas
     header = f"{'ID':<4} | {'Label':<30} | {'Score':<10} | {'Votos':<6}"
