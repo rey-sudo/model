@@ -147,4 +147,4 @@ def create_canvas_row(acc, index: int, sign_size: int, block_length: int):
 
         atlas.paste(sign_img, (x_offset, y_offset))
 
-    return atlas
+    return np.array(atlas)
