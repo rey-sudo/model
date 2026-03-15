@@ -35,7 +35,7 @@ block = sign_manager.apply_index_to_block(clean_paragraph)
 bam_dict=sign_manager.block_to_bam_dict(block)   
 
 
-bam = BAM()  
+bam = BAM(total_signs=len(bam_dict), sign_size_px=SIGN_SIZE_PX)  
 
 train(bam, bam_dict)    
 bam.memory_report()    
