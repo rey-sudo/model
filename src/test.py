@@ -30,7 +30,9 @@ def train(bam, bam_dict):
          
          
 paragraph = sign_manager.load_block_file(path=INPUT_PATH / "block.md")
-paragraph_ = re.findall(r'\w+', paragraph)
+paragraph_ = re.findall(r'\b\d{4}\b|[a-zA-Z]{2,}', paragraph)
+
+print(len(paragraph_))
 
 block = sign_manager.apply_index_to_block(paragraph_)
 bam_dict = sign_manager.block_to_bam_dict(block)   
