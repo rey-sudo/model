@@ -51,3 +51,6 @@ class SignManager:
             return None
             
         return sign
+    
+    def apply_index_to_block(self, array: list[str]):
+        return [self.get_index_from_sign(word) for word in array]

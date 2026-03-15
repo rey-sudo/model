@@ -119,7 +119,7 @@ def block_to_canvas(acc, sign_size:int=0, block_length:int = 0):
 
     return atlas
 
-def block_to_individual_rows(acc, index: int, sign_size: int = 0, block_length: int = 0):
+def create_canvas_row(acc, index: int, sign_size: int, block_length: int):
     """
     Recibe el acumulador completo (acc) y extrae solo la fila indicada por 'index'.
     Coloca los signos en la fila 0 (y_offset = 0).

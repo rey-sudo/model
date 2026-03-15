@@ -1,7 +1,7 @@
 from pathlib import Path
 from src.dicts.signs import SIGN_COLLECTION_RAW, SignManager
 from src.memory import BAM, cargar_con_pillow
-from src.sign.codec import block_to_individual_rows
+from src.sign.codec import create_canvas_row
 
 current_path = Path.cwd()
 
@@ -21,8 +21,7 @@ def create_bam_dict_from_block(block_raw, sign_manager):
     
     return block
 
-def apply_get_index(array):
-    return [sign_manager.get_index_from_sign(word) for word in array]
+
 
 def create_bam_dict(array):
     acc = []
@@ -33,59 +32,31 @@ def create_bam_dict(array):
         
     return {i: v for i, v in enumerate(acc)}   
 
-def train(array):
-    acc = []
-    
-    for i in range(1, len(array) + 1):
-        chunk = array[:i]
-        acc.append(chunk)
+def train(bam_dict):
+    for i, value in bam_dict.items():
+        print(f"Llave {i} contiene: {value}")
         
-    print(acc)
-
-
+        cascade = create_canvas_row(acc=bam_dict, index=i, sign_size=9, block_length=len(bam_dict))
+        cascade.save(f"cascada_{i}.png")    
+        
+        cascade_img = cargar_con_pillow(f"cascada_{i}.png")
+        
+        bam.learn_incremental(cascade_img, str(i))       
     
     
 block_raw = ["the", "car", "is", "a", "vehicle", "with", "four", "wheels", "and", "transports"]    
-block = apply_get_index(block_raw)
+block = sign_manager.apply_index_to_block(block_raw)
 bam_dict=create_bam_dict(block)   
-
 
 print(block_raw)
 print(block)
 print(bam_dict)
 
-bam = BAM(bam_dict)    
+bam = BAM()    #bam_dict
+    
+train(bam_dict)    
     
     
-    
-    
-    
-    
-    
-"""         
-        block_index = i - 1
-        
-        cascade = block_to_individual_rows(acc=acc, index=block_index, sign_size=9, block_length=len(bam_dict))
-        cascade.save(f"cascada_{block_index}.png")        
-        
-        cascade_ = cargar_con_pillow(f"cascada_{block_index}.png")
-        
-        resultado = [str(i) for i in chunk]
-        label = "_".join(resultado)
-        
-        print(f"traduce-> {label}")
-        bam.learn_incremental(cascade_, label)
-        
-    """
-    
-    
-    
-#train(block) 
-
-
-
-
-
 """ 
 
 print("=" * 50)
