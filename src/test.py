@@ -29,9 +29,9 @@ def train(bam, bam_dict):
          
          
 paragraph = sign_manager.load_block_file(path=INPUT_PATH / "block.md")
+clean_paragraph = re.findall(r'\w+', paragraph)
 
-block_raw = re.findall(r'\w+', paragraph)
-block = sign_manager.apply_index_to_block(block_raw)
+block = sign_manager.apply_index_to_block(clean_paragraph)
 bam_dict=sign_manager.block_to_bam_dict(block)   
 
 

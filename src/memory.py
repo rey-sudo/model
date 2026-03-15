@@ -35,7 +35,7 @@ current_path = Path.cwd()
 #  Constantes
 # ══════════════════════════════════════════════════════════════════════════════
 
-IMG_WIDTH  = 900
+IMG_WIDTH  = 477
 IMG_HEIGHT = 9
 N_PIXELS   = IMG_WIDTH * IMG_HEIGHT
 N_LABEL    = 64               # bits para codificar el ID entero
