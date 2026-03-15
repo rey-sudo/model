@@ -119,32 +119,14 @@ def block_to_canvas(acc, sign_size:int=0, block_length:int = 0):
 
     return atlas
 
-def create_canvas_row(acc, index: int, sign_size: int):
-    """
-    Recibe el acumulador completo (acc) y extrae solo la fila indicada por 'index'.
-    Coloca los signos en la fila 0 (y_offset = 0).
-    """
-    
-    # 1. Extraemos la fila específica del acumulador
-    # Ejemplo: si index es 2, current_row será [0, 1, 2]
-    current_row = acc[index]
-    
-    # 2. Definimos el lienzo: ancho total por el alto de un solo signo
-    canva_width = 900
-    canva_height = sign_size
-    
-    # 3. Crear el lienzo negro
-    atlas = Image.new('L', (canva_width, canva_height), 0)
-    #print("=" * 50)
-    #print(index)
-    # 4. Iteramos sobre los elementos de esa fila específica
-    for x_idx, col_val in enumerate(current_row):
-        sign_img = index_to_sign(col_val)
+def create_canvas_row(value, total_items:int, sign_size=int):
+        canvas_width = sign_size * total_items
+        canvas_height = sign_size
         
-        # Posicionamiento horizontal basado en el orden, vertical siempre 0
-        x_offset = x_idx * sign_size
-        y_offset = 0
+        canvas = Image.new('L', (canvas_width, canvas_height), 0)
 
-        atlas.paste(sign_img, (x_offset, y_offset))
+        for j, v in enumerate(value):
+            sign_img = index_to_sign(v) 
+            canvas.paste(sign_img, (j * sign_size, 0))  # x = j*9, y = 0
 
-    return np.array(atlas)
+        return np.array(canvas)
