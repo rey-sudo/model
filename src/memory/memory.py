@@ -161,6 +161,15 @@ class BAM:
             f"Acumulados: {int(x_new.sum())}"
         )
 
+    def flush(self):
+            _ = self.W 
+            
+            del self._W_lil
+
+            for p in self.patterns:
+                del p['x_diff']
+                del p['y']
+                del p['n_white_new']
     # ------------------------------------------------------------------
     #  Recuperación: imagen → label
     # ------------------------------------------------------------------

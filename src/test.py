@@ -28,6 +28,8 @@ def train(bam, bam_dict):
             
         #Image.fromarray(cascade).save(f"cascada_{i}.png")
         
+    bam.flush() 
+    
     
          
          
@@ -39,8 +41,8 @@ bam_dict = sign_manager.block_to_bam_dict(block)
 
 bam = BAM(total_signs=len(bam_dict), sign_size_px=SIGN_SIZE_PX)  
 
-train(bam, bam_dict)    
-
+train(bam, bam_dict)   
+ 
 print(json.dumps(memory_report(bam), indent=4, ensure_ascii=False))
 
 def imprimir_ranking(datos):
