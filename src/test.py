@@ -29,12 +29,28 @@ print(block)
 print(bam_dict)
 
 train(bam, bam_dict)    
+bam.memory_report()    
     
-    
-print("=" * 50)
 
-input_mage = cargar_con_pillow(f"cascada_0.png")
-input_label = bam.recall_ranking(input_mage)
-print(input_label)
+def imprimir_ranking(datos):
+    # Definir los encabezados y el ancho de las columnas
+    header = f"{'ID':<4} | {'Label':<30} | {'Score':<10} | {'Votos':<6}"
+    print(header)
+    print("-" * len(header))
 
-bam.memory_report()
+    for fila in datos:
+        # :<N alinea a la izquierda con N espacios
+        # :.4f reduce el score a 4 decimales para que no rompa la tabla
+        id_val = fila['id']
+        label = sign_manager.decode_labels(fila['label'])
+        score = fila['score']
+        votos = fila['votos']
+        
+        print(f"{id_val:<4} | {label:<30} | {score:<10.4f} | {votos:<6}")
+
+
+
+input_mage = cargar_con_pillow(f"cascada_1.png")
+ranking = bam.recall_ranking(input_mage)
+imprimir_ranking(ranking)
+

@@ -261,18 +261,12 @@ class BAM:
             ranking.append({
                 'id':    p['id'],
                 'label': p['label'],
-                'score': round(score, 4),
+                'score': score,
                 'votos': int(np.dot(x, p['x'])),
             })
 
         ranking.sort(key=lambda d: d['score'], reverse=True)
-
-        print(f"\n{'Rank':<6} {'ID':<5} {'Label':<45} {'Score':>8} {'Votos':>8}")
-        print('─' * 74)
-        for i, d in enumerate(ranking, 1):
-            marker = ' ◄' if i == 1 else ''
-            print(f"{i:<6} {d['id']:<5} {d['label']:<45} {d['score']:>8.4f} {d['votos']:>8}{marker}")
-
+        
         return ranking
 
     # ------------------------------------------------------------------

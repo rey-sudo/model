@@ -63,3 +63,13 @@ class SignManager:
             acc.append(chunk)
             
         return {i: v for i, v in enumerate(acc)}      
+    
+    def decode_labels(self, label_str):
+        # 1. Hacemos el split para obtener ['10', '11', '12']
+        signs = label_str.split(',')
+        
+        # 2. Iteramos, convertimos a int y aplicamos get_sign_from_index
+        # Asumiendo que get_sign_from_index recibe un entero
+        resultado = [self.get_sign_from_index(int(idx)) for idx in signs]
+        
+        return " ".join(resultado)
