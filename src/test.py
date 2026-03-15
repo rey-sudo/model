@@ -2,6 +2,7 @@ from pathlib import Path
 from src.dicts.signs import SIGN_COLLECTION_RAW, SignManager
 from src.memory import BAM, cargar_con_pillow
 from src.dicts.codec import create_canvas_row
+from PIL import Image
 
 current_path = Path.cwd()
 
@@ -12,10 +13,13 @@ def train(bam, bam_dict):
     for i, value in bam_dict.items():
         print(f"Llave {i} contiene: {value}")
         
-        cascade = create_canvas_row(acc=bam_dict, index=i, sign_size=9, block_length=len(bam_dict))
-        
+        cascade = create_canvas_row(acc=bam_dict, index=i, sign_size=9)
+
         label = ",".join(map(str, value))
-        bam.learn_incremental(cascade, label)      
+        bam.learn_incremental(cascade, label)  
+            
+        #print cascade
+        Image.fromarray(cascade).save(f"cascada_{i}.png")
          
 block_raw = ["the", "car", "is", "a", "vehicle", "with", "four", "wheels", "and", "transports"]    
 block = sign_manager.apply_index_to_block(block_raw)
@@ -50,7 +54,7 @@ def imprimir_ranking(datos):
 
 
 
-input_mage = cargar_con_pillow(f"cascada_1.png")
+input_mage = cargar_con_pillow(f"cascada_5.png")
 ranking = bam.recall_ranking(input_mage)
 imprimir_ranking(ranking)
 

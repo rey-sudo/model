@@ -34,8 +34,10 @@ current_path = Path.cwd()
 # ══════════════════════════════════════════════════════════════════════════════
 #  Constantes
 # ══════════════════════════════════════════════════════════════════════════════
-IMG_SIZE   = 90               # píxeles de cada lado  (n × n)
-N_PIXELS   = IMG_SIZE ** 2    # neuronas en la capa de imagen  (8100)
+
+IMG_WIDTH  = 900
+IMG_HEIGHT = 9
+N_PIXELS   = IMG_WIDTH * IMG_HEIGHT
 N_LABEL    = 64               # bits para codificar el ID entero
 MAX_ITER   = 50               # iteraciones máximas de convergencia
 
@@ -69,13 +71,8 @@ def image_to_binary(img_array: np.ndarray) -> np.ndarray:
 
 
 def binary_to_image(vec: np.ndarray) -> np.ndarray:
-    """
-    Reconstruye la imagen (IMG_SIZE × IMG_SIZE) desde un vector binario {0, 1}.
-    Los valores negativos o cero → negro; positivos → blanco.
-    """
-    binary = (vec > 0).reshape(IMG_SIZE, IMG_SIZE).astype(np.float32)
+    binary = (vec > 0).reshape(IMG_HEIGHT, IMG_WIDTH).astype(np.float32)
     return (binary * 255).astype(np.uint8)
-
 
 def id_to_bipolar(label_id: int) -> np.ndarray:
     """
