@@ -35,9 +35,6 @@ current_path = Path.cwd()
 #  Constantes
 # ══════════════════════════════════════════════════════════════════════════════
 
-IMG_WIDTH  = 477
-IMG_HEIGHT = 9
-N_PIXELS   = IMG_WIDTH * IMG_HEIGHT
 N_LABEL    = 64               # bits para codificar el ID entero
 MAX_ITER   = 50               # iteraciones máximas de convergencia
 
@@ -70,8 +67,8 @@ def image_to_binary(img_array: np.ndarray) -> np.ndarray:
     return binary.flatten()                      # (8100,)
 
 
-def binary_to_image(vec: np.ndarray) -> np.ndarray:
-    binary = (vec > 0).reshape(IMG_HEIGHT, IMG_WIDTH).astype(np.float32)
+def binary_to_image(height: int, width: int, vec: np.ndarray) -> np.ndarray:
+    binary = (vec > 0).reshape(height, width).astype(np.float32)
     return (binary * 255).astype(np.uint8)
 
 def id_to_bipolar(label_id: int) -> np.ndarray:
@@ -123,9 +120,14 @@ class BAM:
         x_new = sign(W   @ y)      label  → imagen  (CSR.T @ dense)
     """
 
-    def __init__(self):
+    def __init__(self, total_signs: int, sign_size_px: int):
+        self.IMG_WIDTH  = sign_size_px * total_signs
+        self.IMG_HEIGHT = sign_size_px
+        self.N_PIXELS   = self.IMG_WIDTH * self.IMG_HEIGHT
+        
+        
         # lil_matrix: inserción O(1) por fila, ideal para aprendizaje incremental
-        self._W_lil: lil_matrix = lil_matrix((N_PIXELS, N_LABEL), dtype=np.float32)
+        self._W_lil: lil_matrix = lil_matrix((self.N_PIXELS, N_LABEL), dtype=np.float32)
         # csr_matrix: multiplicación rápida, se genera al primer recall
         self._W_csr: csr_matrix | None = None
         self._dirty: bool = True              # True = _W_lil tiene cambios sin congelar
@@ -136,7 +138,7 @@ class BAM:
         
         print(
             f"✅ BAM inicializada  |  "
-            f"Capa A: {N_PIXELS} neuronas (binaria, dispersa)  |  "
+            f"Capa A: {self.N_PIXELS} neuronas (binaria, dispersa)  |  "
             f"Capa B: {N_LABEL} neuronas (bipolar)"
         )
 
@@ -182,13 +184,13 @@ class BAM:
             'image': image.copy(),
             'label': label,
             'n_white': len(white_pixels),
-            'sparsity': 1.0 - len(white_pixels) / N_PIXELS,
+            'sparsity': 1.0 - len(white_pixels) / self.N_PIXELS,
         })
 
         print(
             f"📚 Patrón aprendido: '{label}'  |  "
-            f"Píxeles blancos: {len(white_pixels)}/{N_PIXELS} "
-            f"({100*len(white_pixels)/N_PIXELS:.1f}%)  |  "
+            f"Píxeles blancos: {len(white_pixels)}/{self.N_PIXELS} "
+            f"({100*len(white_pixels)/self.N_PIXELS:.1f}%)  |  "
             f"Patrones totales: {len(self.patterns)}"
         )
         
@@ -200,7 +202,7 @@ class BAM:
         x_new = image_to_binary(image)
 
         if len(self.patterns) > 0:
-            x_acum = np.zeros(N_PIXELS, dtype=np.float32)
+            x_acum = np.zeros(self.N_PIXELS, dtype=np.float32)
             for p in self.patterns:
                 x_acum = np.maximum(x_acum, p['x'])
             x_diff = x_new * (1 - x_acum)
@@ -276,7 +278,7 @@ class BAM:
         """
         y = label_to_bipolar(label)
         y, x = self._iterate_from_y(y)
-        img_array = binary_to_image(x)
+        img_array = binary_to_image(height=self.IMG_HEIGHT, width=self.IMG_WIDTH, vec=x)
         return img_array, x
 
     # ------------------------------------------------------------------
@@ -348,7 +350,7 @@ class BAM:
         """
         W = self.W
         nnz       = W.nnz
-        total     = N_PIXELS * N_LABEL
+        total     = self.N_PIXELS * N_LABEL
         dense_mb  = total * 4 / 1024**2          # float32 = 4 bytes
         sparse_mb = (
             W.data.nbytes + W.indices.nbytes + W.indptr.nbytes
@@ -435,7 +437,7 @@ class BAM:
 
         # ── Capacidad teórica de la BAM (Hopfield bound) ──────────────
         # n_max ≈ 0.15 × min(N_A, N_B) para recuperación sin errores
-        theoretical_capacity = int(0.15 * min(N_PIXELS, N_LABEL))
+        theoretical_capacity = int(0.15 * min(self.N_PIXELS, N_LABEL))
 
         stats = {
             # Proceso
@@ -594,7 +596,7 @@ def visualize_results(bam: BAM, image: np.ndarray, label: str,
             x_in = x_orig.copy()
         else:
             x_in = bam._add_noise(x_orig, nl)      # flip binario 0↔1
-            noisy_img = binary_to_image(x_in)       # {0,1} → uint8
+            noisy_img = binary_to_image(height=image.size, width=image.size, vec=x_in)       # {0,1} → uint8
 
         ax.imshow(noisy_img, cmap='gray', vmin=0, vmax=255)
 
