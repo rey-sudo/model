@@ -10,7 +10,7 @@ def memory_report(bam) -> dict[str, float]:
 
     def _mb(obj) -> float:
         if isinstance(obj, lil_matrix):
-            return (sys.getsizeof(obj.data) + sys.getsizeof(obj.rows)) / 1024**2
+            return _mb_lil(obj)
         if issparse(obj):
             return (obj.data.nbytes + obj.indices.nbytes + obj.indptr.nbytes) / 1024**2
         if hasattr(obj, "nbytes"):
@@ -29,6 +29,15 @@ def memory_report(bam) -> dict[str, float]:
                 + sys.getsizeof(p["n_white_new"]) + sys.getsizeof(p)) / 1024**2
         return arrays + scalars
 
+    def _mb_lil(m: lil_matrix) -> float:
+        nnz = sum(len(row) for row in m.data)
+        per_value  = sys.getsizeof(m.data[0][0]) if nnz > 0 else 28  # float32 scalar
+        per_index  = 28                                                # int Python
+        row_shells = sum(sys.getsizeof(r) for r in m.data) + \
+                    sum(sys.getsizeof(r) for r in m.rows)
+        outer      = sys.getsizeof(m.data) + sys.getsizeof(m.rows)
+        total      = outer + row_shells + nnz * (per_value + per_index)
+        return total / 1024**2
 
     W = bam.W  # fuerza conversión a CSR si está dirty
 
@@ -45,6 +54,7 @@ def memory_report(bam) -> dict[str, float]:
         "patterns":  sum(_mb_pattern(p) for p in bam.patterns),
         "label_map": _mb_dict_deep(bam.label_map),
         "_dirty":    sys.getsizeof(bam._dirty) / 1024**2,
+        "patterns_list": sys.getsizeof(bam.patterns) / 1024**2,
     }
     entries["TOTAL"] = sum(entries.values())
 
