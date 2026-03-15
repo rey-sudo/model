@@ -36,7 +36,7 @@ train(bam, bam_dict)
 print(json.dumps(memory_report(bam), indent=4, ensure_ascii=False))
 
 
-sign_input = sign_manager.paragraph_to_canvas("cat", sign_size_px=bam.sign_size_px, total_signs=bam.total_signs)
+sign_input = sign_manager.paragraph_to_canvas("cat is", sign_size_px=bam.sign_size_px, total_signs=bam.total_signs)
 ranking = bam.recall_ranking(sign_input)
 
 
