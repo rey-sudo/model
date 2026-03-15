@@ -181,7 +181,6 @@ class BAM:
         self.patterns.append({
             'x': x,
             'y': y,
-            'image': image.copy(),
             'label': label,
             'n_white': len(white_pixels),
             'sparsity': 1.0 - len(white_pixels) / self.N_PIXELS,
@@ -224,7 +223,6 @@ class BAM:
             'y':      y,
             'id':     label_id,
             'label':  label_str,
-            'image':  image.copy(),
             'n_white_new': int(x_diff.sum()),
         })
 

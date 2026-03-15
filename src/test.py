@@ -58,7 +58,7 @@ def imprimir_ranking(datos):
 
 
 
-input_mage = cargar_con_pillow(f"cascada_2.png")
-ranking = bam.recall_ranking(input_mage)
-imprimir_ranking(ranking)
+#input_mage = cargar_con_pillow(f"cascada_2.png")
+#ranking = bam.recall_ranking(input_mage)
+#imprimir_ranking(ranking)
 
