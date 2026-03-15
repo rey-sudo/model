@@ -1,11 +1,9 @@
 import json
 from pathlib import Path
 from src.dicts.signs import SignManager
-from src.memory import BAM
 from src.dicts.codec import create_canvas_row
-from PIL import Image
-import re
 from src.memory import memory_report, BAM
+from src.memory import BAM
 
 current_path = Path.cwd()
 
@@ -13,9 +11,12 @@ INPUT_PATH = Path("input")
 SIGN_SIZE_PX = 9
 
 collection_paths = [Path("dicts/english/words/alpha.txt"), Path(Path("dicts/english/words/custom.txt"))]
-
 sign_manager = SignManager(collection_paths=collection_paths)
 sign_manager.build()    
+
+paragraph = sign_manager.load_block_file(path=INPUT_PATH / "block.md")
+bam_dict = sign_manager.paragraph_to_bam_dict(paragraph)   
+bam = BAM(total_signs=len(bam_dict), sign_size_px=SIGN_SIZE_PX)  
 
 def train(bam, bam_dict):
     for i, value in bam_dict.items():
@@ -30,20 +31,13 @@ def train(bam, bam_dict):
         
     bam.flush() 
     
-    
-         
-         
-paragraph = sign_manager.load_block_file(path=INPUT_PATH / "block.md")
-bam_dict = sign_manager.paragraph_to_bam_dict(paragraph)   
-
-bam = BAM(total_signs=len(bam_dict), sign_size_px=SIGN_SIZE_PX)  
 
 train(bam, bam_dict)   
- 
 print(json.dumps(memory_report(bam), indent=4, ensure_ascii=False))
 
 
-
+sign_input = sign_manager.paragraph_to_canvas("cat", sign_size_px=bam.sign_size_px, total_signs=bam.total_signs)
+ranking = bam.recall_ranking(sign_input)
 
 
 def imprimir_ranking(datos):
@@ -56,15 +50,13 @@ def imprimir_ranking(datos):
         # :<N alinea a la izquierda con N espacios
         # :.4f reduce el score a 4 decimales para que no rompa la tabla
         id_val = fila['id']
-        label = sign_manager.decode_labels(fila['label'])[-30:]
+        label = sign_manager.decode_labels(fila['label'])[-40:]
         score = fila['score']
         votos = fila['votos']
         
         print(f"{id_val:<4} | {label} | {score:<10.4f} | {votos:<6}")
 
 
-sign_input = sign_manager.paragraph_to_canvas("cat", sign_size_px=bam.sign_size_px, total_signs=bam.total_signs)
 
-ranking = bam.recall_ranking(sign_input)
 imprimir_ranking(ranking)
 
