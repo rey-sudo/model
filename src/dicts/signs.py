@@ -1,7 +1,6 @@
 from pathlib import Path
-import re
-
 from src.dicts.codec import create_canvas_row
+import re
 
 class SignManager:
     def __init__(self, collection_paths: list[Path]):
@@ -62,8 +61,6 @@ class SignManager:
             
         return sign
     
-
-    
     def clean_paragraph(self, line: str):
         return re.findall(r'\b\d{4}\b|[a-zA-Z]{2,}', line)
     
@@ -83,7 +80,6 @@ class SignManager:
         # 2. Iteramos, convertimos a int y aplicamos get_sign_from_index
         # Asumiendo que get_sign_from_index recibe un entero
         resultado = [self.get_sign_from_index(int(idx)) for idx in signs]
-        
         return " ".join(resultado)
     
     def load_block_file(self, path: Path):
@@ -101,6 +97,5 @@ class SignManager:
         block = self.paragraph_to_indices(cleaned)
         
         canvas = create_canvas_row(value=block, sign_size_px=sign_size_px, total_signs=total_signs)
-        
         return canvas
         
