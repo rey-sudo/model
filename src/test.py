@@ -1,6 +1,6 @@
 from pathlib import Path
 from src.dicts.signs import SignManager
-from src.memory import BAM, cargar_con_pillow
+from src.memory import BAM
 from src.dicts.codec import create_canvas_row
 from PIL import Image
 import re
