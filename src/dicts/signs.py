@@ -1,3 +1,4 @@
+from pathlib import Path
 from src.dicts import english
 
 SIGN_COLLECTION_RAW = { 
@@ -67,3 +68,13 @@ class SignManager:
         resultado = [self.get_sign_from_index(int(idx)) for idx in signs]
         
         return " ".join(resultado)
+    
+    def load_block_file(self, path: Path):
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                contenido = f.read()
+            return contenido
+        except FileNotFoundError:
+            return f"Error: El archivo en '{path}' no fue encontrado."
+        except Exception as e:
+            return f"Ocurrió un error inesperado: {e}"    

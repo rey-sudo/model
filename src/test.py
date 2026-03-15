@@ -1,13 +1,14 @@
 from pathlib import Path
-import re
 from src.dicts.signs import SIGN_COLLECTION_RAW, SignManager
 from src.memory import BAM, cargar_con_pillow
-from src.dicts.codec import create_canvas_row, index_to_sign
+from src.dicts.codec import create_canvas_row
 from PIL import Image
+import re
 
 current_path = Path.cwd()
 
-SIGN_SIZE = 9
+INPUT_PATH = Path("input")
+SIGN_SIZE_PX = 9
 
 sign_manager = SignManager(SIGN_COLLECTION_RAW)
 sign_manager.build()    
@@ -15,9 +16,8 @@ sign_manager.build()
 def train(bam, bam_dict):
     for i, value in bam_dict.items():
         total_items = len(bam_dict)
-        print(i, value)
         
-        cascade = create_canvas_row(value=value, total_items=total_items, sign_size=SIGN_SIZE)
+        cascade = create_canvas_row(value=value, total_items=total_items, sign_size=SIGN_SIZE_PX)
 
         label = ",".join(map(str, value))
         bam.learn_incremental(cascade, label)  
@@ -26,7 +26,7 @@ def train(bam, bam_dict):
          
          
          
-paragraph = "Automobiles have fundamentally transformed modern civilization, evolving from simple mechanical carriages into sophisticated feats of engineering. They provide unparalleled freedom, allowing individuals to traverse vast distances with ease and efficiency. Beyond mere utility, cars represent a fusion of art and technology, where sleek aesthetics meet cutting-edge innovations like autonomous driving and electric propulsion. As the industry shifts toward sustainability, the focus has moved to reducing carbon footprints through battery-powered motors. Whether it is a rugged off-road vehicle or a high-performance sports car, these machines remain essential symbols of personal mobility, continuous innovation, and the human desire"
+paragraph = sign_manager.load_block_file(path=INPUT_PATH / "block.md")
 
 block_raw = re.findall(r'\w+', paragraph)
 block = sign_manager.apply_index_to_block(block_raw)
