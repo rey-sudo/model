@@ -53,16 +53,10 @@ class SignManager:
         return sign
     
     def apply_index_to_block(self, array: list[str]):
-        return [self.get_index_from_sign(word) for word in array]
+        return [self.get_index_from_sign(word.lower()) for word in array]
     
     def block_to_bam_dict(self, array: list[int]):
-        acc = []
-        
-        for i in range(1, len(array) + 1):
-            chunk = array[:i]
-            acc.append(chunk)
-            
-        return {i: v for i, v in enumerate(acc)}      
+        return {val: array[:i+1] for i, val in enumerate(array)}  
     
     def decode_labels(self, label_str):
         # 1. Hacemos el split para obtener ['10', '11', '12']

@@ -12,7 +12,7 @@ sign_manager.build()
 
 def train(bam, bam_dict):
     for i, value in bam_dict.items():
-        print(f"Llave {i} contiene: {value}")
+        #print(f"Llave {i} contiene: {value}")
         
         cascade = create_canvas_row(acc=bam_dict, index=i, sign_size=9)
 
@@ -24,18 +24,16 @@ def train(bam, bam_dict):
          
          
          
-paragraph = "Automobiles have fundamentally transformed modern civilization, evolving from simple mechanical carriages into sophisticated feats of engineering."
+paragraph = "Automobiles have fundamentally transformed modern civilization, evolving from simple mechanical carriages into sophisticated feats of engineering. They provide unparalleled freedom, allowing individuals to traverse vast distances with ease and efficiency. Beyond mere utility, cars represent a fusion of art and technology, where sleek aesthetics meet cutting-edge innovations like autonomous driving and electric propulsion. As the industry shifts toward sustainability, the focus has moved to reducing carbon footprints through battery-powered motors. Whether it is a rugged off-road vehicle or a high-performance sports car, these machines remain essential symbols of personal mobility, continuous innovation, and the human desire for exploration."
 
-block_raw = re.findall(r'\w+', paragraph.lower())
+block_raw = re.findall(r'\w+', paragraph)
 block = sign_manager.apply_index_to_block(block_raw)
 bam_dict=sign_manager.block_to_bam_dict(block)   
 
 
-bam = BAM()  
-
-print(block_raw)
-print(block)
 print(bam_dict)
+
+bam = BAM()  
 
 train(bam, bam_dict)    
 bam.memory_report()    
@@ -59,7 +57,7 @@ def imprimir_ranking(datos):
 
 
 
-input_mage = cargar_con_pillow(f"cascada_0.png")
+input_mage = cargar_con_pillow(f"cascada_9.png")
 ranking = bam.recall_ranking(input_mage)
-imprimir_ranking(ranking)
+#imprimir_ranking(ranking)
 

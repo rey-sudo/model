@@ -1,14 +1,5 @@
 vocabulary_a = {
-    "abundant": "abundante",
-    "accept": "aceptar",
-    "accurate": "preciso",
-    "achieve": "lograr",
-    "acquire": "adquirir",
-    "address": "dirección",
-    "adjust": "ajustar",
-    "advantage": "ventaja",
-    "advice": "consejo",
-    "ancient": "antiguo"
+
 }
 
 other = {
