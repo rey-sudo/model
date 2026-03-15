@@ -1,20 +1,26 @@
 from pathlib import Path
-from src.dicts import english
-
-SIGN_COLLECTION_RAW = { 
-        **english.words.vocabulary_a,      
-        **english.words.other,
-}
 
 class SignManager:
-    def __init__(self, raw_collection: dict):
-        self.SIGN_COLLECTION_RAW = raw_collection
+    def __init__(self, collection_paths: list[Path]):
+        self.collection_paths = collection_paths
+        
+        self.SIGN_COLLECTION_RAW = {}
+        
         self.SIGN_COLLECTION = {}
         self._SIGN_REVERSE = {}
         
     def build(self):
+        self.load_files()
         self.generate_index_map()
-        
+    
+    def load_files(self):
+        for path in self.collection_paths:    
+            with open(path, 'r', encoding='utf-8') as file:
+                for line in file:
+                    word = line.strip()
+                    if word:
+                        self.SIGN_COLLECTION_RAW[word] = word        
+    
     def generate_index_map(self):
         """
         Convierte RAW en formato "word": index_int

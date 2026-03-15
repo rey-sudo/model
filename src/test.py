@@ -1,5 +1,5 @@
 from pathlib import Path
-from src.dicts.signs import SIGN_COLLECTION_RAW, SignManager
+from src.dicts.signs import SignManager
 from src.memory import BAM, cargar_con_pillow
 from src.dicts.codec import create_canvas_row
 from PIL import Image
@@ -10,7 +10,9 @@ current_path = Path.cwd()
 INPUT_PATH = Path("input")
 SIGN_SIZE_PX = 9
 
-sign_manager = SignManager(SIGN_COLLECTION_RAW)
+collection_paths = [Path("dicts/english/alpha/alpha.txt")]
+
+sign_manager = SignManager(collection_paths=collection_paths)
 sign_manager.build()    
 
 def train(bam, bam_dict):

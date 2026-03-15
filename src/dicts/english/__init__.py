@@ -1,1 +1,1 @@
-from .words import *
+from .alpha import *
