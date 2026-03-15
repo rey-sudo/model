@@ -152,46 +152,6 @@ class BAM:
             self._W_csr = self._W_lil.tocsr()
             self._dirty = False
         return self._W_csr
-
-    # ------------------------------------------------------------------
-    #  Aprendizaje
-    # ------------------------------------------------------------------
-    def learn(self, image: np.ndarray, label: str) -> None:
-        """
-        Almacena un par (imagen, label) en la memoria.
-
-        image  : array NumPy n×n (uint8 o float)
-        label  : string de una sola palabra
-
-        Solo las filas correspondientes a píxeles BLANCOS (x[i] = 1)
-        se actualizan en W, manteniendo su dispersión natural.
-        """
-        x = image_to_binary(image)        # {0, 1} — float32
-        y = label_to_bipolar(label)       # {-1, +1} — float32
-
-        # Índices de píxeles blancos (x[i] = 1)
-        white_pixels = np.nonzero(x)[0]   # shape: (n_blancos,)
-
-        # Actualizar solo las filas de píxeles blancos
-        # Equivale a outer(x, y) pero omite las filas donde x[i]=0
-        self._W_lil[white_pixels, :] += y[np.newaxis, :]   # broadcasting (n_blancos, 160)
-
-        self._dirty = True   # invalidar caché CSR
-
-        self.patterns.append({
-            'x': x,
-            'y': y,
-            'label': label,
-            'n_white': len(white_pixels),
-            'sparsity': 1.0 - len(white_pixels) / self.N_PIXELS,
-        })
-
-        print(
-            f"📚 Patrón aprendido: '{label}'  |  "
-            f"Píxeles blancos: {len(white_pixels)}/{self.N_PIXELS} "
-            f"({100*len(white_pixels)/self.N_PIXELS:.1f}%)  |  "
-            f"Patrones totales: {len(self.patterns)}"
-        )
         
     def learn_incremental(self, image: np.ndarray, label_str: str) -> None:
         label_id = len(self.patterns)              # ID = índice correlativo
@@ -539,7 +499,7 @@ def main():
     # 2. Inicializar BAM y aprender
     bam = BAM()
     label = "manzana"
-    bam.learn(car_image, label)
+    ##bam.learn(car_image, label)
 
     # 3. Prueba: label → imagen
     print(f"\n🔄 Prueba 1 — Reconstrucción  '{label}' → imagen")
