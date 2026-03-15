@@ -1,9 +1,11 @@
+import json
 from pathlib import Path
 from src.dicts.signs import SignManager
 from src.memory import BAM
 from src.dicts.codec import create_canvas_row
 from PIL import Image
 import re
+from src.memory import memory_report, BAM
 
 current_path = Path.cwd()
 
@@ -26,7 +28,7 @@ def train(bam, bam_dict):
             
         #Image.fromarray(cascade).save(f"cascada_{i}.png")
         
-    bam.memory_report()    
+    
          
          
 paragraph = sign_manager.load_block_file(path=INPUT_PATH / "block.md")
@@ -38,8 +40,9 @@ bam_dict = sign_manager.block_to_bam_dict(block)
 bam = BAM(total_signs=len(bam_dict), sign_size_px=SIGN_SIZE_PX)  
 
 train(bam, bam_dict)    
-    
-    
+
+print(json.dumps(memory_report(bam), indent=4, ensure_ascii=False))
+
 def imprimir_ranking(datos):
     # Definir los encabezados y el ancho de las columnas
     header = f"{'ID':<4} | {'Label':<30} | {'Score':<10} | {'Votos':<6}"
