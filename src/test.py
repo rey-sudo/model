@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 from src.dicts.signs import SIGN_COLLECTION_RAW, SignManager
 from src.memory import BAM, cargar_con_pillow
 from src.dicts.codec import create_canvas_row
@@ -21,7 +22,11 @@ def train(bam, bam_dict):
         #print cascade
         Image.fromarray(cascade).save(f"cascada_{i}.png")
          
-block_raw = ["the", "car", "is", "a", "vehicle", "with", "four", "wheels", "and", "transports"]    
+         
+         
+paragraph = "Automobiles have fundamentally transformed modern civilization, evolving from simple mechanical carriages into sophisticated feats of engineering."
+
+block_raw = re.findall(r'\w+', paragraph.lower())
 block = sign_manager.apply_index_to_block(block_raw)
 bam_dict=sign_manager.block_to_bam_dict(block)   
 
@@ -54,7 +59,7 @@ def imprimir_ranking(datos):
 
 
 
-input_mage = cargar_con_pillow(f"cascada_5.png")
+input_mage = cargar_con_pillow(f"cascada_0.png")
 ranking = bam.recall_ranking(input_mage)
 imprimir_ranking(ranking)
 
