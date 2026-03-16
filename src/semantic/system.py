@@ -74,6 +74,35 @@ def cosine_similarity(a: Coord3D, b: Coord3D) -> float:
 # CONCEPTO
 # ─────────────────────────────────────────────
 
+class DriftMode:
+    """
+    Estrategia de coordenadas cuando la definición cambia.
+
+    FIXED      — las coordenadas nunca se tocan (ancla nominal).
+                 El concepto tiene un "lugar histórico" inmutable.
+                 Útil para modelar que la palabra/etiqueta es la identidad.
+
+    AUTO       — tras cada cambio de definición las coordenadas se
+                 recalculan como el centroide de los conceptos que la
+                 conforman.  El concepto *es* su significado actual.
+
+    TRAJECTORY — igual que AUTO pero guarda cada posición anterior
+                 en coord_history.  Permite reconstruir el recorrido
+                 completo del concepto a través del espacio semántico.
+    """
+    FIXED      = "fixed"
+    AUTO       = "auto"
+    TRAJECTORY = "trajectory"
+
+
+@dataclass
+class CoordSnapshot:
+    """Posición histórica de un concepto en un momento dado."""
+    timestamp: float
+    coords: Coord3D
+    note: str = ""
+
+
 @dataclass
 class ConceptSnapshot:
     """Versión histórica de la definición de un concepto."""
@@ -90,12 +119,15 @@ class Concept:
       - Una posición (x, y, z) en el espacio semántico
       - Una definición: lista de nombres de otros conceptos
       - Una historia de cambios en su definición
+      - Un modo de deriva: FIXED | AUTO | TRAJECTORY
     """
     name: str
     coords: Coord3D
     definition: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
     history: list[ConceptSnapshot] = field(default_factory=list)
+    coord_history: list[CoordSnapshot] = field(default_factory=list)
+    drift_mode: str = DriftMode.FIXED
     created_at: float = field(default_factory=time.time)
 
     # ── Gestión de definición ──────────────────
@@ -107,26 +139,69 @@ class Concept:
             note=note
         ))
 
-    def set_definition(self, concepts: list[str], note: str = "") -> None:
+    def _record_coord(self, note: str = "") -> None:
+        """Guarda la posición actual en coord_history."""
+        self.coord_history.append(CoordSnapshot(
+            timestamp=time.time(),
+            coords=self.coords,
+            note=note
+        ))
+
+    def _maybe_drift(self, matrix: "SemanticMatrix3D", note: str = "") -> None:
+        """
+        Si el modo es AUTO o TRAJECTORY, recalcula las coordenadas
+        como el centroide de los conceptos de la definición actual.
+        En TRAJECTORY también archiva la posición anterior.
+        """
+        if self.drift_mode == DriftMode.FIXED:
+            return
+        new_coords = self.centroid_definition(matrix)
+        if new_coords is None:
+            return                          # sin referencias resolubles, no mover
+        if self.drift_mode == DriftMode.TRAJECTORY:
+            self._record_coord(note)        # archiva ANTES de mover
+        self.coords = new_coords
+
+    def set_definition(self, concepts: list[str], note: str = "",
+                       matrix: "SemanticMatrix3D | None" = None) -> None:
         self._snapshot(note or "set")
         self.definition = list(concepts)
+        if matrix:
+            self._maybe_drift(matrix, note or "set")
 
-    def expand(self, concepts: list[str], note: str = "") -> None:
+    def expand(self, concepts: list[str], note: str = "",
+               matrix: "SemanticMatrix3D | None" = None) -> None:
         """Añade conceptos a la definición (sin duplicados)."""
         self._snapshot(note or "expand")
         for c in concepts:
             if c not in self.definition:
                 self.definition.append(c)
+        if matrix:
+            self._maybe_drift(matrix, note or "expand")
 
-    def reduce(self, concepts: list[str], note: str = "") -> None:
+    def reduce(self, concepts: list[str], note: str = "",
+               matrix: "SemanticMatrix3D | None" = None) -> None:
         """Elimina conceptos de la definición."""
         self._snapshot(note or "reduce")
         self.definition = [c for c in self.definition if c not in concepts]
+        if matrix:
+            self._maybe_drift(matrix, note or "reduce")
 
-    def replace(self, old: str, new: str, note: str = "") -> None:
+    def replace(self, old: str, new: str, note: str = "",
+                matrix: "SemanticMatrix3D | None" = None) -> None:
         """Sustituye un concepto por otro en la definición."""
         self._snapshot(note or f"replace {old} → {new}")
         self.definition = [new if c == old else c for c in self.definition]
+        if matrix:
+            self._maybe_drift(matrix, note or f"replace {old}→{new}")
+
+    def reposition(self, new_coords: Coord3D, note: str = "") -> None:
+        """
+        Reposicionamiento manual. Siempre archiva la posición anterior
+        (independientemente del drift_mode).
+        """
+        self._record_coord(note or "manual reposition")
+        self.coords = new_coords
 
     # ── Propiedades espaciales ──────────────────
 
@@ -138,7 +213,37 @@ class Concept:
         n = len(coords)
         return tuple(sum(c[i] for c in coords) / n for i in range(3))
 
-    def semantic_vector(self, matrix: "SemanticMatrix3D") -> Coord3D:
+    def trajectory_length(self) -> float:
+        """Distancia total recorrida a lo largo de toda la trayectoria espacial."""
+        positions = [snap.coords for snap in self.coord_history] + [self.coords]
+        if len(positions) < 2:
+            return 0.0
+        return sum(euclidean(positions[i], positions[i+1])
+                   for i in range(len(positions) - 1))
+
+    def displacement(self) -> float:
+        """Distancia entre la posición original y la actual."""
+        if not self.coord_history:
+            return 0.0
+        return euclidean(self.coord_history[0].coords, self.coords)
+
+    def original_coords(self) -> Coord3D:
+        """Coordenadas originales (antes de cualquier deriva)."""
+        if self.coord_history:
+            return self.coord_history[0].coords
+        return self.coords
+
+    def velocity(self) -> float:
+        """Velocidad media de cambio espacial (distancia / número de pasos)."""
+        steps = len(self.coord_history)
+        if steps == 0:
+            return 0.0
+        return self.trajectory_length() / steps
+
+    def direction_of_drift(self) -> Coord3D:
+        """Vector normalizado desde la posición original hasta la actual."""
+        orig = self.original_coords()
+        return normalize(vector(orig, self.coords))
         """Vector desde el concepto hacia el centroide de su definición."""
         centroid = self.centroid_definition(matrix)
         if centroid is None:
@@ -175,7 +280,8 @@ class SemanticMatrix3D:
         coords: Coord3D,
         definition: list[str] | None = None,
         metadata: dict | None = None,
-        note: str = ""
+        note: str = "",
+        drift_mode: str = DriftMode.FIXED,
     ) -> Concept:
         if name in self._concepts:
             raise ValueError(f"Concepto '{name}' ya existe. Usa update().")
@@ -184,6 +290,7 @@ class SemanticMatrix3D:
             coords=coords,
             definition=list(definition or []),
             metadata=metadata or {},
+            drift_mode=drift_mode,
         )
         if note:
             c._snapshot(note)
@@ -429,7 +536,52 @@ class SemanticMatrix3D:
 
     # ── Evolución Temporal ──────────────────────
 
-    def definition_drift(self, name: str) -> list[dict]:
+    def coord_drift(self, name: str) -> list[dict]:
+        """
+        Historial de posiciones de un concepto en el espacio 3D.
+        Muestra la trayectoria completa con timestamps.
+        """
+        c = self.require(name)
+        all_positions = list(c.coord_history) + [
+            CoordSnapshot(timestamp=time.time(), coords=c.coords, note="(posición actual)")
+        ]
+        result = []
+        for i, snap in enumerate(all_positions):
+            entry = {
+                "step": i,
+                "timestamp": snap.timestamp,
+                "coords": snap.coords,
+                "note": snap.note,
+            }
+            if i > 0:
+                prev = all_positions[i - 1].coords
+                entry["delta"] = round(euclidean(prev, snap.coords), 4)
+            result.append(entry)
+        return result
+
+    def most_displaced(self, n: int = 5) -> list[tuple[str, float]]:
+        """Conceptos que más se han desplazado desde su posición original."""
+        return sorted(
+            [(name, c.displacement()) for name, c in self._concepts.items()],
+            key=lambda x: -x[1]
+        )[:n]
+
+    def snapshot_matrix(self, timestamp: float) -> dict[str, Coord3D]:
+        """
+        Reconstruye las coordenadas de todos los conceptos tal como eran
+        en un momento dado (interpolando si hace falta).
+        Útil para "rebobinar" el espacio semántico.
+        """
+        result = {}
+        for name, c in self._concepts.items():
+            # Buscar la última posición archivada antes del timestamp
+            past = [s for s in c.coord_history if s.timestamp <= timestamp]
+            if past:
+                result[name] = past[-1].coords
+            else:
+                # O la posición actual si nunca se movió
+                result[name] = c.coords
+        return result
         """
         Evolución histórica de la definición de un concepto.
         Retorna lista de cambios con timestamp, añadidos y eliminados.
@@ -590,12 +742,17 @@ class SemanticMatrix3D:
         """Descripción completa de un concepto."""
         c = self.require(name)
         x, y, z = c.coords
+        orig = c.original_coords()
+        ox, oy, oz = orig
         lines = [
             f"┌─ Concepto: '{name}'",
             f"│  Coordenadas : ({x:.3f}, {y:.3f}, {z:.3f})",
+            f"│  Origen      : ({ox:.3f}, {oy:.3f}, {oz:.3f})  "
+            f"desplazamiento={c.displacement():.3f}  modo={c.drift_mode}",
             f"│  Definición  : {c.definition if c.definition else '(primitivo / sin definición)'}",
             f"│  Metadata    : {c.metadata if c.metadata else '{}'}",
-            f"│  Versiones   : {len(c.history)} cambios históricos",
+            f"│  Versiones   : {len(c.history)} cambios de definición  |  "
+            f"{len(c.coord_history)} pasos espaciales",
         ]
         nearest = self.nearest(name, n=3)
         lines.append(f"│  Vecinos     : {[(n, round(d, 2)) for n, d in nearest]}")
@@ -655,113 +812,150 @@ class SemanticMatrix3D:
 # DEMOSTRACIÓN COMPLETA
 # ─────────────────────────────────────────────
 
+    def definition_drift(self, name: str) -> list[dict]:
+        """
+        Evolución histórica de la definición de un concepto.
+        Retorna lista de cambios con timestamp, añadidos y eliminados.
+        """
+        c = self.require(name)
+        if not c.history:
+            return []
+        changes = []
+        prev = []
+        for snap in c.history:
+            added = [x for x in snap.definition if x not in prev]
+            removed = [x for x in prev if x not in snap.definition]
+            changes.append({
+                "timestamp": snap.timestamp,
+                "note": snap.note,
+                "added": added,
+                "removed": removed,
+                "definition": list(snap.definition),
+            })
+            prev = snap.definition
+        return changes
+
+
 def demo():
-    print("=" * 60)
-    print("  SISTEMA SEMÁNTICO 3D — DEMOSTRACIÓN")
-    print("=" * 60)
+    print("=" * 65)
+    print("  SISTEMA SEMÁNTICO 3D — TRES MODOS DE DERIVA")
+    print("=" * 65)
 
-    # ── Construir un universo semántico mínimo ──
-    m = SemanticMatrix3D("Filosofía-Ciencia")
+    m = SemanticMatrix3D("Demo-Deriva")
 
-    # Conceptos primitivos (sin definición → átomos del sistema)
-    m.add("ser",       (0.0, 0.0, 0.0))
-    m.add("no-ser",    (0.0, 0.0, 1.0))
-    m.add("tiempo",    (1.0, 0.0, 0.0))
-    m.add("espacio",   (0.0, 1.0, 0.0))
-    m.add("materia",   (1.0, 1.0, 0.0))
-    m.add("energía",   (1.0, 1.0, 1.0))
-    m.add("causa",     (0.5, 0.0, 0.5))
-    m.add("efecto",    (0.5, 0.1, 0.6))
-    m.add("mente",     (0.0, 0.5, 0.5))
-    m.add("conciencia",(0.1, 0.6, 0.6))
+    # ── Primitivos (anclas fijas del espacio) ──────────────────
+    m.add("materia",    (0.0, 0.0, 0.0))
+    m.add("vacío",      (1.0, 0.0, 0.0))
+    m.add("indivisible",(0.0, 1.0, 0.0))
+    m.add("divisible",  (1.0, 1.0, 0.0))
+    m.add("nuclear",    (0.5, 0.5, 1.0))
+    m.add("cuántico",   (0.5, 0.5, 2.0))
+    m.add("onda",       (0.0, 0.5, 1.5))
+    m.add("partícula",  (1.0, 0.5, 1.5))
 
-    # Conceptos compuestos (definidos por primitivos)
-    m.add("cambio",    (1.0, 0.0, 1.0), ["ser", "no-ser", "tiempo"])
-    m.add("movimiento",(1.1, 0.1, 1.0), ["cambio", "espacio", "tiempo"])
-    m.add("física",    (1.5, 1.5, 0.5), ["materia", "energía", "espacio", "tiempo"])
-    m.add("causalidad",(0.5, 0.5, 1.0), ["causa", "efecto", "tiempo"])
-    m.add("existencia",(0.2, 0.2, 0.2), ["ser", "espacio", "tiempo"])
-    m.add("mente-cuerpo", (0.5, 1.5, 0.5), ["mente", "materia", "causa"])
-    m.add("libre-albedrío", (0.3, 1.0, 0.8), ["conciencia", "causalidad", "mente"])
+    print("\n  Primitivos añadidos (posición fija, sin definición).")
 
-    print("\n" + m.summary())
+    # ── MODO 1: FIXED ──────────────────────────────────────────
+    # El concepto "átomo" según Demócrito (siglo V a.C.)
+    # Definición original: materia indivisible que existe en el vacío
+    atomo_fixed = m.add(
+        "átomo[FIXED]",
+        (0.2, 0.8, 0.1),                        # coordenada original
+        definition=["materia", "indivisible", "vacío"],
+        drift_mode=DriftMode.FIXED,
+        note="Demócrito ~400 a.C.",
+    )
 
-    # ── Describe un concepto ────────────────────
-    print("\n" + m.describe("libre-albedrío"))
+    print("\n── MODO FIXED ─────────────────────────────────────────────")
+    print(f"  Posición inicial: {atomo_fixed.coords}")
+    atomo_fixed.expand(["divisible", "nuclear"], note="Dalton 1808 — divisible pero atómico")
+    atomo_fixed.expand(["cuántico", "onda", "partícula"], note="Bohr/Heisenberg 1927")
+    print(f"  Posición final  : {atomo_fixed.coords}  (sin cambio)")
+    print(f"  Desplazamiento  : {atomo_fixed.displacement():.4f}  ← siempre 0")
+    print(f"  Definición actual: {atomo_fixed.definition}")
+    print(f"  Pasos espaciales: {len(atomo_fixed.coord_history)}")
 
-    # ── Camino semántico ────────────────────────
-    print("\n── Camino conceptual: 'libre-albedrío' → 'ser' ──")
-    path = m.path("libre-albedrío", "ser")
-    print(" → ".join(path) if path else "Sin camino directo")
+    # ── MODO 2: AUTO ───────────────────────────────────────────
+    # Misma historia, pero las coords se recalculan al centroide
+    atomo_auto = m.add(
+        "átomo[AUTO]",
+        (0.2, 0.8, 0.1),
+        definition=["materia", "indivisible", "vacío"],
+        drift_mode=DriftMode.AUTO,
+        note="Demócrito ~400 a.C.",
+    )
+    # Forzar la posición inicial como centroide de su definición actual
+    atomo_auto._maybe_drift(m, "inicio")
 
-    # ── Razonamiento analógico ──────────────────
-    print("\n── Analogía: movimiento : espacio :: causalidad : ? ──")
-    results = m.analogy("movimiento", "espacio", "causalidad", n=3)
-    for r, d in results:
-        print(f"   {r:20s}  (distancia vectorial: {d:.3f})")
+    print("\n── MODO AUTO ──────────────────────────────────────────────")
+    print(f"  Posición post-inicio: {tuple(round(v,3) for v in atomo_auto.coords)}")
 
-    # ── Primitivos de un concepto ───────────────
-    print("\n── Cadena de implicación (primitivos de 'libre-albedrío') ──")
-    prims = m.implication_chain("libre-albedrío")
-    print(f"  {prims}")
+    atomo_auto.expand(["divisible", "nuclear"], note="Dalton 1808", matrix=m)
+    print(f"  Posición post-Dalton: {tuple(round(v,3) for v in atomo_auto.coords)}")
 
-    # ── Ancestros comunes ───────────────────────
-    print("\n── Ancestros comunes: 'movimiento' y 'libre-albedrío' ──")
-    anc = m.common_ancestors("movimiento", "libre-albedrío")
-    print(f"  {anc}")
+    atomo_auto.expand(["cuántico", "onda", "partícula"], note="Bohr/Heisenberg 1927", matrix=m)
+    print(f"  Posición post-cuántica: {tuple(round(v,3) for v in atomo_auto.coords)}")
 
-    # ── Diferencia conceptual ───────────────────
-    print("\n── Diferencia: 'libre-albedrío' vs 'mente-cuerpo' ──")
-    solo_a, solo_b = m.difference("libre-albedrío", "mente-cuerpo")
-    print(f"  Solo en libre-albedrío : {solo_a}")
-    print(f"  Solo en mente-cuerpo   : {solo_b}")
+    print(f"  Desplazamiento  : {atomo_auto.displacement():.4f}  ← no hay historia, sólo coord actual")
+    print(f"  Pasos espaciales: {len(atomo_auto.coord_history)}  ← AUTO no archiva")
 
-    # ── Orden topológico ────────────────────────
-    print("\n── Orden topológico (precedencia) ──")
-    topo = m.topological_order()
-    if topo:
-        print("  " + " → ".join(topo))
-    else:
-        print("  Ciclos detectados — no hay orden lineal")
+    # ── MODO 3: TRAJECTORY ─────────────────────────────────────
+    # La más completa: se mueve Y guarda cada posición
+    atomo_traj = m.add(
+        "átomo[TRAJ]",
+        (0.2, 0.8, 0.1),
+        definition=["materia", "indivisible", "vacío"],
+        drift_mode=DriftMode.TRAJECTORY,
+        note="Demócrito ~400 a.C.",
+    )
+    atomo_traj._maybe_drift(m, "inicio")
 
-    # ── Clusters ────────────────────────────────
-    print("\n── Clusters semánticos (k=3) ──")
-    clusters = m.clusters_naive(k=3)
-    by_cluster: dict[int, list] = defaultdict(list)
-    for name, cid in clusters.items():
-        by_cluster[cid].append(name)
-    for cid, members in sorted(by_cluster.items()):
-        print(f"  Cluster {cid}: {members}")
+    print("\n── MODO TRAJECTORY ────────────────────────────────────────")
+    print(f"  Posición inicial : {tuple(round(v,3) for v in atomo_traj.coords)}")
 
-    # ── Evolución temporal de un concepto ───────
-    print("\n── Evolución temporal de 'causalidad' ──")
-    caus = m.require("causalidad")
-    caus.expand(["espacio"], note="revisión post-Kant")
-    time.sleep(0.01)
-    caus.reduce(["espacio"], note="vuelta al modelo clásico")
-    time.sleep(0.01)
-    caus.replace("causa", "acción", note="enfoque neocausal")
-    time.sleep(0.01)
-    caus.replace("acción", "causa", note="revert")
+    atomo_traj.expand(["divisible", "nuclear"], note="Dalton 1808", matrix=m)
+    atomo_traj.expand(["cuántico"], note="Bohr 1913", matrix=m)
+    atomo_traj.expand(["onda", "partícula"], note="De Broglie / Heisenberg 1927", matrix=m)
+    atomo_traj.reduce(["indivisible"], note="confirmación experimental — el átomo es divisible", matrix=m)
 
-    drift = m.definition_drift("causalidad")
-    for change in drift:
-        print(f"  [{change['note']}] +{change['added']} -{change['removed']}")
+    print(f"  Posición final   : {tuple(round(v,3) for v in atomo_traj.coords)}")
+    print(f"  Desplazamiento   : {atomo_traj.displacement():.4f}")
+    print(f"  Long. trayectoria: {atomo_traj.trajectory_length():.4f}")
+    print(f"  Velocidad media  : {atomo_traj.velocity():.4f}")
+    print(f"  Dirección deriva : {tuple(round(v,3) for v in atomo_traj.direction_of_drift())}")
+    print(f"  Pasos espaciales : {len(atomo_traj.coord_history)}")
 
-    # ── Mapa ASCII 2D ───────────────────────────
-    print("\n── Mapa ASCII (proyección plano XY) ──")
-    print(m.ascii_map(axis="z", width=50, height=15))
+    print("\n  Trayectoria completa:")
+    for step in m.coord_drift("átomo[TRAJ]"):
+        arrow = f"  Δ={step['delta']:.4f}" if "delta" in step else ""
+        print(f"    paso {step['step']}: {tuple(round(v,3) for v in step['coords'])}  "
+              f"[{step['note']}]{arrow}")
 
-    # ── Campo semántico ─────────────────────────
-    print("\n── Campo semántico de 'física' (profundidad 2) ──")
-    field = m.semantic_field("física", depth=2)
-    for concept, depth in sorted(field.items(), key=lambda x: x[1]):
-        indent = "  " * depth
-        print(f"  {indent}{'└─' if depth else '●'} {concept}")
+    # ── Snapshot histórico del espacio ─────────────────────────
+    print("\n── Snapshot del espacio en un momento pasado ─────────────")
+    # Tomar el timestamp del segundo paso de la trayectoria
+    if len(atomo_traj.coord_history) >= 2:
+        t_pasado = atomo_traj.coord_history[1].timestamp
+        snap = m.snapshot_matrix(t_pasado)
+        print(f"  'átomo[TRAJ]' en t={t_pasado:.3f}:")
+        coords_past = snap.get("átomo[TRAJ]")
+        if coords_past:
+            print(f"    {tuple(round(v,3) for v in coords_past)}")
 
-    print("\n" + "=" * 60)
-    print("  FIN DE LA DEMOSTRACIÓN")
-    print("=" * 60)
+    # ── Comparación final ──────────────────────────────────────
+    print("\n── Comparación de los tres modos ─────────────────────────")
+    print(f"  {'Modo':<14} {'Coords actuales':<28} {'Desplaz.':<12} {'Pasos'}")
+    print(f"  {'─'*14} {'─'*28} {'─'*12} {'─'*5}")
+    for name in ["átomo[FIXED]", "átomo[AUTO]", "átomo[TRAJ]"]:
+        c = m.require(name)
+        coord_str = str(tuple(round(v,3) for v in c.coords))
+        print(f"  {name:<14} {coord_str:<28} {c.displacement():<12.4f} {len(c.coord_history)}")
+
+    print("\n  Conclusión:")
+    print("  - FIXED     → identidad nominal: el concepto tiene una 'dirección postal' inmutable.")
+    print("  - AUTO      → identidad semántica: el concepto ES su significado actual.")
+    print("  - TRAJECTORY→ identidad continua: el concepto tiene historia y recorrido en el espacio.")
+    print("=" * 65)
 
 
 if __name__ == "__main__":
