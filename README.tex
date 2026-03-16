@@ -79,10 +79,17 @@ A diferencia de los LLMs, que almacenan el conocimiento de forma difusa y probab
 \section{Introduction}
 
 
-I believe the path we're exploring regarding artificial intelligence is misguided. I think what we've currently created—LLMs, Transformers—are merely advanced and sophisticated word processors that are useful but inert in the sense that they lack unique, living units from which all processing originates. My proposal is to take a different path and follow the model that nature has created with the human brain.
-To do this, it is necessary to analyze the behavior of the human brain from the perspective of memorizing what has been learned. For example. When a student is reading their university textbook to learn the concept of "bank", they read the definition: "an organization where people and businesses can invest" If they close their eyes immediately after reading it, they will be able to recall the sentence in its original order. Even speaking in the original order. The human brain is limited, so this only works if the sentence is short. To memorize the entire page in its original order, they would have to repeat it many times.
+I believe the path we're exploring regarding artificial intelligence is misguided.
+I think what we've currently created—LLMs, Transformers—are merely advanced and sophisticated word processors that are useful but knowledge is scattered and the architecture does not have an atomic element like the neuron would be for a brain.
+My proposal is to take a different path and follow the model that nature has created with the human brain.
+To do this, it is necessary to analyze the behavior of the human brain from the perspective of memorizing what has been learned.
+For example. When a business student is reading their university textbook to learn the concept of "bank", they read the definition: "an organization where people and businesses can invest". 
+If they close their eyes immediately after reading it, they will be able to recall the sentence in its original order.
+Even repeat it with the voice in the original order.
+The human brain is limited, so this only works if the sentence is short.
+To memorize the entire page in its original order they would have to repeat it many times.
 
-But in the student's example, it was only done once. From this action, we can conclude that:
+From the learning process of the business student we can conjecture the following:
 \begin{itemize}
 \item The student associated the definition with the concept.
 
@@ -129,15 +136,29 @@ In the human brain there is nothing superior to the concept. The concept is a ba
 \end{array}
 \]
 
-The sign "Car" is just a human convention to refer to the concept of a car. In Italian the sign is "Macchina" and in French "Voiture".
-In current LLM models, tokenization or embedding distorts the original sign of words.
+The linguistic sign "Car" is just a human convention to refer to the concept of a car. In italian the sign is "Macchina" and in french "Voiture".
+In current (LLM) models, tokenization or embedding distorts the original sign of words.
 They become abstract and fragmented data. This is incorrect because the human brain does not do this.
 The original words, letters, and symbols must be respected as they are the direct reference to the concept.
-Fragmentation “kills” the reference to concepts.
-The same applies to lines and paragraphs; these units must be respected in their original order during training.
+That is, fragmentation “kills” the reference to concepts.
+
+The linguistic sign "Bank" can be used to refer to two concepts. 1. Geography bank to refer to the bank of a river. and 2. Financial bank to refer to a business bank.
+
+An (LLM) needs a transformer to determine which word is being discussed based on the context. This is not a natural process. The correct approach is to treat each word in a paragraph as a concept. A concept cannot have two definitions. A concept establishes boundaries according to its definition.
+
 \[
-\text{Sign} \xrightarrow{} \text{Line} \xrightarrow{} \text{Paragraph} \xrightarrow{} \text{Document}
+\begin{array}{rcccl}
+	\text{Bank}_{\text{finance}} & \quad & \text{vs.} & \quad & \text{Bank}_{\text{geography}}
+\end{array}
 \]
+
+If a (LLM) knows the semantic signature of a word during its training, then later when it receives a prompt it can know what concept it is and does not need a transformer.
+
+But how can two different signatures be applied using the same word "Bank"?
+Simply assigning a signature (\textbf{bank\textunderscore geography}) or (\textbf{bank\textunderscore finance}) during training since that is the moment when the concept of what is being learned is fully understood.
+A semantic system based on concepts and their recursive definitions as a 3-dimensional topological semantic matrix. That is, a SemanticMatrix3D.
+
+
 As mentioned earlier, in the student example. The student can recall what they have studied in its original order. Word by word. Line by line. And if he has the ability to memorize more, he can also do it paragraph by paragraph throughout the whole document.
 
 The definition of a concept is a set of concepts making it a recursive system.
@@ -158,19 +179,7 @@ $$\begin{array}{|c|c|c|}
 	& \text{Pine} \downarrow & \\ \hline
 \end{array}$$
 
-$$\begin{array}{|c|c|c|} 
-	\hline 
-	& \text{Galaxy} \downarrow & \\ \hline 
-	\text{Nebula} \longrightarrow  & \mathbf{\text{Planet}} & \text{Life } \longrightarrow \\ \hline 
-	& \text{Core} \downarrow & \\ \hline
-\end{array}$$
 
-
-% ═════════════════════════════════════════════════════════════════
-\section{BAN}
-% ═════════════════════════════════════════════════════════════════
-
-symbol doesnt matter. Must be unique.
 
 % ═════════════════════════════════════════════════════════════════
 \section{Matrix of concepts}
