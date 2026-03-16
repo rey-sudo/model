@@ -1,5 +1,5 @@
 from typing import Self
-import src.concepts as c
+import src.other as c
 from src.neuron.neuron import Neuron
 
 neuron = Neuron()

@@ -1,4 +1,4 @@
-import src.concepts as c
+import src.other as c
 
 class Not:
     def __init__(self, state: int):

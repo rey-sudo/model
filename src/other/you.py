@@ -1,5 +1,5 @@
 from typing import Self
-import src.concepts as c
+import src.other as c
 
 class You:
     def __init__(self, state: int):
