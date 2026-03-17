@@ -1,10 +1,7 @@
 <template>
   <div class="chart-wrapper">
     <div ref="plotlyChart" class="plotly-container"></div>
-
-    <div v-if="loading" class="loading-overlay">
-      Cargando visualización 3D...
-    </div>
+    <div v-if="loading" class="loading-overlay">Cargando matriz...</div>
   </div>
 </template>
 
@@ -16,7 +13,6 @@ const loading = ref(true);
 let Plotly = null;
 
 const props = defineProps({
-  // Puntos periféricos
   points: {
     type: Object,
     required: true,
@@ -27,129 +23,146 @@ const props = defineProps({
       labels: ["Punto A", "Punto B", "Punto C", "Punto D"],
     }),
   },
-  // Punto al que todos apuntan (por defecto el origen)
   target: {
     type: Object,
     default: () => ({ x: 0, y: 0, z: 0, label: "CENTRO" }),
   },
 });
 
-const buildStarStructure = () => {
-  const x = [];
-  const y = [];
-  const z = [];
-  const text = [];
+const buildDataStructure = () => {
+  const x = [],
+    y = [],
+    z = [],
+    text = [],
+    colors = [],
+    sizes = [];
 
-  // Construimos segmentos individuales: Punto[i] -> Target -> null
+  const colorPeriferico = "#e74c3c"; // Rojo
+  const colorCentro = "#3177b4"; // Azul
+
   for (let i = 0; i < props.points.x.length; i++) {
-    // 1. Punto de la matriz
+    // 1. Punto Periférico
     x.push(props.points.x[i]);
     y.push(props.points.y[i]);
     z.push(props.points.z[i]);
     text.push(props.points.labels[i] || `Punto ${i}`);
+    colors.push(colorPeriferico);
+    sizes.push(8); // Tamaño normal
 
-    // 2. Punto destino (Centro)
+    // 2. Punto Central (Destino)
     x.push(props.target.x);
     y.push(props.target.y);
     z.push(props.target.z);
     text.push(props.target.label);
+    colors.push(colorCentro);
+    sizes.push(18); // Más grande
 
-    // 3. Corte de línea (Null) para que no se unan entre sí
+    // 3. Null para separar líneas
     x.push(null);
     y.push(null);
     z.push(null);
     text.push(null);
+    colors.push("rgba(0,0,0,0)");
+    sizes.push(0);
   }
 
-  return { x, y, z, text };
+  return { x, y, z, text, colors, sizes };
 };
 
 const drawChart = async () => {
   if (!process.client) return;
 
-  // Carga dinámica de Plotly para evitar errores de SSR
-  if (!Plotly) {
-    const module = await import("plotly.js-dist-min");
-    Plotly = module.default || module;
-  }
+  try {
+    if (!Plotly) {
+      const module = await import("plotly.js-dist-min");
+      Plotly = module.default || module;
+    }
 
-  const starData = buildStarStructure();
+    const s = buildDataStructure();
 
-  const trace = {
-    type: "scatter3d",
-    mode: "lines+markers",
-    x: starData.x,
-    y: starData.y,
-    z: starData.z,
-    text: starData.text,
-    hoverinfo: "text+x+y+z",
-    line: {
-      color: "#3177b4",
-      width: 3,
-      opacity: 0.6,
-    },
-    marker: {
-      size: 8,
-      color: "#e74c3c",
-      symbol: "circle",
+    const trace = {
+      type: "scatter3d",
+      mode: "lines+markers+text",
+      x: s.x,
+      y: s.y,
+      z: s.z,
+      text: s.text,
+      hoverinfo: "text+x+y+z",
       line: {
-        color: "white",
-        width: 1,
+        color: "#3177b4",
+        width: 2,
+        opacity: 0.4,
       },
-    },
-  };
-
-  const layout = {
-    autosize: true,
-    height: 600,
-    dragmode: "turntable",
-    scene: {
-      xaxis: { title: "X", backgroundcolor: "#f0f0f0", showbackground: true },
-      yaxis: { title: "Y", backgroundcolor: "#f0f0f0", showbackground: true },
-      zaxis: { title: "Z", backgroundcolor: "#f0f0f0", showbackground: true },
-      camera: {
-        up: { x: 0, y: 0, z: 1 },
-        center: { x: 0, y: 0, z: 0 },
-        eye: { x: 1.5, y: 1.5, z: 1.2 },
+      marker: {
+        size: s.sizes, // Array de tamaños
+        color: s.colors, // Array de colores
+        symbol: "circle",
+        line: { color: "white", width: 1 },
       },
-      aspectmode: "cube",
-    },
-    margin: { l: 0, r: 0, b: 0, t: 40 },
-    paper_bgcolor: "rgba(0,0,0,0)",
-    plot_bgcolor: "rgba(0,0,0,0)",
-  };
+    };
 
-  const config = {
-    scrollZoom: true,
-    responsive: true,
-    displaylogo: false,
-    modeBarButtonsToRemove: ["sendDataToCloud", "lasso2d", "select2d"],
-  };
+    const layout = {
+      autosize: true,
+      height: 600,
+      dragmode: "turntable", // Rotación estable
+      scene: {
+        fixedratio: true,
+        aspectmode: "cube",
+        xaxis: {
+          title: "X",
+          zerolinecolor: "#000000",
+          showline: true,
 
-  Plotly.react(plotlyChart.value, [trace], layout, config);
-  loading.value = false;
+          showbackground: true,
+          backgroundcolor: "#f0f0f0",
+        },
+        yaxis: {
+          title: "Y",
+          zerolinecolor: "#000000",
+          showline: true,
+        },
+        zaxis: {
+          title: "Z",
+          zerolinecolor: "#000000",
+          showline: true,
+        },
+        camera: {
+          projection: {
+            type: "orthographic",
+          },
+          up: { x: 0, y: 0, z: 1 }, // Z siempre arriba
+          eye: { x: 1.5, y: 1.5, z: 1.5 },
+        },
+      },
+      margin: { l: 0, r: 0, b: 0, t: 30 },
+    };
+
+    const config = { responsive: true, displaylogo: false };
+
+    Plotly.react(plotlyChart.value, [trace], layout, config);
+    loading.value = false;
+  } catch (err) {
+    console.error("Error cargando Plotly:", err);
+  }
 };
 
-// Observar cambios en los datos para redibujar
 watch(
   () => [props.points, props.target],
-  () => {
-    drawChart();
-  },
+  () => drawChart(),
   { deep: true },
 );
 
 onMounted(() => {
   drawChart();
-  window.addEventListener("resize", () =>
-    Plotly?.Plots.resize(plotlyChart.value),
-  );
+  window.addEventListener("resize", onResize);
 });
 
+const onResize = () => {
+  if (Plotly && plotlyChart.value) Plotly.Plots.resize(plotlyChart.value);
+};
+
 onBeforeUnmount(() => {
-  window.removeEventListener("resize", () =>
-    Plotly?.Plots.resize(plotlyChart.value),
-  );
+  window.removeEventListener("resize", onResize);
 });
 </script>
 
@@ -158,15 +171,12 @@ onBeforeUnmount(() => {
   position: relative;
   width: 100%;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
 }
-
 .plotly-container {
   width: 100%;
   min-height: 600px;
 }
-
 .loading-overlay {
   position: absolute;
   top: 0;
@@ -176,8 +186,6 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.8);
-  font-family: sans-serif;
-  z-index: 10;
+  background: rgba(255, 255, 255, 0.7);
 }
 </style>
