@@ -112,9 +112,6 @@ const drawChart = async () => {
           title: "X",
           zerolinecolor: "#000000",
           showline: true,
-
-          showbackground: true,
-          backgroundcolor: "#f0f0f0",
         },
         yaxis: {
           title: "Y",
