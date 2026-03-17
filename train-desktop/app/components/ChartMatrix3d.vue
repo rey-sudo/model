@@ -105,23 +105,51 @@ const drawChart = async () => {
       autosize: true,
       height: 600,
       dragmode: "turntable", // Rotación estable
+      hovermode: 'closest',
       scene: {
         fixedratio: true,
         aspectmode: "cube",
         xaxis: {
-          title: "X",
+          title: {
+            text: "X Axis",
+            font: {
+              color: "#ff5733",
+              size: 14,
+              family: "Arial, sans-serif",
+            },
+          },
           zerolinecolor: "#000000",
           showline: true,
+          mirror: false,
+          
+          showbackground: true,
+          backgroundcolor: "#f0f0f0"
         },
         yaxis: {
-          title: "Y",
+          title: {
+            text: "Y Axis",
+            font: {
+              color: "#2ecc71",
+              size: 14,
+              family: "Arial, sans-serif",
+            },
+          },
           zerolinecolor: "#000000",
           showline: true,
+          mirror: false,
         },
         zaxis: {
-          title: "Z",
+          title: {
+            text: "Z Axis",
+            font: {
+              color: "#3498db",
+              size: 14,
+              family: "Arial, sans-serif",
+            },
+          },
           zerolinecolor: "#000000",
           showline: true,
+          mirror: false,
         },
         camera: {
           projection: {
