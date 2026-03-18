@@ -24,7 +24,7 @@
       color="neutral"
       variant="ghost"
       size="sm"
-      >Semantic</UButton
+      >Memory</UButton
     >
 
     <UColorModeButton />
