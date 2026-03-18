@@ -19,7 +19,7 @@ const initialJson = {
       content: [
         {
           type: "text",
-          text: `As part of an interdisciplinary field, psychologists are involved in research on perception, cognition, attention, emotion, intelligence, subjective experiences, motivation, brain functioning, and personality. Psychologists' interests extend to interpersonal relationships, psychological resilience, family resilience, and other areas within social psychology. They also consider the unconscious mind. Research psychologists employ empirical methods to infer causal and correlational relationships between psychosocial variables. Some, but not all, clinical and counseling psychologists rely on symbolic interpretation.`,
+          text: `The West Bank is a landlocked territory near the Mediterranean coast of Western Asia, bordered by Jordan to the east and Israel to the north, south, and west. It is a region of immense historical and religious significance, housing ancient cities like Jericho, Hebron, and Bethlehem. Its landscape is characterized by rugged limestone hills and vast olive groves that have been cultivated for generations. Despite its cultural richness, the area is defined by a complex geopolitical reality and a fragmented administrative structure. This ongoing situation creates significant challenges for the daily lives and mobility of its residents, keeping the region at the center of international diplomatic focus.`,
         },
       ],
     },
@@ -40,21 +40,15 @@ const editor = useEditor({
 
 <style lang="css">
 .editor-scroll-container {
-  /* Define la altura que prefieras */
   height: 500px; 
-  /* O usa max-height si quieres que crezca hasta cierto punto */
-  /* max-height: 70vh; */
-  
   overflow-y: auto;
   padding: 1rem;
   border-radius: 8px;
 }
 
-/* Opcional: Quitar el outline azul al hacer foco para que se vea más limpio */
 :deep(.tiptap:focus) {
   outline: none;
 }
-
 
 .tiptap {
   outline: none;

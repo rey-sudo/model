@@ -1,6 +1,15 @@
 <template>
   <div class="header flex center gap-1">
     <UButton
+      :class="{ tabActive: isTabActive('TabSign') }"
+      @click="tabStore.selectTab('TabSign')"
+      color="neutral"
+      variant="ghost"
+      size="sm"
+      >LSign</UButton
+    >
+
+    <UButton
       :class="{ tabActive: isTabActive('TabTrain') }"
       @click="tabStore.selectTab('TabTrain')"
       color="neutral"
@@ -27,8 +36,8 @@ import { useTabStore } from "~/stores/tab";
 
 const tabStore = useTabStore();
 
-function isTabActive(tabName: string){
-  return tabStore.activeTab === tabName
+function isTabActive(tabName: string) {
+  return tabStore.activeTab === tabName;
 }
 </script>
 
