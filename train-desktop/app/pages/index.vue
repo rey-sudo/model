@@ -1,18 +1,33 @@
 <template>
-  <component :is="tabs[tabStore.activeTab as TabKey]" class="mt-4" />
+  <div class="tabs-content">
+    <component 
+      v-for="(component, name) in tabs" 
+      :key="name"
+      :is="component"
+      v-show="tabStore.activeTab === name"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
-import TrainTab from "@/components/TabTrain.vue";
+import { markRaw } from 'vue';
 import { useTabStore } from "~/stores/tab";
+import TabTrain from "@/components/TabTrain.vue";
+import TabSemantic from "@/components/TabSemantic.vue";
 
 const tabStore = useTabStore();
 
+
 const tabs = {
-  TrainTab: TrainTab,
+  TabTrain: markRaw(TabTrain),
+  TabSemantic: markRaw(TabSemantic)
 };
 
-type TabKey = keyof typeof tabs
 </script>
 
-<style lang="css" scoped></style>
+<style scoped>
+.tabs-content {
+  width: 100%;
+  height: 100%;
+}
+</style>

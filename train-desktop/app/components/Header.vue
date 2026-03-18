@@ -1,16 +1,16 @@
 <template>
   <div class="header flex center gap-1">
     <UButton
-      :class="{ tabActive: isTabActive('TrainTab') }"
-      @click="tabStore.selectTab('TrainTab')"
+      :class="{ tabActive: isTabActive('TabTrain') }"
+      @click="tabStore.selectTab('TabTrain')"
       color="neutral"
       variant="ghost"
       >Train</UButton
     >
 
     <UButton
-      :class="{ tabActive: isTabActive('Semantic') }"
-      @click="tabStore.selectTab('Semantic')"
+      :class="{ tabActive: isTabActive('TabSemantic') }"
+      @click="tabStore.selectTab('TabSemantic')"
       color="neutral"
       variant="ghost"
       >Semantic</UButton

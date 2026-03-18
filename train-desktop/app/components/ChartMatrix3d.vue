@@ -103,9 +103,9 @@ const drawChart = async () => {
 
     const layout = {
       autosize: true,
-      height: 600,
+      height: 500,
       dragmode: "turntable", // Rotación estable
-      hovermode: 'closest',
+      hovermode: "closest",
       scene: {
         fixedratio: true,
         aspectmode: "cube",
@@ -121,9 +121,9 @@ const drawChart = async () => {
           zerolinecolor: "#000000",
           showline: true,
           mirror: false,
-          
+
           showbackground: true,
-          backgroundcolor: "#f0f0f0"
+          backgroundcolor: "#f0f0f0",
         },
         yaxis: {
           title: {
@@ -212,14 +212,20 @@ const puntoCentral = {
 
 <style scoped>
 .chart-wrapper {
-  position: relative;
   width: 100%;
-  background: #fff;
-  border-radius: 8px;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  justify-content: center;
+  background: var(--color-white);
+  border-radius: var(--chart-radius);
+  border: 1px solid var(--color-border);
 }
 .plotly-container {
   width: 100%;
-  min-height: 600px;
+  height: 100%;
 }
 .loading-overlay {
   position: absolute;

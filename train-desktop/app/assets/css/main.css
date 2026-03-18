@@ -34,6 +34,9 @@
   --color-input-text: #111827;
 
   --ui-radius: 0rem;
+  --chart-radius: 0.5rem;
+
+  --color-white: #ffffff;
 }
 
 .dark {
@@ -70,7 +73,7 @@
 
 
 * {
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: "Inter", sans-serif;
   font-optical-sizing: auto;
   font-style: normal;
 }
