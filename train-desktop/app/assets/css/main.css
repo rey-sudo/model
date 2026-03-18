@@ -6,6 +6,7 @@
   /* Fondo y texto */
   --color-bg: #ffffff;
   --color-text: #0f172a;
+  --color-text-secondary: #64748b;
 
   /* Superficies (cards, modales) */
   --color-surface: #f8fafc;
@@ -44,6 +45,7 @@
   /* Fondo y texto */
   --color-bg: #020617;
   --color-text: #e5e7eb;
+  --color-text-secondary: #cbd5f5;
 
   /* Superficies */
   --color-surface: #0f172a;
