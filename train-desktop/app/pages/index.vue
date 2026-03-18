@@ -1,26 +1,18 @@
 <template>
-    <div>
-       <ChartMatrix3d :points="misDatos" :target="puntoCentral"/>
-    </div>
+  <component :is="tabs[tabStore.activeTab as TabKey]" class="mt-4" />
 </template>
 
-<script setup>
-const misDatos = {
-  x: [8298.85, 3047.98, 2934.95],
-  y: [8759.67, 3781.44, 1110.77],
-  z: [62.87, 887.32, 7063.16],
-  labels: ["vehicle", "wheels", "gas"]
+<script setup lang="ts">
+import TrainTab from "@/components/TabTrain.vue";
+import { useTabStore } from "~/stores/tab";
+
+const tabStore = useTabStore();
+
+const tabs = {
+  TrainTab: TrainTab,
 };
 
-const puntoCentral = {
-  x: 4200.24,
-  y: 6149.22,
-  z: 2799.93,
-  label: 'car'
-};
-
+type TabKey = keyof typeof tabs
 </script>
 
-<style lang="css" scoped>
-
-</style>
+<style lang="css" scoped></style>
