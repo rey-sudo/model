@@ -12,7 +12,7 @@ doc = nlp(block)
 tags_interes = ["NOUN", "PROPN", "VERB", "ADJ"] # "PRON", "ADV", "ADP", "DET", "AUX"
 
 data_nlp = {
-    tag: list(set(token.text for token in doc if token.pos_ == tag))
+    tag: list(set(token.lemma_ for token in doc if token.pos_ == tag))
     for tag in tags_interes
 }
 

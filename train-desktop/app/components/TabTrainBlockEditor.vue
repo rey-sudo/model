@@ -1,5 +1,5 @@
 <template>
-<div class="editor-scroll-container">
+  <div class="editor-scroll-container">
     <editor-content :editor="editor" />
   </div>
 </template>
@@ -40,10 +40,12 @@ const editor = useEditor({
 
 <style lang="css">
 .editor-scroll-container {
-  height: 500px; 
+  height: 100%;
   overflow-y: auto;
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: var(--card-radius);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
 }
 
 :deep(.tiptap:focus) {

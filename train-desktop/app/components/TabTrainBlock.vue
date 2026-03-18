@@ -1,17 +1,17 @@
 <template>
   <div class="tab-train-block">
-    <Block />
+    <TabTrainBlockEditor />
+    <TabTrainBlockControl />
   </div>
 </template>
 
-<script setup>
-
-</script>
+<script setup></script>
 
 <style lang="css" scoped>
 .tab-train-block {
-  border-radius: var(--card-radius);
-  background: var(--color-white);
-  border: 1px solid var(--color-border);
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 50vh 1fr;
+  gap: 1rem;
 }
 </style>
