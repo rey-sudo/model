@@ -5,6 +5,7 @@
       @click="tabStore.selectTab('TabTrain')"
       color="neutral"
       variant="ghost"
+      size="sm"
       >Train</UButton
     >
 
@@ -13,6 +14,7 @@
       @click="tabStore.selectTab('TabSemantic')"
       color="neutral"
       variant="ghost"
+      size="sm"
       >Semantic</UButton
     >
 

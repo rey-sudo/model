@@ -1,12 +1,10 @@
 <template>
-  <div class="tabs-content">
     <component 
       v-for="(component, name) in tabs" 
       :key="name"
       :is="component"
       v-show="tabStore.activeTab === name"
     />
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -26,8 +24,5 @@ const tabs = {
 </script>
 
 <style scoped>
-.tabs-content {
-  width: 100%;
-  height: 100%;
-}
+
 </style>

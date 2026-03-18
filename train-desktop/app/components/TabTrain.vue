@@ -6,7 +6,7 @@
       class="bg-[var(--color-surface)] p-4 overflow-y-auto border-r border-[var(--color-border)]"
     ></aside>
 
-    <main class="p-4 grid gap-4">
+    <main class="p-4 grid gap-4 box-border">
       <ChartMatrix3d :points="misDatos" , :target="puntoCentral" />
       <Console />
     </main>
