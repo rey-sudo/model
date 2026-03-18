@@ -1,6 +1,4 @@
 <template>
-  <UHeader title="Train">
-    <UColorModeButton />
- </UHeader>
+  <Header/>
   <NuxtPage />
 </template>

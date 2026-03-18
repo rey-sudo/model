@@ -1,2 +1,76 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+
+
+:root {
+  /* Fondo y texto */
+  --color-bg: #ffffff;
+  --color-text: #0f172a;
+
+  /* Superficies (cards, modales) */
+  --color-surface: #f8fafc;
+  --color-surface-2: #e2e8f0;
+
+  /* Bordes */
+  --color-border: #e5e7eb;
+
+  /* Primario */
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-text: #ffffff;
+
+  /* Secundario */
+  --color-secondary: #64748b;
+  --color-secondary-text: #ffffff;
+
+  /* Estados */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+
+  /* Inputs */
+  --color-input-bg: #ffffff;
+  --color-input-border: #d1d5db;
+  --color-input-text: #111827;
+
+  --ui-radius: 0rem;
+}
+
+.dark {
+  /* Fondo y texto */
+  --color-bg: #020617;
+  --color-text: #e5e7eb;
+
+  /* Superficies */
+  --color-surface: #0f172a;
+  --color-surface-2: #1e293b;
+
+  /* Bordes */
+  --color-border: #334155;
+
+  /* Primario */
+  --color-primary: #60a5fa;
+  --color-primary-hover: #3b82f6;
+  --color-primary-text: #020617;
+
+  /* Secundario */
+  --color-secondary: #94a3b8;
+  --color-secondary-text: #020617;
+
+  /* Estados */
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+
+  /* Inputs */
+  --color-input-bg: #0f172a;
+  --color-input-border: #334155;
+  --color-input-text: #e5e7eb;
+}
+
+
+* {
+  font-family: "IBM Plex Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
