@@ -1,6 +1,6 @@
 <template>
   <div
-    class="h-screen box-border grid grid-cols-1 md:grid-cols-[200px_1fr_550px] "
+    class="h-screen box-border grid grid-cols-1 md:grid-cols-[200px_1fr_550px]"
   >
     <aside
       class="bg-[var(--color-surface)] p-4 overflow-y-auto border-r border-[var(--color-border)]"
@@ -13,7 +13,9 @@
 
     <aside
       class="bg-[var(--color-surface)] p-4 overflow-y-auto border-l border-[var(--color-border)]"
-    ></aside>
+    >
+      <TabTrainBlock />
+    </aside>
   </div>
 </template>
 
