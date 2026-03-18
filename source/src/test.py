@@ -1,4 +1,3 @@
-# Load English tokenizer, tagger, parser and NER
 import json
 import spacy
 
