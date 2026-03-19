@@ -20,6 +20,7 @@ smap, cascade = sign_manager.get_cascade_from_block(block)
 #print(imap)
 #print(smap)
 print(cascade)
+
 bam = BAM(total_signs=CONTEXT_LENGTH, sign_size_px=SIGN_SIZE_PX)  
 
 def train(bam, cascade):
@@ -32,10 +33,9 @@ def train(bam, cascade):
         Image.fromarray(canvas).save(f"cascada_{i}.png")
         
     bam.flush() 
-    
+    print(json.dumps(memory_report(bam), indent=4, ensure_ascii=False))
 
 train(bam, cascade)   
-print(json.dumps(memory_report(bam), indent=4, ensure_ascii=False))
 
 #============================================================================
 
