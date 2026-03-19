@@ -1,1 +1,1 @@
-A cat is a small furry animal with sharp teeth and whiskers
+The domestic cat is the only domesticated species of the family Felidae.

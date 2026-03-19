@@ -44,10 +44,10 @@ class SignManager:
         
         mapped_by_indices = self._map_coords(block_coords)
         mapped_by_coords = self._map_coords_reverse(block_coords)
-        
+   
         cascade = {i: list(range(i + 1)) for i in range(len(mapped_by_indices))}
     
-        return mapped_by_coords, cascade
+        return mapped_by_indices, mapped_by_coords, cascade
     
     def load_block_file(self, path: Path):
         try:
@@ -79,9 +79,8 @@ class SignManager:
         canvas = create_canvas_row(value=values, sign_size_px=sign_size_px, total_signs=total_signs)
         return canvas
         
-    def decode_labels(self, ranking_label, smap):
-        smap_keys = list(smap.keys())
+    def decode_labels(self, ranking_label, imap):
+        resultado = [self.LSIGN[imap[int(n)]] for n in ranking_label.split(",")]
         
-        resultado = [self.LSIGN[smap_keys[int(n)]] for n in ranking_label.split(",")]
              
         return " ".join(resultado)
