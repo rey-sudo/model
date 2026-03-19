@@ -38,7 +38,7 @@ const buildDataStructure = () => {
     sizes = [];
 
   const colorPeriferico = "#e74c3c"; // Rojo
-  const colorCentro = "#3177b4"; // Azul
+  const colorCentro = "rgba(49, 119, 180, 0.8)"; // Azul
 
   for (let i = 0; i < props.points.x.length; i++) {
     // 1. Punto Periférico
@@ -55,7 +55,7 @@ const buildDataStructure = () => {
     z.push(props.target.z);
     text.push(props.target.label);
     colors.push(colorCentro);
-    sizes.push(18); // Más grande
+    sizes.push(20); // Más grande
 
     // 3. Null para separar líneas
     x.push(null);
@@ -89,9 +89,9 @@ const drawChart = async () => {
       text: s.text,
       hoverinfo: "text+x+y+z",
       line: {
-        color: "#3177b4",
-        width: 1,
-        opacity: 0.1,
+        color: "rgba(49, 119, 180, 0.5)",
+        width: 2,
+        opacity: 1,
       },
       marker: {
         size: s.sizes, // Array de tamaños
@@ -106,6 +106,7 @@ const drawChart = async () => {
       height: 500,
       dragmode: "turntable", // Rotación estable
       hovermode: "closest",
+      margin: { l: 0, r: 0, b: 0, t: 0 },
       scene: {
         fixedratio: true,
         aspectmode: "cube",
@@ -146,17 +147,20 @@ const drawChart = async () => {
               family: "Arial, sans-serif",
             },
           },
+          tickfont: {
+            color: "#64748b",
+          },
           zerolinecolor: "#000000",
           showline: true,
           mirror: false,
-          showticklabels: true,
+          showticklabels: false,
         },
         camera: {
           projection: {
             type: "orthographic",
           },
           up: { x: 0, y: 0, z: 1 }, // Z siempre arriba
-          eye: { x: 3, y: 1.5, z: 1.5 },
+          eye: { x: 1.5, y: 1.5, z: 1.5 },
         },
       },
       margin: { l: 0, r: 0, b: 0, t: 30 },
