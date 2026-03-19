@@ -19,8 +19,8 @@ sign_manager = SignManager()
 block = sign_manager.load_block_file(path=INPUT_PATH / "block.md")
 smap, cascade = sign_manager.get_cascade_from_block(block)
 
-#print(imap)
-#print(smap)
+
+print(smap)
 print(cascade)
 
 bam = BAM(total_signs=CONTEXT_LENGTH, sign_size_px=SIGN_SIZE_PX)  
