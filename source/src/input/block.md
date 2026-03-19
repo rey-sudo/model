@@ -1,1 +1,1 @@
-A cat is a small, carnivorous mammal known for its independence and agility. Characterized by retractable claws, keen night vision, and a flexible body, it serves as both a skilled predator and a loyal companion. This domestic feline communicates through subtle body language, purring, and various vocalizations within human environments.
+A cat is a small carnivorous mammal known for its independence and agility

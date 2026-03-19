@@ -73,10 +73,9 @@ class SignManager:
         canvas = create_canvas_row(value=values, sign_size_px=sign_size_px, total_signs=total_signs)
         return canvas
         
-    def decode_labels(self, label_str, referencia):
-        valores_lista = list(referencia.keys())
-        indices = [int(n) for n in label_str.split(",")]
-       
-        resultado = [self.LSIGN[valores_lista[idx]] for idx in indices]
-
+    def decode_labels(self, ranking_label, smap):
+        smap_keys = list(smap.keys())
+        
+        resultado = [self.LSIGN[smap_keys[int(n)]] for n in ranking_label.split(",")]
+             
         return " ".join(resultado)
