@@ -37,8 +37,8 @@ const buildDataStructure = () => {
     colors = [],
     sizes = [];
 
-  const colorPeriferico = "#e74c3c"; // Rojo
-  const colorCentro = "rgba(49, 119, 180, 0.8)"; // Azul
+  const colorPeriferico = "#e74c3c"; 
+  const colorCentro = "rgba(49, 119, 180, 1)"; 
 
   for (let i = 0; i < props.points.x.length; i++) {
     // 1. Punto Periférico
@@ -82,22 +82,26 @@ const drawChart = async () => {
 
     const trace = {
       type: "scatter3d",
-      mode: "lines+markers+text",
+      mode: "lines+markers",
       x: s.x,
       y: s.y,
       z: s.z,
       text: s.text,
+      textposition: "top center", 
+      textfont: {
+        color: "#64748b", 
+        size: 12
+      },
       hoverinfo: "text+x+y+z",
       line: {
-        color: "rgba(49, 119, 180, 0.5)",
+        color: "rgba(49, 119, 180, 1)",
         width: 2,
-        opacity: 1,
       },
       marker: {
         size: s.sizes, // Array de tamaños
         color: s.colors, // Array de colores
         symbol: "circle",
-        line: { color: "white", width: 1 },
+        line: { color: "rgba(0,0,0,1)", width: 1 },
       },
     };
 
@@ -114,7 +118,7 @@ const drawChart = async () => {
           title: {
             text: "X Axis",
             font: {
-              color: "#ff5733",
+              color: "#64748b",
               size: 14,
               family: "Arial, sans-serif",
             },
@@ -123,12 +127,13 @@ const drawChart = async () => {
           showline: true,
           mirror: false,
           showticklabels: false,
+          showspikes: false
         },
         yaxis: {
           title: {
             text: "Y Axis",
             font: {
-              color: "#2ecc71",
+              color: "#64748b",
               size: 14,
               family: "Arial, sans-serif",
             },
@@ -137,12 +142,13 @@ const drawChart = async () => {
           showline: true,
           mirror: false,
           showticklabels: false,
+          showspikes: false
         },
         zaxis: {
           title: {
             text: "Z Axis",
             font: {
-              color: "#3498db",
+              color: "#64748b",
               size: 14,
               family: "Arial, sans-serif",
             },
@@ -154,6 +160,7 @@ const drawChart = async () => {
           showline: true,
           mirror: false,
           showticklabels: false,
+          showspikes: false
         },
         camera: {
           projection: {
