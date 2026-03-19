@@ -10,7 +10,7 @@ from dicts.codec import create_canvas_row
 
 INPUT_PATH = Path("input")
 SIGN_SIZE_PX = 9
-CONTEXT_LENGTH = 1_000
+CONTEXT_LENGTH = 100
 
 sign_manager = SignManager()
 
@@ -40,7 +40,7 @@ print(json.dumps(memory_report(bam), indent=4, ensure_ascii=False))
 
 #============================================================================
 
-sign_input = sign_manager.block_to_canvas(block="a cat is", smap=smap, sign_size_px=bam.sign_size_px, total_signs=CONTEXT_LENGTH)
+sign_input = sign_manager.block_to_canvas(block="a cat is small", smap=smap, sign_size_px=bam.sign_size_px, total_signs=CONTEXT_LENGTH)
 ranking = bam.recall_ranking(sign_input)
 
 
