@@ -28,6 +28,15 @@
     >
 
     <UButton
+      :class="{ tabActive: isTabActive('TabSemantic') }"
+      @click="tabStore.selectTab('TabSemantic')"
+      color="neutral"
+      variant="ghost"
+      size="sm"
+      >Semantic</UButton
+    >
+
+    <UButton
       :class="{ tabActive: isTabActive('TabOperator') }"
       @click="tabStore.selectTab('TabOperator')"
       color="neutral"
