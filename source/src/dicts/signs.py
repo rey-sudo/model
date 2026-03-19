@@ -25,14 +25,14 @@ class SignManager:
         sign = self.LSIGN.get(coords)
         return sign
     
-    def clean_block(self, line: str):
-        return re.findall(r'\b\d{4}\b|[a-zA-Z]{2,}', line)
-    
     def apply_coords_to_block(self, array: list[str]) -> list[tuple[float, float, float]]:
         return [self.get_coords_from_sign(word.lower()) for word in array]
-                
+    
+    def _clean_block(self, line: str):
+        return re.findall(r'\b\d{4}\b|[a-zA-Z]{2,}', line)
+                    
     def get_cascade_from_block(self, block: str):
-        cleaned = self.clean_block(block)
+        cleaned = self._clean_block(block)
 
         block = self.apply_coords_to_block(cleaned)
         return {i: block[:i+1] for i in range(len(block))}
@@ -57,7 +57,7 @@ class SignManager:
             return f"Ocurrió un error inesperado: {e}"  
         
     def block_to_canvas(self, block: str, sign_size_px: int, total_signs: int):
-        cleaned = self.clean_block(block)
+        cleaned = self._clean_block(block)
         block = self.apply_coords_to_block(cleaned)
         
         canvas = create_canvas_row(value=block, sign_size_px=sign_size_px, total_signs=total_signs)
