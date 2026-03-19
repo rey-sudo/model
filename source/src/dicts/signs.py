@@ -59,16 +59,16 @@ class SignManager:
         except Exception as e:
             return f"Ocurrió un error inesperado: {e}"  
         
-    def _get_values_from_mapped_reverse(self, lista_tuplas, referencia):
-        return [referencia.get(tupla) for tupla in lista_tuplas]
+    def _get_indices_from_smap(self, lista_tuplas, smap):
+        return [smap.get(tupla) for tupla in lista_tuplas]
         
-    def block_to_canvas(self, block: str, referencia: dict[Any, int], sign_size_px: int, total_signs: int):
+    def block_to_canvas(self, block: str, smap: dict[Any, int], sign_size_px: int, total_signs: int):
         cleaned = self._clean_block(block)
         block_coords = self.apply_coords_to_block(cleaned)
         
-        values = self._get_values_from_mapped_reverse(block_coords, referencia)
+        values = self._get_indices_from_smap(block_coords, smap)
         
-        print(values)
+        #if none implement
         
         canvas = create_canvas_row(value=values, sign_size_px=sign_size_px, total_signs=total_signs)
         return canvas

@@ -10,6 +10,7 @@ from dicts.codec import create_canvas_row
 
 INPUT_PATH = Path("input")
 SIGN_SIZE_PX = 9
+CONTEXT_LENGTH = 1_000
 
 sign_manager = SignManager()
 
@@ -18,13 +19,13 @@ smap, cascade = sign_manager.get_cascade_from_block(block)
 
 print(smap, cascade)
 
-bam = BAM(total_signs=len(cascade), sign_size_px=SIGN_SIZE_PX)  
+bam = BAM(total_signs=CONTEXT_LENGTH, sign_size_px=SIGN_SIZE_PX)  
 
 def train(bam, cascade):
     for i, value in cascade.items():
         total_items = len(cascade)
         
-        canvas = create_canvas_row(value=value, sign_size_px=SIGN_SIZE_PX, total_signs=total_items)
+        canvas = create_canvas_row(value=value, sign_size_px=SIGN_SIZE_PX, total_signs=CONTEXT_LENGTH)
 
         label = ",".join(map(str, value))
         bam.learn_incremental(canvas, label) 
@@ -37,9 +38,9 @@ def train(bam, cascade):
 train(bam, cascade)   
 print(json.dumps(memory_report(bam), indent=4, ensure_ascii=False))
 
+#============================================================================
 
-
-sign_input = sign_manager.block_to_canvas(block="cat", referencia=smap, sign_size_px=bam.sign_size_px, total_signs=bam.total_signs)
+sign_input = sign_manager.block_to_canvas(block="cat", smap=smap, sign_size_px=bam.sign_size_px, total_signs=CONTEXT_LENGTH)
 ranking = bam.recall_ranking(sign_input)
 
 
