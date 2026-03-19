@@ -4,9 +4,11 @@
   >
     <aside
       class="bg-[var(--color-surface)] p-4 overflow-y-auto border-r border-[var(--color-border)]"
-    ></aside>
+    >
+      <TabTrainExplorer />
+    </aside>
 
-    <main class="bg-[var(--color-surface)]  p-4 grid gap-4 box-border">
+    <main class="bg-[var(--color-surface)] p-4 grid gap-4 box-border">
       <ChartMatrix3d :points="misDatos" , :target="puntoCentral" />
       <Console />
     </main>
@@ -21,18 +23,34 @@
 
 <script setup>
 const misDatos = {
-  x: [8298.85, 3047.98, 2934.95, 5120.40, 1200.15, 7500.60, 4300.20, 9100.00, 2500.50, 6800.30, 1500.90, 5900.40, 3100.75],
-  y: [8759.67, 3781.44, 1110.77, 4500.30, 2100.80, 7800.90, 3200.45, 9500.10, 1800.60, 6200.25, 2900.70, 5300.85, 4100.20],
-  z: [62.87, 887.32, 7063.16, 1200.45, 5400.12, 300.55, 8500.90, 150.20, 4200.75, 2100.30, 9800.60, 3300.40, 1100.95],
+  x: [
+    8298.85, 3047.98, 2934.95, 5120.4, 1200.15, 7500.6, 4300.2, 9100.0, 2500.5,
+    6800.3, 1500.9, 5900.4, 3100.75,
+  ],
+  y: [
+    8759.67, 3781.44, 1110.77, 4500.3, 2100.8, 7800.9, 3200.45, 9500.1, 1800.6,
+    6200.25, 2900.7, 5300.85, 4100.2,
+  ],
+  z: [
+    62.87, 887.32, 7063.16, 1200.45, 5400.12, 300.55, 8500.9, 150.2, 4200.75,
+    2100.3, 9800.6, 3300.4, 1100.95,
+  ],
   labels: [
-    "territory", "area", "residents", 
-    "sector A", "sector B", "zone alpha", 
-    "zone beta", "central", "outskirts", 
-    "urban", "rural", "industrial", "commercial"
+    "territory",
+    "area",
+    "residents",
+    "sector A",
+    "sector B",
+    "zone alpha",
+    "zone beta",
+    "central",
+    "outskirts",
+    "urban",
+    "rural",
+    "industrial",
+    "commercial",
   ],
 };
-
-
 
 const puntoCentral = {
   x: 4200.24,
