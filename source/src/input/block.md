@@ -1,1 +1,1 @@
-The domestic cat is the only domesticated species of the family Felidae.
+the domestic cat is the only domesticated species of the family Felidae.
