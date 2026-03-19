@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
-from src.dicts.signs import SignManager
-from src.dicts.codec import create_canvas_row
-from src.memory import memory_report, BAM
-from src.memory import BAM
+from dicts.signs import SignManager
+from dicts.codec import create_canvas_row
+from memory import memory_report, BAM
+from memory import BAM
 
 current_path = Path.cwd()
 
@@ -15,7 +15,8 @@ sign_manager = SignManager(collection_paths=collection_paths)
 sign_manager.build()    
 
 paragraph = sign_manager.load_paragraph_file(path=INPUT_PATH / "block.md")
-bam_dict = sign_manager.paragraph_to_bam_dict(paragraph)   
+bam_dict = sign_manager.paragraph_to_bam_dict(paragraph) 
+
 bam = BAM(total_signs=len(bam_dict), sign_size_px=SIGN_SIZE_PX)  
 
 def train(bam, bam_dict):

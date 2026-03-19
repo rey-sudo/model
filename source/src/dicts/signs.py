@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 from dicts.hashing import string_to_coords_3d
 from dicts.codec import create_canvas_row
 import re
@@ -7,6 +8,15 @@ class SignManager:
     def __init__(self):
         self.LSIGN = {}
         
+    def _clean_block(self, line: str):
+        return re.findall(r'\b\d{4}\b|[a-zA-Z]{2,}', line)
+    
+    def _map_coords(self, coord_list):
+        return {i: tupla for i, tupla in enumerate(coord_list)}
+    
+    def _map_coords_reverse(self, coord_list):
+        return {tupla: i for i, tupla in enumerate(coord_list)}
+                
     def get_coords_from_sign(self, sign: str, append=True) -> tuple[float, float, float]:
         """
         Returns deterministic 3D coordinates according to the linguistic sign and adds the sign to the idempotent dictionary
@@ -27,24 +37,17 @@ class SignManager:
     
     def apply_coords_to_block(self, array: list[str]) -> list[tuple[float, float, float]]:
         return [self.get_coords_from_sign(word.lower()) for word in array]
-    
-    def _clean_block(self, line: str):
-        return re.findall(r'\b\d{4}\b|[a-zA-Z]{2,}', line)
-                    
+                     
     def get_cascade_from_block(self, block: str):
         cleaned = self._clean_block(block)
-
-        block = self.apply_coords_to_block(cleaned)
-        return {i: block[:i+1] for i in range(len(block))}
-    
-    def decode_labels(self, label_str):
-        # 1. Hacemos el split para obtener ['10', '11', '12']
-        signs = label_str.split(',')
+        block_coords = self.apply_coords_to_block(cleaned)
         
-        # 2. Iteramos, convertimos a int y aplicamos get_sign_from_index
-        # Asumiendo que get_sign_from_index recibe un entero
-        resultado = [self.get_sign_from_index(int(idx)) for idx in signs]
-        return " ".join(resultado)
+        mapped_by_indices = self._map_coords(block_coords)
+        mapped_by_coords = self._map_coords_reverse(block_coords)
+        
+        cascade = {i: list(range(i + 1)) for i in range(len(mapped_by_indices))}
+    
+        return mapped_by_coords, cascade
     
     def load_block_file(self, path: Path):
         try:
@@ -56,10 +59,24 @@ class SignManager:
         except Exception as e:
             return f"Ocurrió un error inesperado: {e}"  
         
-    def block_to_canvas(self, block: str, sign_size_px: int, total_signs: int):
-        cleaned = self._clean_block(block)
-        block = self.apply_coords_to_block(cleaned)
+    def _get_values_from_mapped_reverse(self, lista_tuplas, referencia):
+        return [referencia.get(tupla) for tupla in lista_tuplas]
         
-        canvas = create_canvas_row(value=block, sign_size_px=sign_size_px, total_signs=total_signs)
+    def block_to_canvas(self, block: str, referencia: dict[Any, int], sign_size_px: int, total_signs: int):
+        cleaned = self._clean_block(block)
+        block_coords = self.apply_coords_to_block(cleaned)
+        
+        values = self._get_values_from_mapped_reverse(block_coords, referencia)
+        
+        print(values)
+        
+        canvas = create_canvas_row(value=values, sign_size_px=sign_size_px, total_signs=total_signs)
         return canvas
         
+    def decode_labels(self, label_str, referencia):
+        valores_lista = list(referencia.keys())
+        indices = [int(n) for n in label_str.split(",")]
+       
+        resultado = [self.LSIGN[valores_lista[idx]] for idx in indices]
+
+        return " ".join(resultado)
