@@ -40,7 +40,7 @@ print(json.dumps(memory_report(bam), indent=4, ensure_ascii=False))
 
 #============================================================================
 
-sign_input = sign_manager.block_to_canvas(block="cat", smap=smap, sign_size_px=bam.sign_size_px, total_signs=CONTEXT_LENGTH)
+sign_input = sign_manager.block_to_canvas(block="a cat is", smap=smap, sign_size_px=bam.sign_size_px, total_signs=CONTEXT_LENGTH)
 ranking = bam.recall_ranking(sign_input)
 
 
@@ -54,7 +54,7 @@ def imprimir_ranking(datos):
         # :<N alinea a la izquierda con N espacios
         # :.4f reduce el score a 4 decimales para que no rompa la tabla
         id_val = fila['id']
-        label = sign_manager.decode_labels(fila['label'], smap)[-40:]
+        label = sign_manager.decode_labels(fila['label'], smap)
         score = fila['score']
         votos = fila['votos']
         

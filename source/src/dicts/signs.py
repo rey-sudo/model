@@ -68,8 +68,14 @@ class SignManager:
         
         values = self._get_indices_from_smap(block_coords, smap)
         
-        #if none implement
-        
+        escritura = 0
+
+        for lectura in range(len(values)):
+            if values[lectura] is not None:
+                values[escritura] = values[lectura]
+                escritura += 1
+        del values[escritura:]
+       
         canvas = create_canvas_row(value=values, sign_size_px=sign_size_px, total_signs=total_signs)
         return canvas
         

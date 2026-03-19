@@ -1,1 +1,1 @@
-A cat is a small carnivorous mammal known for its independence and agility
+A cat is a small furry animal with sharp teeth and whiskers
