@@ -13,9 +13,6 @@ class SignManager:
     
     def _map_coords_by_index(self, coord_list):
         return {i: tupla for i, tupla in enumerate(coord_list)}
-    
-    def _map_coords_by_value(self, coord_list):
-        return {tupla: i for i, tupla in enumerate(coord_list)}
                 
     def get_coords_from_sign(self, sign: str, append=True) -> tuple[float, float, float]:
         """

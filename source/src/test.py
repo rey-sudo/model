@@ -39,7 +39,7 @@ print(json.dumps(memory_report(bam), indent=4, ensure_ascii=False))
 
 #============================================================================
 
-sign_input = sign_manager.block_to_canvas(block="the domestic cat", smap=smap, sign_size_px=bam.sign_size_px, total_signs=CONTEXT_LENGTH)
+sign_input = sign_manager.block_to_canvas(block="the", smap=smap, sign_size_px=bam.sign_size_px, total_signs=CONTEXT_LENGTH)
 ranking = bam.recall_ranking(sign_input)
 
 def imprimir_ranking(datos):
