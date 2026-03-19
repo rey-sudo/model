@@ -157,7 +157,7 @@ const drawChart = async () => {
             color: "#64748b",
           },
           zerolinecolor: "#000000",
-          showline: true,
+          showline: false,
           mirror: false,
           showticklabels: false,
           showspikes: false
