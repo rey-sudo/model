@@ -17,7 +17,7 @@ sign_manager = SignManager()
 block = sign_manager.load_block_file(path=INPUT_PATH / "block.md")
 imap, smap, cascade = sign_manager.get_cascade_from_block(block)
 
-print(json.dumps(imap, indent=4, ensure_ascii=False))
+print(imap)
 print(smap)
 print(cascade)
 bam = BAM(total_signs=CONTEXT_LENGTH, sign_size_px=SIGN_SIZE_PX)  
@@ -41,7 +41,7 @@ print(json.dumps(memory_report(bam), indent=4, ensure_ascii=False))
 
 #============================================================================
 
-sign_input = sign_manager.block_to_canvas(block="The", smap=smap, sign_size_px=bam.sign_size_px, total_signs=CONTEXT_LENGTH)
+sign_input = sign_manager.block_to_canvas(block="what is the animal domesticated", smap=smap, sign_size_px=bam.sign_size_px, total_signs=CONTEXT_LENGTH)
 ranking = bam.recall_ranking(sign_input)
 
 

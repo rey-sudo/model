@@ -81,6 +81,5 @@ class SignManager:
         
     def decode_labels(self, ranking_label, imap):
         resultado = [self.LSIGN[imap[int(n)]] for n in ranking_label.split(",")]
-        
-             
+         
         return " ".join(resultado)
