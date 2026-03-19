@@ -37,8 +37,8 @@ const buildDataStructure = () => {
     colors = [],
     sizes = [];
 
-  const colorPeriferico = "#e74c3c"; 
-  const colorCentro = "rgba(49, 119, 180, 1)"; 
+  const colorPeriferico = "#e74c3c";
+  const colorCentro = "rgba(49, 119, 180, 1)";
 
   for (let i = 0; i < props.points.x.length; i++) {
     // 1. Punto Periférico
@@ -87,10 +87,10 @@ const drawChart = async () => {
       y: s.y,
       z: s.z,
       text: s.text,
-      textposition: "top center", 
+      textposition: "top center",
       textfont: {
-        color: "#64748b", 
-        size: 12
+        color: "#64748b",
+        size: 12,
       },
       hoverinfo: "text+x+y+z",
       line: {
@@ -106,8 +106,19 @@ const drawChart = async () => {
     };
 
     const layout = {
+      title: {
+        text: "Bank",
+        font: {
+          family: "Inter, sans-serif",
+          size: 16,
+          color: "#0f172a",
+        },
+        x: 0.98, // 0 1
+        y: 0.04,
+        xanchor: "right",
+        yanchor: "bottom",
+      },
       autosize: true,
-      height: 500,
       dragmode: "turntable", // Rotación estable
       hovermode: "closest",
       margin: { l: 0, r: 0, b: 0, t: 0 },
@@ -120,14 +131,14 @@ const drawChart = async () => {
             font: {
               color: "#64748b",
               size: 14,
-              family: "Arial, sans-serif",
+              family: "Inter, sans-serif",
             },
           },
           zerolinecolor: "#000000",
           showline: true,
           mirror: false,
           showticklabels: false,
-          showspikes: false
+          showspikes: false,
         },
         yaxis: {
           title: {
@@ -135,14 +146,14 @@ const drawChart = async () => {
             font: {
               color: "#64748b",
               size: 14,
-              family: "Arial, sans-serif",
+              family: "Inter, sans-serif",
             },
           },
           zerolinecolor: "#000000",
           showline: true,
           mirror: false,
           showticklabels: false,
-          showspikes: false
+          showspikes: false,
         },
         zaxis: {
           title: {
@@ -150,7 +161,7 @@ const drawChart = async () => {
             font: {
               color: "#64748b",
               size: 14,
-              family: "Arial, sans-serif",
+              family: "Inter, sans-serif",
             },
           },
           tickfont: {
@@ -160,20 +171,20 @@ const drawChart = async () => {
           showline: false,
           mirror: false,
           showticklabels: false,
-          showspikes: false
+          showspikes: false,
         },
         camera: {
           projection: {
             type: "orthographic",
           },
-          up: { x: 0, y: 0, z: 1 }, // Z siempre arriba
-          eye: { x: 1.5, y: 1.5, z: 1.5 },
+          up: { x: 0, y: 0, z: 1 },
+          eye: { x: 0.8, y: 0.8, z: 0.8 },
         },
       },
       margin: { l: 0, r: 0, b: 0, t: 30 },
     };
 
-    const config = { responsive: true, displaylogo: false };
+    const config = { displayModeBar: true, responsive: true, displaylogo: false };
 
     Plotly.react(plotlyChart.value, [trace], layout, config);
     loading.value = false;
@@ -200,25 +211,6 @@ const onResize = () => {
 onBeforeUnmount(() => {
   window.removeEventListener("resize", onResize);
 });
-
-/*
-
-const misDatos = {
-  x: [8298.85, 3047.98, 2934.95],
-  y: [8759.67, 3781.44, 1110.77],
-  z: [62.87, 887.32, 7063.16],
-  labels: ["vehicle", "wheels", "gas"]
-};
-
-const puntoCentral = {
-  x: 4200.24,
-  y: 6149.22,
-  z: 2799.93,
-  label: 'car'
-};
-
-
-*/
 </script>
 
 <style scoped>
@@ -230,7 +222,6 @@ const puntoCentral = {
   align-items: center;
   box-sizing: border-box;
   justify-content: center;
-  background: var(--color-white);
   border-radius: var(--chart-radius);
   border: 1px solid var(--color-border);
 }
