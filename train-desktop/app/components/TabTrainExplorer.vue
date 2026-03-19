@@ -17,79 +17,79 @@ const items = ref<TreeItem[]>([
     defaultExpanded: true,
     children: [
       {
-        label: "b_0_100.json",
+        label: "b_0.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_1_100.json",
+        label: "b_1.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_2_100.json",
+        label: "b_2.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_3_100.json",
+        label: "b_3.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_4_100.json",
+        label: "b_4.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_5_100.json",
+        label: "b_5.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_6_100.json",
+        label: "b_6.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_7_100.json",
+        label: "b_7.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_8_100.json",
+        label: "b_8.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_9_100.json",
+        label: "b_9.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_10_100.json",
+        label: "b_10.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_11_100.json",
+        label: "b_11.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_12_100.json",
+        label: "b_12.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_13_100.json",
+        label: "b_13.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_14_100.json",
+        label: "b_14.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_15_100.json",
+        label: "b_15.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_16_100.json",
+        label: "b_16.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_17_100.json",
+        label: "b_17.json",
         icon: "lucide-file-braces",
       },
       {
-        label: "b_18_100.json",
+        label: "b_18.json",
         icon: "lucide-file-braces",
       },
     ],

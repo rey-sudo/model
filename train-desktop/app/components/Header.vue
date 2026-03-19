@@ -27,6 +27,15 @@
       >Memory</UButton
     >
 
+    <UButton
+      :class="{ tabActive: isTabActive('TabOperator') }"
+      @click="tabStore.selectTab('TabOperator')"
+      color="neutral"
+      variant="ghost"
+      size="sm"
+      >Operator</UButton
+    >
+
     <UColorModeButton />
   </div>
 </template>
