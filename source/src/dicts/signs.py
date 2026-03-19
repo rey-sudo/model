@@ -1,76 +1,40 @@
 from pathlib import Path
-from src.dicts.codec import create_canvas_row
+from dicts.hashing import string_to_coords_3d
+from dicts.codec import create_canvas_row
 import re
 
 class SignManager:
-    def __init__(self, collection_paths: list[Path]):
-        self.collection_paths = collection_paths
+    def __init__(self):
+        self.LSIGN = {}
         
-        self.SIGN_COLLECTION_RAW = {}
-        
-        self.SIGN_COLLECTION = {}
-        self._SIGN_REVERSE = {}
-        
-    def build(self):
-        self.load_files()
-        self.generate_index_map()
-    
-    def load_files(self):
-        for path in self.collection_paths:    
-            with open(path, 'r', encoding='utf-8') as file:
-                for line in file:
-                    word = line.strip()
-                    if word:
-                        self.SIGN_COLLECTION_RAW[word] = word        
-    
-    def generate_index_map(self):
+    def get_coords_from_sign(self, sign: str, append=False) -> tuple[float, float, float]:
         """
-        Convierte RAW en formato "word": index_int
-        Ejemplo: "abundant": 0, "accept": 1...
+        Returns deterministic 3D coordinates according to the linguistic sign and adds the sign to the idempotent dictionary
         """
+        coords = string_to_coords_3d(sign)
         
-        for i, key in enumerate(self.SIGN_COLLECTION_RAW.keys()):
-                    self.SIGN_COLLECTION[key] = i
-                    self._SIGN_REVERSE[i] = key
-                    
-        print(f"Diccionario indexado con {len(self.SIGN_COLLECTION)} entradas.")
-        
-    def get_index_from_sign(self, sign: str) -> int:
-        """
-        Busca el signo (llave) y retorna su índice entero.
-        """
-        # Usamos .get() para evitar que el programa se rompa si el signo no existe
-        index = self.SIGN_COLLECTION.get(sign)
-        if index is None:
-            # Podrías retornar -1 o lanzar un error según prefieras
-            print(f"Error: El signo '{sign}' no existe en la colección.")
-            return None
+        if append:
+            self.LSIGN[coords] = sign
             
-        return index        
-        
-    def get_sign_from_index(self, index: int) -> str:
+        return coords
+              
+    def get_sign_from_coords(self, coords: tuple[float, float, float]) -> str:
         """
-        Retorna la palabra (str) a partir de su índice entero (int).
+        The linguistic sign returns from its deterministic coordinates.
         """
-        # Buscamos en el mapa inverso para máxima velocidad
-        sign = self._SIGN_REVERSE.get(index)
-        
-        if sign is None:
-            print(f"Error: El índice '{index}' no existe.")
-            return None
-            
+        sign = self.LSIGN.get(coords)
         return sign
     
     def clean_paragraph(self, line: str):
         return re.findall(r'\b\d{4}\b|[a-zA-Z]{2,}', line)
     
-    def paragraph_to_indices(self, array: list[str]):
-        return [self.get_index_from_sign(word.lower()) for word in array]
+    def apply_coords_to_block(self, array: list[str]) -> list[tuple[float, float, float]]:
+        return [self.get_coords_from_sign(word.lower()) for word in array]
                 
     def paragraph_to_bam_dict(self, paragraph: str):
         cleaned = self.clean_paragraph(paragraph)
 
-        block = self.paragraph_to_indices(cleaned)
+        block = self.apply_coords_to_block(cleaned)
         return {i: block[:i+1] for i in range(len(block))}
     
     def decode_labels(self, label_str):
@@ -94,7 +58,7 @@ class SignManager:
         
     def paragraph_to_canvas(self, paragraph: str, sign_size_px: int, total_signs: int):
         cleaned = self.clean_paragraph(paragraph)
-        block = self.paragraph_to_indices(cleaned)
+        block = self.apply_coords_to_block(cleaned)
         
         canvas = create_canvas_row(value=block, sign_size_px=sign_size_px, total_signs=total_signs)
         return canvas

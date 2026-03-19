@@ -1,35 +1,78 @@
-import hashlib
+import xxhash
+import struct
 
-def entero_a_coordenadas_3d(n, limite_min=0, limite_max=100):
+def string_to_coords_3d(
+    text: str,
+    x_range: tuple[float, float] = (-1.0, 1.0),
+    y_range: tuple[float, float] = (-1.0, 1.0),
+    z_range: tuple[float, float] = (-1.0, 1.0),
+) -> tuple[float, float, float]:
+    """Convert a string into a deterministic 3-D coordinate.
+ 
+    Strategy
+    --------
+    1. Encode *text* as UTF-8 and feed it to xxHash-128, which produces a
+       16-byte (128-bit) digest.
+    2. Split the digest into four consecutive 32-bit big-endian unsigned
+       integers: ``ix``, ``iy``, ``iz``, and a spare word reserved for
+       future extensions (e.g. a W component or metadata tag).
+    3. Normalise each integer from ``[0, MAX_UINT32]`` to ``[0, 1]``, then
+       scale linearly to the requested axis range.
+ 
+    The mapping is **purely deterministic**: identical inputs always yield
+    identical outputs regardless of platform or process state.
+ 
+    Parameters
+    ----------
+    text:
+        Input string.  May be empty or contain arbitrary Unicode; it is
+        always encoded as UTF-8 before hashing.
+    x_range:
+        ``(min, max)`` bounds for the X axis.  Defaults to ``(-1.0, 1.0)``.
+    y_range:
+        ``(min, max)`` bounds for the Y axis.  Defaults to ``(-1.0, 1.0)``.
+    z_range:
+        ``(min, max)`` bounds for the Z axis.  Defaults to ``(-1.0, 1.0)``.
+ 
+    Returns
+    -------
+    tuple[float, float, float]
+        ``(x, y, z)`` coordinates inside the specified bounding box.
     """
-    Convierte un entero de cualquier longitud en coordenadas (x, y, z)
-    con distribución uniforme dentro de un rango definido.
-    """
-    # 1. Convertimos el entero a una cadena de bytes para el hash
-    n_bytes = str(n).encode('utf-8')
-    hash_obj = hashlib.sha256(n_bytes).digest()
-    
-    # 2. Dividimos el hash (32 bytes) en 3 partes de 8 bytes cada una (64 bits)
-    # Usamos los primeros 24 bytes del hash para x, y, z
-    parte_x = int.from_bytes(hash_obj[0:8], byteorder='big')
-    parte_y = int.from_bytes(hash_obj[8:16], byteorder='big')
-    parte_z = int.from_bytes(hash_obj[16:24], byteorder='big')
-    
-    # Valor máximo posible para 8 bytes (2^64 - 1)
-    max_64bit = 0xFFFFFFFFFFFFFFFF
-    
-    # 3. Normalizamos a un rango [0, 1] y luego al rango deseado
-    rango = limite_max - limite_min
-    
-    x = limite_min + (parte_x / max_64bit) * rango
-    y = limite_min + (parte_y / max_64bit) * rango
-    z = limite_min + (parte_z / max_64bit) * rango
-    
-    return x, y, z
+    # --- Step 1: hash -------------------------------------------------------
+    # Encode the string as UTF-8 (handles ASCII, accented chars, emoji, etc.)
+    # and compute the 128-bit xxHash digest (16 bytes).    
+    digest: bytes = xxhash.xxh128(text.encode("utf-8")).digest()  # 16 bytes
 
-# --- Ejemplo de uso ---
-numero_largo = 982374982374982374982374987234987234
-coord = entero_a_coordenadas_3d(numero_largo, 0, 1000)
+    # --- Step 2: unpack four uint32 values ----------------------------------
+    # ">IIII" = big-endian, four unsigned 32-bit integers.
+    # The fourth word (_) is unused here but kept for forward compatibility.
+    ix, iy, iz, _ = struct.unpack(">IIII", digest)
 
-print(f"Entero: {numero_largo}")
-print(f"Coordenadas: X={coord[0]:.2f}, Y={coord[1]:.2f}, Z={coord[2]:.2f}")
+    _MAX_UINT32 = 0xFFFF_FFFF
+    
+    # --- Step 3: scale to target ranges -------------------------------------
+    def _scale(value: int, lo: float, hi: float) -> float:
+        """Linearly map *value* from ``[0, MAX_UINT32]`` to ``[lo, hi]``.
+ 
+        Parameters
+        ----------
+        value:
+            Raw unsigned 32-bit integer from the hash digest.
+        lo:
+            Lower bound of the target range.
+        hi:
+            Upper bound of the target range.
+ 
+        Returns
+        -------
+        float
+            Scaled value within ``[lo, hi]``.
+        """
+        return lo + (value / _MAX_UINT32) * (hi - lo)
+
+    x = _scale(ix, *x_range)
+    y = _scale(iy, *y_range)
+    z = _scale(iz, *z_range)
+
+    return (x, y, z)
