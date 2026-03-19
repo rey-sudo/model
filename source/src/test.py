@@ -9,6 +9,8 @@ from dicts.codec import create_canvas_row
 
 
 INPUT_PATH = Path("input")
+OUTPUT_PATH = Path("output")
+
 SIGN_SIZE_PX = 9
 CONTEXT_LENGTH = 100
 
@@ -30,7 +32,7 @@ def train(bam, cascade):
         label = ",".join(map(str, value))
         bam.learn_incremental(canvas, label) 
             
-        Image.fromarray(canvas).save(f"cascada_{i}.png")
+        Image.fromarray(canvas).save(OUTPUT_PATH / f"cascada_{i}.png")
         
     bam.flush() 
     print(json.dumps(memory_report(bam), indent=4, ensure_ascii=False))
