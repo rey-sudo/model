@@ -6,7 +6,7 @@
 
 <style lang="css" scoped>
 .console {
-  height: 200px;
-  background: black;
+  height: 300px;
+  background: rgb(39, 39, 39);
 }
 </style>

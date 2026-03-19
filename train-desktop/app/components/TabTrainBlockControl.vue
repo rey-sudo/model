@@ -14,9 +14,7 @@
       >
     </div>
     <USeparator />
-    <div>
-      <UTable :data="data" :columns="columns" class="flex-1" />
-    </div>
+    <UTable :data="data" :columns="columns" class="flex-1" />
   </div>
 </template>
 
@@ -25,18 +23,18 @@ import { h, resolveComponent } from "vue";
 import type { TableColumn, TableRow } from "@nuxt/ui";
 
 const tabs = [
-  "NOUN",
-  "PROPN",
-  "VERB",
-  "ADJ",
-  "PRON",
-  "ADV",
-  "ADP",
-  "DET",
-  "AUX",
+  "Noun",
+  "Propn",
+  "Verb",
+  "Adj",
+  "Pron",
+  "Adv",
+  "Adp",
+  "Det",
+  "Aux",
 ];
 
-const activeTab = ref("NOUN");
+const activeTab = ref("Noun");
 
 const UBadge = resolveComponent("UBadge");
 
@@ -62,7 +60,7 @@ const columns: TableColumn<Payment>[] = [
     accessorKey: "sign",
     header: "Sign",
     cell: ({ row }) => {
-      return row.getValue("sign")
+      return row.getValue("sign");
     },
   },
   {

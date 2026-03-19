@@ -90,8 +90,8 @@ const drawChart = async () => {
       hoverinfo: "text+x+y+z",
       line: {
         color: "#3177b4",
-        width: 2,
-        opacity: 0.4,
+        width: 1,
+        opacity: 0.1,
       },
       marker: {
         size: s.sizes, // Array de tamaños
@@ -121,9 +121,7 @@ const drawChart = async () => {
           zerolinecolor: "#000000",
           showline: true,
           mirror: false,
-
-          showbackground: true,
-          backgroundcolor: "#f0f0f0",
+          showticklabels: false,
         },
         yaxis: {
           title: {
@@ -137,6 +135,7 @@ const drawChart = async () => {
           zerolinecolor: "#000000",
           showline: true,
           mirror: false,
+          showticklabels: false,
         },
         zaxis: {
           title: {
@@ -150,13 +149,14 @@ const drawChart = async () => {
           zerolinecolor: "#000000",
           showline: true,
           mirror: false,
+          showticklabels: true,
         },
         camera: {
           projection: {
             type: "orthographic",
           },
           up: { x: 0, y: 0, z: 1 }, // Z siempre arriba
-          eye: { x: 1.5, y: 1.5, z: 1.5 },
+          eye: { x: 3, y: 1.5, z: 1.5 },
         },
       },
       margin: { l: 0, r: 0, b: 0, t: 30 },
