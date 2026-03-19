@@ -7,7 +7,7 @@ class SignManager:
     def __init__(self):
         self.LSIGN = {}
         
-    def get_coords_from_sign(self, sign: str, append=False) -> tuple[float, float, float]:
+    def get_coords_from_sign(self, sign: str, append=True) -> tuple[float, float, float]:
         """
         Returns deterministic 3D coordinates according to the linguistic sign and adds the sign to the idempotent dictionary
         """
@@ -25,14 +25,14 @@ class SignManager:
         sign = self.LSIGN.get(coords)
         return sign
     
-    def clean_paragraph(self, line: str):
+    def clean_block(self, line: str):
         return re.findall(r'\b\d{4}\b|[a-zA-Z]{2,}', line)
     
     def apply_coords_to_block(self, array: list[str]) -> list[tuple[float, float, float]]:
         return [self.get_coords_from_sign(word.lower()) for word in array]
                 
-    def paragraph_to_bam_dict(self, paragraph: str):
-        cleaned = self.clean_paragraph(paragraph)
+    def get_cascade_from_block(self, block: str):
+        cleaned = self.clean_block(block)
 
         block = self.apply_coords_to_block(cleaned)
         return {i: block[:i+1] for i in range(len(block))}
@@ -46,7 +46,7 @@ class SignManager:
         resultado = [self.get_sign_from_index(int(idx)) for idx in signs]
         return " ".join(resultado)
     
-    def load_paragraph_file(self, path: Path):
+    def load_block_file(self, path: Path):
         try:
             with open(path, 'r', encoding='utf-8') as f:
                 contenido = f.read()
@@ -56,8 +56,8 @@ class SignManager:
         except Exception as e:
             return f"Ocurrió un error inesperado: {e}"  
         
-    def paragraph_to_canvas(self, paragraph: str, sign_size_px: int, total_signs: int):
-        cleaned = self.clean_paragraph(paragraph)
+    def block_to_canvas(self, block: str, sign_size_px: int, total_signs: int):
+        cleaned = self.clean_block(block)
         block = self.apply_coords_to_block(cleaned)
         
         canvas = create_canvas_row(value=block, sign_size_px=sign_size_px, total_signs=total_signs)
